@@ -1,0 +1,2 @@
+# WineWizard
+Modern Wine GUI
