@@ -1,0 +1,4 @@
+XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+CACHE="$XDG_CACHE_HOME/winewizard"
+7z -o"$CACHE" x "$CACHE/main_package.7z"
+rm "$CACHE/main_package.7z"

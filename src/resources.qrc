@@ -1,0 +1,17 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="after">files/after-sh</file>
+        <file alias="before">files/before-sh</file>
+        <file alias="create">files/create-sh</file>
+        <file alias="debug">files/debug-sh</file>
+        <file alias="prepare">files/prepare-sh</file>
+        <file alias="release">files/release-sh</file>
+        <file alias="terminate">files/terminate-sh</file>
+        <file alias="winemenubuilder.exe">files/winemenubuilder.exe</file>
+        <file alias="decrypt">files/decrypt-sh</file>
+        <file alias="shortcut">files/shortcut-sh</file>
+        <file alias="prepare-after">files/prepare-after-sh</file>
+        <file alias="extract-main">files/extract-main</file>
+        <file alias="clear">files/clear-sh</file>
+    </qresource>
+</RCC>

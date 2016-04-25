@@ -1,0 +1,7 @@
+packages="%1"
+for p in $packages
+do
+    [ -z "$p" ] && break
+    ww_install_$p
+done
+rm -rf "$WINEPREFIX/.packages"

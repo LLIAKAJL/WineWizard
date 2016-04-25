@@ -1,0 +1,2 @@
+rm -rf "$WW_TMP"
+mkdir "$WW_TMP"

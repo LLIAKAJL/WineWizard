@@ -1,0 +1,4 @@
+XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+CACHE="$XDG_CACHE_HOME/winewizard"
+echo atata | gpg --no-tty -o "$CACHE/%1.7z" --passphrase-fd 0 "$CACHE/%1.wwp"
+rm "$CACHE/%1.wwp"

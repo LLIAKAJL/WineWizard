@@ -1,0 +1,11 @@
+rm -rf "$WINEPREFIX/.wine"
+test -d "$WINEPREFIX/.packages" && rm -rf "$WINEPREFIX/.packages"
+7z -o"$WINEPREFIX" x "$CACHE/%1.7z"
+test -d "$WINEPREFIX/%1" || exit 1
+mv "$WINEPREFIX/%1" "$WINEPREFIX/.wine"
+files="%2"
+for p in $files
+do
+    [ -z "$p" ] && break
+    7z -o"$WINEPREFIX/.packages" x "$CACHE/$p.7z"
+done
