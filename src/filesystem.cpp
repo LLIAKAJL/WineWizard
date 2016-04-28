@@ -57,9 +57,14 @@ namespace FS
         return make(QDir::temp().absoluteFilePath(".winewizard"));
     }
 
+    QDir mainPackageDir()
+    {
+        return make(cache().absoluteFilePath("main_package"));
+    }
+
     QString mainPart(const QString &packageName)
     {
-        return cache().absoluteFilePath("main_package/" + packageName);
+        return mainPackageDir().absoluteFilePath(packageName);
     }
 
     QDir solution(const QString &solutionHash)

@@ -48,11 +48,11 @@ public slots:
 private slots:
     void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
     void otherProgress(qint64 bytesReceived, qint64 bytesTotal);
+    void mainFileFinished();
     void packageFinished();
     void solutionFinished();
     void updateFinished();
     void readyRead();
-
     void on_buttonBox_helpRequested();
 
 private:
@@ -63,6 +63,7 @@ private:
     void getSolution(const QString &url);
     void getUpdate();
     void getPackage();
+    void getMainFile();
     void makeRequired();
 };
 

@@ -29,6 +29,8 @@
 #include "executor.h"
 #include "dialogs.h"
 
+const QString GIT_URL = "https://raw.githubusercontent.com/LLIAKAJL/WineWizard-Utils/master/";
+
 DownloadDialog::DownloadDialog(const QString &url, QWidget *parent) :
     SingletonDialog(parent),
     ui(new Ui::DownloadDialog)
@@ -75,6 +77,46 @@ void DownloadDialog::otherProgress(qint64 bytesReceived, qint64 bytesTotal)
     ui->progressBar->setValue(bytesReceived);
 }
 
+void DownloadDialog::mainFileFinished()
+{
+    auto reply = static_cast<QNetworkReply *>(sender());
+    if (reply->error() != QNetworkReply::NoError)
+    {
+        if (reply->error() != QNetworkReply::OperationCanceledError && Dialogs::retry(tr("Network error: %1").arg(reply->errorString()), this))
+            getMainFile();
+        else
+            QDialog::reject();
+    }
+    else
+    {
+        auto download = mList.first();
+        QSettings s("winewizard", "settings");
+        QSettings u(FS::temp().absoluteFilePath("update"), QSettings::IniFormat);
+        u.beginGroup("Packages");
+        s.setValue(download.first, u.value(download.first).toInt());
+        u.endGroup();
+        if (download.first == "versions")
+        {
+            auto conf = FS::config();
+            {
+                auto cd = FS::cache();
+                QSettings s(conf.absoluteFilePath("versions"), QSettings::IniFormat);
+                QSettings v(cd.absoluteFilePath("versions"), QSettings::IniFormat);
+                for (auto g : s.childKeys())
+                    if (s.value(g, 0).toInt() < v.value(g, -1).toInt())
+                        cd.remove(g + ".7z");
+            }
+            conf.remove("versions");
+            QFile::copy(FS::mainPart("versions"), conf.absoluteFilePath("versions"));
+        }
+        mList.removeFirst();
+        if (mList.isEmpty())
+            accept();
+        else
+            getMainFile();
+    }
+}
+
 void DownloadDialog::packageFinished()
 {
     auto reply = static_cast<QNetworkReply *>(sender());
@@ -91,35 +133,11 @@ void DownloadDialog::packageFinished()
         auto redirect = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toString();
         if (redirect.isEmpty())
         {
-            auto cd = FS::cache();
-            if (download.first == "main_package")
+            QSettings h(FS::mainPart("hashes"), QSettings::IniFormat);
+            if (FS::md5(FS::cache().absoluteFilePath(download.first + ".wwp")) == h.value(download.first).toString())
             {
-                QSettings u(FS::temp().absoluteFilePath("update"), QSettings::IniFormat);
-                if (FS::md5(cd.absoluteFilePath("main_package.wwp")) == u.value("MainPackageHash").toString())
-                {
-                    mList.removeFirst();
-                    Ex::wait(FS::readFile(":/decrypt").arg(download.first), QString(), this);
-                    Ex::wait(FS::readFile(":/extract-main"), QString(), this);
-                    auto conf = FS::config();
-                    {
-                        QSettings s(conf.absoluteFilePath("versions"), QSettings::IniFormat);
-                        QSettings v(cd.absoluteFilePath("versions"), QSettings::IniFormat);
-                        for (auto g : s.childKeys())
-                            if (s.value(g, 0).toInt() < v.value(g, -1).toInt())
-                                cd.remove(g + ".7z");
-                    }
-                    conf.remove("versions");
-                    QFile::rename(FS::mainPart("versions"), conf.absoluteFilePath("versions"));
-                }
-            }
-            else
-            {
-                QSettings h(FS::mainPart("hashes"), QSettings::IniFormat);
-                if (FS::md5(cd.absoluteFilePath(download.first + ".wwp")) == h.value(download.first).toString())
-                {
-                    Ex::wait(FS::readFile(":/decrypt").arg(download.first), QString(), this);
-                    mList.removeFirst();
-                }
+                Ex::wait(FS::readFile(":/decrypt").arg(download.first), QString(), this);
+                mList.removeFirst();
             }
             if (mList.isEmpty())
                 accept();
@@ -186,20 +204,20 @@ void DownloadDialog::updateFinished()
         else
         {
             QSettings s("winewizard", "settings");
-            auto myMainPackageVersion = s.value("MainPackageVersion", 0).toInt();
-            auto mainPackageVersion = u.value("MainPackageVersion", 0).toInt();
-            if (myMainPackageVersion != mainPackageVersion)
-            {
-                QDir(FS::cache().absoluteFilePath("main_package")).removeRecursively();
-                s.setValue("MainPackageVersion", mainPackageVersion);
-            }
-            if (!FS::cache().exists("main_package"))
-            {
-                mList.append(Download{ "main_package", u.value("MainPackageUrl").toString() });
-                getPackage();
-            }
-            else
+            u.beginGroup("Packages");
+            auto mpd = FS::mainPackageDir();
+            for (auto package : u.childKeys())
+                if (!mpd.exists(package) || s.value(package, 0).toInt() < u.value(package, -1).toInt())
+                    mList.append(Download{ package, GIT_URL + "main_package/" + package });
+            u.endGroup();
+            if (mList.isEmpty())
                 accept();
+            else
+            {
+                ui->file->setVisible(true);
+                setWindowTitle(tr("Downloading"));
+                getMainFile();
+            }
         }
     }
     reply->deleteLater();
@@ -230,7 +248,7 @@ void DownloadDialog::getUpdate()
 {
     setWindowTitle(tr("Check for Updates"));
     FS::temp().remove("update");
-    QNetworkRequest request(QNetworkRequest(QUrl("http://wwizard.net/update/")));
+    QNetworkRequest request(QNetworkRequest(QUrl(GIT_URL + "update")));
     request.setRawHeader("User-Agent", "Mozilla Firefox");
     auto reply = mNam.get(request);
     reply->setProperty("out", FS::temp().absoluteFilePath("update"));
@@ -249,6 +267,20 @@ void DownloadDialog::getPackage()
     auto reply = mNam.get(request);
     reply->setProperty("out", FS::cache().absoluteFilePath(download.first + ".wwp"));
     connect(reply, &QNetworkReply::finished, this, &DownloadDialog::packageFinished);
+    connect(reply, &QNetworkReply::readyRead, this, &DownloadDialog::readyRead);
+    connect(this, &DownloadDialog::rejected, reply, &QNetworkReply::deleteLater);
+    connect(reply, &QNetworkReply::downloadProgress, this, &DownloadDialog::downloadProgress);
+}
+
+void DownloadDialog::getMainFile()
+{
+    auto download = mList.first();
+    FS::cache().remove(download.first);
+    QNetworkRequest request(QNetworkRequest(download.second));
+    request.setRawHeader("User-Agent", "Mozilla Firefox");
+    auto reply = mNam.get(request);
+    reply->setProperty("out", FS::cache().absoluteFilePath("main_package/" + download.first));
+    connect(reply, &QNetworkReply::finished, this, &DownloadDialog::mainFileFinished);
     connect(reply, &QNetworkReply::readyRead, this, &DownloadDialog::readyRead);
     connect(this, &DownloadDialog::rejected, reply, &QNetworkReply::deleteLater);
     connect(reply, &QNetworkReply::downloadProgress, this, &DownloadDialog::downloadProgress);

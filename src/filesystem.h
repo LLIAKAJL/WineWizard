@@ -29,6 +29,7 @@ namespace FS
     QDir data();
     QDir config();
     QDir temp();
+    QDir mainPackageDir();
     QString mainPart(const QString &packageName);
 
     QDir solution(const QString &solutionHash);
