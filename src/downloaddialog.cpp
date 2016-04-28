@@ -101,11 +101,13 @@ void DownloadDialog::packageFinished()
                     Ex::wait(FS::readFile(":/decrypt").arg(download.first), QString(), this);
                     Ex::wait(FS::readFile(":/extract-main"), QString(), this);
                     auto conf = FS::config();
-                    QSettings s(conf.absoluteFilePath("versions"), QSettings::IniFormat);
-                    QSettings v(cd.absoluteFilePath("versions"), QSettings::IniFormat);
-                    for (auto g : s.childKeys())
-                        if (s.value(g, 0).toInt() < v.value(g, -1).toInt())
-                            cd.remove(g + ".7z");
+                    {
+                        QSettings s(conf.absoluteFilePath("versions"), QSettings::IniFormat);
+                        QSettings v(cd.absoluteFilePath("versions"), QSettings::IniFormat);
+                        for (auto g : s.childKeys())
+                            if (s.value(g, 0).toInt() < v.value(g, -1).toInt())
+                                cd.remove(g + ".7z");
+                    }
                     conf.remove("versions");
                     QFile::rename(FS::mainPart("versions"), conf.absoluteFilePath("versions"));
                 }
@@ -266,12 +268,12 @@ void DownloadDialog::makeRequired()
         mList.append(Download{ aw, u.value(aw).toString() });
     QSettings r(FS::mainPart("required"), QSettings::IniFormat);
     for (auto package : s.value("BPackages").toStringList())
-        if (!cache.exists(package + ".7z"))
-            for (auto file : r.value(package).toStringList())
+        for (auto file : r.value(package).toStringList())
+            if (!cache.exists(file + ".7z"))
                 mList.append(Download{ file, u.value(file).toString() });
     for (auto package : s.value("APackages").toStringList())
-        if (!cache.exists(package + ".7z"))
-            for (auto file : r.value(package).toStringList())
+        for (auto file : r.value(package).toStringList())
+            if (!cache.exists(file + ".7z"))
                 mList.append(Download{ file, u.value(file).toString() });
     mList = mList.toSet().toList();
 }

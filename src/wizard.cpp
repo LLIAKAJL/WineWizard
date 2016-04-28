@@ -32,6 +32,7 @@
 #include "downloaddialog.h"
 #include "solutiondialog.h"
 #include "controldialog.h"
+#include "scriptsdialog.h"
 #include "outputdialog.h"
 #include "aboutdialog.h"
 #include "waitdialog.h"
@@ -163,6 +164,15 @@ void Wizard::install(const QString &exe)
         auto aw = s.value("AWine").toString();
         auto ap = s.value("APackages").toStringList();
         auto apr = required(ap);
+        auto bscript = s.value("BScript").toString();
+        auto ascript = s.value("AScript").toString();
+        auto runScript = !(bscript.isEmpty() && ascript.isEmpty());
+        if (runScript)
+        {
+            runScript = QSettings("winewizard", "settings").value("ExecuteScripts", false).toBool();
+            if (runScript)
+                runScript = ScriptsDialog(bscript, ascript).exec() == QDialog::Accepted;
+        }
         auto varSH = FS::readFile(FS::mainPart("variables-sh")).arg("win32");
         auto mainSH = FS::readFile(FS::mainPart("functions-sh"));
         mainSH += varSH;
@@ -174,6 +184,8 @@ void Wizard::install(const QString &exe)
         QFile::remove(wmbPath);
         QFile::copy(":/winemenubuilder.exe", wmbPath);
         mainSH += FS::readFile(FS::mainPart("packages-sh"));
+        if (runScript)
+            Ex::terminal(mainSH + bscript, solution);
         Ex::terminal(mainSH + FS::readFile(":/before").arg(bp.join(' ')), solution);
         auto debugSH = FS::readFile(":/debug");
         mRunList.append(solution);
@@ -181,7 +193,8 @@ void Wizard::install(const QString &exe)
         mRunList.removeOne(solution);
         Ex::wait(mainSH + FS::readFile(":/prepare-after").arg(aw, apr), solution);
         Ex::terminal(mainSH + FS::readFile(":/after").arg(ap.join(' ')), solution);
-        auto clearSH = varSH + FS::readFile(":/clear");
+        if (runScript)
+            Ex::terminal(mainSH + ascript, solution);
         while (true)
         {
             auto res = Dialogs::finish(solution);
@@ -208,7 +221,7 @@ void Wizard::install(const QString &exe)
             }
             else
             {
-                Ex::execute(clearSH, solution);
+                Ex::execute(varSH + FS::readFile(":/clear"), solution);
                 return;
             }
             mRunList.append(solution);
