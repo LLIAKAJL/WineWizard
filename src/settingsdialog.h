@@ -21,8 +21,6 @@
 #ifndef SETTINGSDIALOG_H
 #define SETTINGSDIALOG_H
 
-#include <QModelIndex>
-
 #include "singletondialog.h"
 
 namespace Ui {
@@ -34,24 +32,14 @@ class SettingsDialog : public SingletonDialog
     Q_OBJECT
 
 public:
-    explicit SettingsDialog(const QModelIndex &index, QWidget *parent = nullptr);
+    explicit SettingsDialog(QWidget *parent = nullptr);
     ~SettingsDialog() override;
 
 public slots:
     void accept() override;
 
-private slots:
-    void on_name_textChanged(const QString &name);
-    void on_icon_clicked();
-
-    void on_buttonBox_helpRequested();
-
 private:
     Ui::SettingsDialog *ui;
-    QModelIndex mIndex;
-    QString mIcon;
-
-    bool exists(const QString &name) const;
 };
 
 #endif // SETTINGSDIALOG_H

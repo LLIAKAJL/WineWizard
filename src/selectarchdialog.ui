@@ -1,24 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>ShortcutsDialog</class>
- <widget class="QDialog" name="ShortcutsDialog">
+ <class>SelectArchDialog</class>
+ <widget class="QDialog" name="SelectArchDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>464</width>
-    <height>364</height>
+    <height>94</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Run Shortcut</string>
+   <string>Select Archhitecture</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="sizeConstraint">
     <enum>QLayout::SetFixedSize</enum>
    </property>
    <item>
-    <widget class="QListView" name="shortcuts"/>
+    <widget class="QRadioButton" name="win32">
+     <property name="text">
+      <string>Win32 application</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QRadioButton" name="win64">
+     <property name="text">
+      <string>Win64 application</string>
+     </property>
+    </widget>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
@@ -43,12 +57,12 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>ShortcutsDialog</receiver>
+   <receiver>SelectArchDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>225</x>
-     <y>347</y>
+     <x>248</x>
+     <y>254</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -59,12 +73,12 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>ShortcutsDialog</receiver>
+   <receiver>SelectArchDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>293</x>
-     <y>353</y>
+     <x>316</x>
+     <y>260</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>

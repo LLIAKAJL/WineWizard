@@ -18,42 +18,22 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef FILESYSTEM_H
-#define FILESYSTEM_H
+#ifndef SELECTMODEL_H
+#define SELECTMODEL_H
 
-#include <QDir>
+#include <QAbstractListModel>
 
-namespace FS
+class SelectModel : public QAbstractListModel
 {
-    QDir cache();
-    QDir data();
-    QDir config();
-    QDir temp();
+    Q_OBJECT
+public:
+    explicit SelectModel(const QStringList &list, QObject *parent = nullptr);
 
-    QDir prefix(const QString &prefixHash);
-    QDir devices(const QString &prefixHash);
-    QDir drive(const QString &prefixHash, const QString &letter = "c:");
-    QDir driveTarget(const QString &prefixHash, const QString &letter = "c:");
-    QDir icons(const QString &prefixHash);
-    QDir shortcuts(const QString &prefixHash);
-    QDir links(const QString &prefixHash);
-    QDir documents(const QString &prefixHash);
-    QDir wine(const QString &prefixHash);
-    QDir packages(const QString &prefixHash);
-    QDir windows(const QString &prefixHash);
-    QDir sys32(const QString &prefixHash, const QString &arch = "32");
-    QDir sys64(const QString &prefixHash);
-    QDir users(const QString &prefixHash);
-    QDir user(const QString &prefixHash);
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
-    QString readFile(const QString &filePath);
-    void browse(const QString &path);
-    QString hash(const QString &str);
-    bool checkFileSum(const QString &filePath, const QString &checksum);
+private:
+    QStringList mList;
+};
 
-    void removePrefix(const QString &prefixHash, QWidget *parent = nullptr);
-    QString toWinPath(const QString &prefixHash, const QString &path);
-    QString toUnixPath(const QString &prefixHash, const QString &path);
-}
-
-#endif // FILESYSTEM_H
+#endif // SELECTMODEL_H

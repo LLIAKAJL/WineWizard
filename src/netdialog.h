@@ -18,33 +18,27 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef SHORTCUTSDIALOG_H
-#define SHORTCUTSDIALOG_H
+#ifndef NETDIALOG_H
+#define NETDIALOG_H
+
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QUrlQuery>
 
 #include "singletondialog.h"
 
-namespace Ui {
-class ShortcutsDialog;
-}
+const QString API_URL = "http://wwizard.net/api/";
+const QString REPO_URL = "https://raw.githubusercontent.com/LLIAKAJL/WineWizard-Utils/master/main.wwrepo";
 
-class ShortcutsDialog : public SingletonDialog
+class NetDialog : public SingletonDialog
 {
     Q_OBJECT
-
 public:
-    explicit ShortcutsDialog(const QString &solution, QWidget *parent = nullptr);
-    ~ShortcutsDialog() override;
+    explicit NetDialog(QWidget *parent = nullptr);
 
-    QString shortcut() const;
-
-public slots:
-    void reject() override;
-
-private slots:
-    void on_buttonBox_helpRequested();
-
-private:
-    Ui::ShortcutsDialog *ui;
+protected:
+    QNetworkAccessManager mNam;
 };
 
-#endif // SHORTCUTSDIALOG_H
+#endif // NETDIALOG_H

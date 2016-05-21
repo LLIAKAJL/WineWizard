@@ -29,7 +29,7 @@ public:
     explicit SingletonWidget(QWidget *widget);
     virtual ~SingletonWidget();
 
-    static bool activate();
+    static bool exists();
 
 private:
     static QList<SingletonWidget *> mList;

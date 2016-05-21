@@ -57,84 +57,82 @@ namespace FS
         return make(QDir::temp().absoluteFilePath(".winewizard"));
     }
 
-    QDir mainPackageDir()
+    QDir prefix(const QString &prefixHash)
     {
-        return make(cache().absoluteFilePath("main_package"));
+        return data().absoluteFilePath(prefixHash);
     }
 
-    QString mainPart(const QString &packageName)
+    QDir devices(const QString &prefixHash)
     {
-        return mainPackageDir().absoluteFilePath(packageName);
+        return prefix(prefixHash).absoluteFilePath("dosdevices");
     }
 
-    QDir solution(const QString &solutionHash)
+    QDir drive(const QString &prefixHash, const QString &letter)
     {
-        return data().absoluteFilePath(solutionHash);
+        return devices(prefixHash).absoluteFilePath(letter);
     }
 
-    QDir devices(const QString &solutionHash)
+    QDir driveTarget(const QString &prefixHash, const QString &letter)
     {
-        return solution(solutionHash).absoluteFilePath("dosdevices");
+        return QFile::symLinkTarget(FS::drive(prefixHash, letter).absolutePath());
     }
 
-    QDir drive(const QString &solutionHash, const QString &letter)
+    QDir icons(const QString &prefixHash)
     {
-        return devices(solutionHash).absoluteFilePath(letter);
+        return prefix(prefixHash).absoluteFilePath(".icons");
     }
 
-    QDir driveTarget(const QString &solutionHash, const QString &letter)
+    QDir shortcuts(const QString &prefixHash)
     {
-        return QFile::symLinkTarget(FS::drive(solutionHash, letter).absolutePath());
+        return prefix(prefixHash).absoluteFilePath(".shortcuts");
     }
 
-    QDir icons(const QString &solutionHash)
+    QDir links(const QString &prefixHash)
     {
-        return solution(solutionHash).absoluteFilePath(".icons");
+        return prefix(prefixHash).absoluteFilePath(".links");
     }
 
-    QDir shortcuts(const QString &solutionHash)
+    QDir documents(const QString &prefixHash)
     {
-        return solution(solutionHash).absoluteFilePath(".shortcuts");
+        return prefix(prefixHash).absoluteFilePath(".documents");
     }
 
-    QDir documents(const QString &solutionHash)
+    QDir wine(const QString &prefixHash)
     {
-        return solution(solutionHash).absoluteFilePath(".documents");
+        return prefix(prefixHash).absoluteFilePath(".wine");
     }
 
-    QDir wine(const QString &solutionHash)
+    QDir packages(const QString &prefixHash)
     {
-        return solution(solutionHash).absoluteFilePath(".wine");
+        return prefix(prefixHash).absoluteFilePath(".packages");
     }
 
-    QDir packages(const QString &solutionHash)
+    QDir windows(const QString &prefixHash)
     {
-        return solution(solutionHash).absoluteFilePath(".packages");
+        return drive(prefixHash).absoluteFilePath("windows");
     }
 
-    QDir windows(const QString &solutionHash)
+    QDir sys32(const QString &prefixHash, const QString &arch)
     {
-        return drive(solutionHash).absoluteFilePath("windows");
+        if (arch == "32")
+            return windows(prefixHash).absoluteFilePath("system32");
+        else
+            return windows(prefixHash).absoluteFilePath("syswow64");
     }
 
-    QDir sys32(const QString &solutionHash)
+    QDir sys64(const QString &prefixHash)
     {
-        return windows(solutionHash).absoluteFilePath("system32");
+        return windows(prefixHash).absoluteFilePath("system32");
     }
 
-    QDir users(const QString &solutionHash)
+    QDir users(const QString &prefixHash)
     {
-        return drive(solutionHash).absoluteFilePath("users");
+        return drive(prefixHash).absoluteFilePath("users");
     }
 
-    QDir user(const QString &solutionHash)
+    QDir user(const QString &prefixHash)
     {
-        return users(solutionHash).absoluteFilePath(qgetenv("USER"));
-    }
-
-    QDir links(const QString &solutionHash)
-    {
-        return solution(solutionHash).absoluteFilePath(".links");
+        return users(prefixHash).absoluteFilePath(qgetenv("USER"));
     }
 
     QString readFile(const QString &filePath)
@@ -153,43 +151,30 @@ namespace FS
         QDesktopServices::openUrl(QUrl::fromLocalFile(path));
     }
 
-    QString hash(const QString &solutionName)
+    QString hash(const QString &str)
     {
-        return QCryptographicHash::hash(solutionName.toUtf8(), QCryptographicHash::Sha1).toHex();
+        return QCryptographicHash::hash(str.toUtf8(), QCryptographicHash::Sha1).toHex();
     }
 
-    QString md5(const QString &filePath)
+    bool checkFileSum(const QString &filePath, const QString &checksum)
     {
-        QFile f(filePath);
-        f.open(QFile::ReadOnly);
-        return QCryptographicHash::hash(f.readAll(), QCryptographicHash::Md5).toHex();
-    }
-
-    QString pathWithDrive(const QString &solutionHash, const QString &path)
-    {
-        auto res = path;
-        auto c = driveTarget(solutionHash).absolutePath();
-        if (res.startsWith(c))
-            res.replace(c, "c:");
-        else
-        {
-            auto y = FS::driveTarget(solutionHash, "y:").absolutePath();
-            if (res.startsWith(y))
-                res.replace(y, "y:");
-            else
-                res.push_front("z:");
-        }
-        return res;
-    }
-
-    void removeSolution(const QString &solutionHash)
-    {
+        bool res = false;
         WaitDialog wd;
         auto worker = new QObject;
         worker->moveToThread(new QThread);
-        wd.connect(worker->thread(), &QThread::started, worker, [worker, solutionHash]()
+        wd.connect(worker->thread(), &QThread::started, worker, [worker, &checksum, &res, &filePath]()
         {
-            solution(solutionHash).removeRecursively();
+            if (QFile::exists(filePath))
+            {
+                QFile f(filePath);
+                f.open(QFile::ReadOnly);
+                auto data = f.readAll();
+                f.close();
+                auto fSum = QCryptographicHash::hash(data, QCryptographicHash::Sha1).toHex();
+                res = fSum == checksum;
+            }
+            else
+                res = false;
             worker->deleteLater();
         });
         wd.connect(worker, &QObject::destroyed, worker->thread(), &QThread::quit);
@@ -197,5 +182,62 @@ namespace FS
         wd.connect(worker->thread(), &QThread::destroyed, &wd, &WaitDialog::accept);
         worker->thread()->start();
         wd.exec();
+        return res;
+    }
+
+    void removePrefix(const QString &prefixHash, QWidget *parent)
+    {
+        WaitDialog wd(parent);
+        auto worker = new QObject;
+        worker->moveToThread(new QThread);
+        wd.connect(worker->thread(), &QThread::started, worker, [worker, prefixHash]()
+        {
+            prefix(prefixHash).removeRecursively();
+            worker->deleteLater();
+        });
+        wd.connect(worker, &QObject::destroyed, worker->thread(), &QThread::quit);
+        wd.connect(worker->thread(), &QThread::finished, worker->thread(), &QThread::deleteLater);
+        wd.connect(worker->thread(), &QThread::destroyed, &wd, &WaitDialog::accept);
+        worker->thread()->start();
+        wd.exec();
+    }
+
+    QString toWinPath(const QString &prefixHash, const QString &path)
+    {
+        QString res(path);
+        if (res.contains('/'))
+        {
+            for (char c = 'a'; c <= 'z'; ++c)
+            {
+                QString targetDrivePath = driveTarget(prefixHash, c + ":").absolutePath();
+                QString drivePath = FS::drive(prefixHash, c + ":").absolutePath();
+                if (res.startsWith(targetDrivePath) || res.startsWith(drivePath))
+                {
+                    res.replace(targetDrivePath, QChar::toUpper(c) + ":");
+                    break;
+                }
+            }
+            return res.replace('/', '\\');
+        }
+        return res;
+    }
+
+    QString toUnixPath(const QString &prefixHash, const QString &path)
+    {
+        QString res(path);
+        res.replace('\\', '/');
+        if (res.contains('/'))
+        {
+            for (char c = 'a'; c <= 'z'; ++c)
+            {
+                if (res.startsWith(c + ":") || res.startsWith(QChar::toUpper(c) + ":"))
+                {
+                    res.replace(0, 1, QChar(res.at(0)).toLower());
+                    break;
+                }
+            }
+            return devices(prefixHash).absoluteFilePath(res);
+        }
+        return res;
     }
 }

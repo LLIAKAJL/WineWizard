@@ -20,6 +20,7 @@
 
 #include <QFileInfo>
 #include <QIcon>
+#include <QDir>
 
 #include "qtsingleapplication/QtSingleApplication"
 #include "wizard.h"
@@ -27,16 +28,31 @@
 int main(int argc, char *argv[])
 {
     QtSingleApplication app(argc, argv);
+    QStringList list = app.arguments();
+    list.removeFirst();
     if (app.isRunning())
     {
-        app.sendMessage(argc > 1 ? argv[1] : QString());
+        if (list.isEmpty())
+            app.sendMessage(QString());
+        else
+        {
+            QString exe = QFileInfo(list.takeFirst()).absoluteFilePath();
+            app.sendMessage(exe + '\n' + QDir::currentPath() + '\n' + list.join('\n'));
+        }
         return 0;
     }
+    app.setQuitOnLastWindowClosed(false);
     app.setApplicationDisplayName("Wine Wizard");
     app.setApplicationName("winewizard");
     app.setApplicationVersion(APP_VERSION);
     Wizard w;
     app.connect(&app, &QtSingleApplication::messageReceived, &w, &Wizard::start);
-    w.start(argc > 1 ? argv[1] : QString());
-    return 0;
+    if (list.isEmpty())
+        w.start(QString());
+    else
+    {
+        QString exe = QFileInfo(list.takeFirst()).absoluteFilePath();
+        w.start(exe + '\n' + QDir::currentPath() + '\n' + list.join('\n'));
+    }
+    return app.exec();
 }

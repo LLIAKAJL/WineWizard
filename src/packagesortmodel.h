@@ -18,38 +18,24 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef CONTROLDIALOG_H
-#define CONTROLDIALOG_H
+#ifndef PACKAGESORTMODEL_H
+#define PACKAGESORTMODEL_H
 
-#include "singletondialog.h"
+#include <QSortFilterProxyModel>
 
-namespace Ui {
-class ControlDialog;
-}
-
-class ControlDialog : public SingletonDialog
+class PackageSortModel : public QSortFilterProxyModel
 {
     Q_OBJECT
-
 public:
-    explicit ControlDialog(const QStringList &busiList, const QStringList &runList, QWidget *parent = nullptr);
-    ~ControlDialog() override;
+    explicit PackageSortModel(QObject *parent = nullptr);
 
-private slots:
-    void shortcutChanged(const QModelIndex &index);
-    void on_deleteShortcutBtn_clicked();
-    void on_addBtn_clicked();
-    void on_deleteSolutionBtn_clicked();
-    void on_browseBtn_clicked();
-    void on_shortcutSettingsBtn_clicked();
-    void on_solutionSettingsBtn_clicked();
-    void on_solutions_currentIndexChanged(int index);
+    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
 
-    void on_buttonBox_helpRequested();
+protected:
+    bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const override;
 
 private:
-    Ui::ControlDialog *ui;
-    QStringList mBusiList, mRunList;
+    QString mCategory;
 };
 
-#endif // CONTROLDIALOG_H
+#endif // PACKAGESORTMODEL_H

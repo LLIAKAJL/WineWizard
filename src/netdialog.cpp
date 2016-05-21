@@ -18,39 +18,9 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef CREATESHORTCUTDIALOG_H
-#define CREATESHORTCUTDIALOG_H
+#include "netdialog.h"
 
-#include <QAbstractItemModel>
-#include <QFileInfo>
-#include <QDialog>
-
-namespace Ui {
-class CreateShortcutDialog;
-}
-
-class CreateShortcutDialog : public QDialog
+NetDialog::NetDialog(QWidget *parent) :
+    SingletonDialog(parent)
 {
-    Q_OBJECT
-
-public:
-    explicit CreateShortcutDialog(QAbstractItemModel *model, const QFileInfo &exe, QWidget *parent = nullptr);
-    ~CreateShortcutDialog() override;
-
-    QString name() const;
-    QString workDir() const;
-    QString args() const;
-
-private slots:
-    void on_browseBtn_clicked();
-    void on_name_textChanged(const QString &name);
-    void on_buttonBox_helpRequested();
-
-private:
-    Ui::CreateShortcutDialog *ui;
-    QAbstractItemModel *mModel;
-
-    bool exists(const QString &name) const;
-};
-
-#endif // CREATESHORTCUTDIALOG_H
+}

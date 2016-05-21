@@ -31,14 +31,15 @@ class MainMenu : public QMenu, public SingletonWidget
     Q_OBJECT
 
 public:
-    enum { Empty, Shortcut, Terminate, Control, About, Help };
+    enum { Empty, Install, Debug, Run, RunFile, Browse, Delete,
+           Edit, Terminate, Settings, About, Help, Quit };
 
-    explicit MainMenu(const QStringList &runList, QWidget *parent = nullptr);
+    explicit MainMenu(const QStringList &runList, const QStringList &busyList, QWidget *parent = nullptr);
 
 private:
     void addEmpty(QMenu *menu);
-    QIcon getSolutionIcon(const QString &solution, const QFileInfoList &list) const;
-    void sortList(QFileInfoList &list, bool solution = true);
+    QIcon getPrefixIcon(const QString &prefixHash) const;
+    void sortList(QFileInfoList &list, bool prefix = true);
 };
 
 #endif // MAINMENU_H

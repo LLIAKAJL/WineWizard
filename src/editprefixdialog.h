@@ -18,35 +18,42 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef SHORTCUTSMODEL_H
-#define SHORTCUTSMODEL_H
+#ifndef EDITPREFIXDIALOG_H
+#define EDITPREFIXDIALOG_H
 
-#include <QAbstractListModel>
-#include <QFileInfo>
-#include <QIcon>
+#include "singletondialog.h"
 
-class ShortcutsModel : public QAbstractListModel
+namespace Ui {
+class EditPrefixDialog;
+}
+
+class EditPrefixDialog : public SingletonDialog
 {
     Q_OBJECT
 
-    struct Shortcut
-    {
-        QString name, hash;
-        QIcon icon;
-    };
-
 public:
-    explicit ShortcutsModel(QObject *parent = nullptr);
+    explicit EditPrefixDialog(const QString &prefixHash, QWidget *parent = nullptr);
+    ~EditPrefixDialog() override;
 
-    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
-    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
-    bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
-    bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
+public slots:
+    void accept() override;
+
+private slots:
+    void on_name_textChanged(const QString &name);
+    void on_icon_clicked();
+    void currentChanged(const QModelIndex &index);
+    void on_deleteBtn_clicked();
+    void on_addBtn_clicked();
+    void on_editBtn_clicked();
+
+    void on_setIconBtn_clicked();
 
 private:
-    QList<Shortcut> mList;
-    QString mSolution;
+    Ui::EditPrefixDialog *ui;
+    QString mPrefixName, mPrefixHash, mIcon;
+    QStringList mPrefixList;
+
+    bool exists(const QString &name) const;
 };
 
-#endif // SHORTCUTSMODEL_H
+#endif // EDITPREFIXDIALOG_H

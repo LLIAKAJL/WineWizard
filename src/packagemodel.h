@@ -18,28 +18,42 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef SCRIPTSDIALOG_H
-#define SCRIPTSDIALOG_H
+#ifndef PACKAGEMODEL_H
+#define PACKAGEMODEL_H
 
-#include "singletondialog.h"
+#include <QAbstractListModel>
 
-namespace Ui {
-class ScriptsDialog;
-}
-
-class ScriptsDialog : public SingletonDialog
+class PackageModel : public QAbstractListModel
 {
     Q_OBJECT
 
 public:
-    explicit ScriptsDialog(const QString &before, const QString &after, QWidget *parent = nullptr);
-    ~ScriptsDialog() override;
+    struct Package
+    {
+        QString name, category, tooltip;
+        int type;
+    };
+    typedef QList<Package> PackageList;
 
-private slots:
-    void viewClicked();
+    enum { TypeRole = Qt::UserRole + 1, CategoryRole };
+
+    explicit PackageModel(const PackageList &list, QObject *parent = nullptr);
+
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
+    Qt::DropActions supportedDropActions() const override;
+    Qt::ItemFlags flags(const QModelIndex &index) const override;
+    bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
+    bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
+    QStringList mimeTypes() const override;
+    QMimeData *mimeData(const QModelIndexList &indexes) const override;
+    bool dropMimeData(const QMimeData *data, Qt::DropAction action, int row,
+                                    int column, const QModelIndex &parent) override;
 
 private:
-    Ui::ScriptsDialog *ui;
+    PackageList mList;
+    QString mArch;
 };
 
-#endif // SCRIPTSDIALOG_H
+#endif // PACKAGEMODEL_H

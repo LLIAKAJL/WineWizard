@@ -28,7 +28,7 @@
 #include "filesystem.h"
 #include "dialogs.h"
 
-OutputDialog::OutputDialog(QWidget *parent) :
+OutputDialog::OutputDialog(const Ex::Out &out, QWidget *parent) :
     SingletonDialog(parent),
     ui(new Ui::OutputDialog)
 {
@@ -36,21 +36,28 @@ OutputDialog::OutputDialog(QWidget *parent) :
     QSettings s("winewizard", "settings");
     s.beginGroup("OutputDialog");
     resize(s.value("Size", size()).toSize());
+    ui->vSplitter->restoreState(s.value("VSplitter").toByteArray());
+    ui->hSplitter->restoreState(s.value("HSplitter").toByteArray());
     s.endGroup();
-    auto viewBtn = ui->buttonBox->addButton(tr("View Solution"), QDialogButtonBox::ActionRole);
-    connect(viewBtn, &QPushButton::clicked, this, &OutputDialog::viewClicked);
-    viewBtn->setIcon(style()->standardIcon(QStyle::SP_FileDialogContentsView));
-    auto errors = FS::readFile(FS::temp().absoluteFilePath("errors"));
-    ui->errors->appendPlainText(errors);
+    ui->out->appendPlainText(out.first);
+    ui->err->appendPlainText(out.second);
 
-    QSettings e(FS::mainPart("errors"), QSettings::IniFormat);
-    for (auto package : e.childKeys())
-        for (auto error : e.value(package).toStringList())
-            if (errors.contains(error))
-            {
-                ui->advice->appendPlainText(tr("You can try to install package: %1.").arg(package));
-                break;
-            }
+    QSettings r(FS::cache().absoluteFilePath("main.wwrepo"), QSettings::IniFormat);
+    {
+        r.beginGroup("Errors");
+        for (const QString &package : r.childGroups())
+        {
+            r.beginGroup(package);
+            for (const QString &error : r.value("RE").toStringList())
+                if (out.second.contains(error))
+                {
+                    ui->advice->appendPlainText(tr("You can try to install package: %1.").arg(package));
+                    break;
+                }
+            r.endGroup();
+        }
+        r.endGroup();
+    }
     if (ui->advice->toPlainText().isEmpty())
         ui->advice->appendPlainText(tr("You can try to change the version of Wine."));
 }
@@ -60,15 +67,10 @@ OutputDialog::~OutputDialog()
     QSettings s("winewizard", "settings");
     s.beginGroup("OutputDialog");
     s.setValue("Size", size());
+    s.setValue("VSplitter", ui->vSplitter->saveState());
+    s.setValue("HSplitter", ui->hSplitter->saveState());
     s.endGroup();
     delete ui;
-}
-
-void OutputDialog::viewClicked()
-{
-    QSettings s(FS::temp().absoluteFilePath("solution"), QSettings::IniFormat);
-    s.setIniCodec("UTF-8");
-    QDesktopServices::openUrl(QUrl(s.value("URL").toString()));
 }
 
 void OutputDialog::on_buttonBox_helpRequested()

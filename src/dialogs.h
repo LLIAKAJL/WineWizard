@@ -37,6 +37,7 @@ namespace Dialogs
         friend void error(const QString &text, QWidget *parent);
         friend bool confirm(const QString &text, QWidget *parent);
         friend bool retry(const QString &text, QWidget *parent);
+        friend bool finish(const QString &prefixHash, QWidget *parent);
 
     protected:
         explicit MessageDialog(Icon icon, const QString &title, const QString &text, QMessageBox::StandardButtons buttons, QWidget *parent = nullptr);
@@ -44,25 +45,10 @@ namespace Dialogs
 
     //--------------------------------------------------------------------------------------------
 
-    class FinishDialog : public MessageDialog
-    {
-        Q_OBJECT
-
-        friend FinishStatus finish(const QString &solution);
-
-    public slots:
-        void reject() override;
-
-    protected:
-        explicit FinishDialog(bool ok);
-    };
-
-    //--------------------------------------------------------------------------------------------
-
     void error(const QString &text, QWidget *parent = nullptr);
     bool confirm(const QString &text, QWidget *parent = nullptr);
     bool retry(const QString &text, QWidget *parent = nullptr);
-    FinishStatus finish(const QString &solution);
+    bool finish(const QString &prefixHash, QWidget *parent = nullptr);
     QString open(const QString &title, const QString &filter, QWidget *parent = nullptr, const QString &dir = QDir::homePath());
     QString selectDir(const QString &start, QWidget *parent = nullptr);
 }

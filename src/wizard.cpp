@@ -18,31 +18,32 @@
  *                                                                         *
  ***************************************************************************/
 
-#include <QCryptographicHash>
 #include <QDesktopServices>
 #include <QSystemTrayIcon>
 #include <QApplication>
-#include <QEventLoop>
-#include <QSettings>
-#include <QProcess>
-#include <QThread>
+#include <QStyle>
+#include <QMenu>
 #include <QUrl>
 
-#include "shortcutsdialog.h"
+#include "qtsingleapplication/QtSingleApplication"
+#include "editsolutiondialog.h"
+#include "editprefixdialog.h"
+#include "selectarchdialog.h"
 #include "downloaddialog.h"
 #include "solutiondialog.h"
-#include "controldialog.h"
-#include "scriptsdialog.h"
+#include "settingsdialog.h"
 #include "outputdialog.h"
 #include "aboutdialog.h"
-#include "waitdialog.h"
 #include "filesystem.h"
-#include "executor.h"
 #include "mainmenu.h"
+#include "executor.h"
 #include "dialogs.h"
 #include "wizard.h"
 
-#define FINISHED static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished)
+const QString PREPARE_PACKAGES = "ww_installed_%1()\n{\n%2\n}\nww_install_%1()\n{\n%3\n}\n";
+const QString PREPARE_FUNCTIONS = "ww_%1()\n{\n%2\n}\n";
+const QString VERSION_ERR = QObject::tr("Please install a newer version of Wine Wizard.\n\nThe current version is %1.\n" \
+                                        "The required version is %2.\n\nWine Wizard will exit.");
 
 Wizard::Wizard(QObject *parent) :
     QObject(parent)
@@ -55,199 +56,345 @@ Wizard::Wizard(QObject *parent) :
     }
     if (QSystemTrayIcon::isSystemTrayAvailable())
     {
-        auto tray = new QSystemTrayIcon(QIcon::fromTheme("winewizard"), this);
-        connect(tray, &QSystemTrayIcon::activated, this, [this](){ start(); });
+        QSystemTrayIcon *tray = new QSystemTrayIcon(QIcon::fromTheme("winewizard"), this);
+        connect(tray, &QSystemTrayIcon::activated, this, [this]{ if (!SingletonWidget::exists()) showMenu(); });
         tray->show();
     }
 }
 
-void Wizard::start(const QString &exe)
+void Wizard::start(const QString &cmdLine)
 {
-    if (SingletonWidget::activate())
-        return;
-    else if (exe.isEmpty())
-        showMenu();
-    else if (mRunList.isEmpty() && mBusyList.isEmpty())
-        install(exe);
-    else
-        Dialogs::error(tr("Another process is already running!"));
+    if (!SingletonWidget::exists())
+    {
+        if (cmdLine.isEmpty())
+        {
+            if (!QSystemTrayIcon::isSystemTrayAvailable())
+                showMenu();
+        }
+        else
+        {
+            if (mBusyList.isEmpty())
+                install(cmdLine);
+            else
+                Dialogs::error(tr("Another installation is already running!"));
+        }
+    }
 }
 
 void Wizard::showMenu()
 {
-    MainMenu mm(mRunList);
-    auto act = mm.exec();
-    if (act)
+    MainMenu menu(mRunList, mBusyList);
+    QAction *act = menu.exec();
+    if (!act)
+        return;
+    switch (act->data().toInt())
     {
-        switch (act->data().toInt())
+    case MainMenu::Install:
         {
-        case MainMenu::Shortcut:
-            {
-                auto solution = act->property("Solution").toString();
-                auto exe = FS::devices(solution).absoluteFilePath(act->property("Exe").toString());
-                mRunList.append(solution);
-                Ex::execute(FS::readFile(":/release").arg(exe), solution);
-                mRunList.removeOne(solution);
-            }
-            break;
-        case MainMenu::Terminate:
-            {
-                auto solution = act->property("Solution").toString();
-                QSettings s(FS::solution(solution).absoluteFilePath(".settings"), QSettings::IniFormat);
-                s.setIniCodec("UTF-8");
-                auto solutionName = s.value("Name").toString();
-                if (Dialogs::confirm(tr(R"(Are you sure you want to terminate "%1"?)").arg(solutionName)))
-                {
-                    mRunList.append(solution);
-                    Ex::execute(FS::readFile(":/terminate"), solution);
-                    mRunList.removeOne(solution);
-                }
-            }
-            break;
-        case MainMenu::Control:
-            ControlDialog(mBusyList, mRunList).exec();
-            break;
-        case MainMenu::Help:
-            QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
-            break;
-        case MainMenu::About:
-            AboutDialog().exec();
-            break;
+            QString exe = Dialogs::open(tr("Select Installer"), tr("Executable files (*.exe *.msi)"));
+            if (!exe.isEmpty())
+                install(exe + '\n' + QFileInfo(exe).absolutePath() + '\n');
         }
+        break;
+    case MainMenu::Debug:
+        {
+            QString exe = act->property("Exe").toString();
+            QString args = act->property("Args").toString();
+            QString workDir = act->property("WorkDir").toString();
+            QString prefixHash = act->property("PrefixHash").toString();
+            QString shortcut = act->property("Shortcut").toString();
+            mRunList.append(prefixHash);
+            QString script = FS::readFile(":/run").arg(exe).arg(workDir).arg(args);
+            Ex::Out out = Ex::debug(script, prefixHash);
+            mRunList.removeOne(prefixHash);
+            if (Dialogs::finish(prefixHash))
+            {
+                QSettings s(shortcut, QSettings::IniFormat);
+                s.setValue("Debug", false);
+            }
+            else
+                OutputDialog(out).exec();
+        }
+        break;
+    case MainMenu::Run:
+        {
+            QString exe = act->property("Exe").toString();
+            QString args = act->property("Args").toString();
+            QString workDir = act->property("WorkDir").toString();
+            QString prefixHash = act->property("PrefixHash").toString();
+            mRunList.append(prefixHash);
+            Ex::release(FS::readFile(":/run").arg(exe).arg(workDir).arg(args), prefixHash);
+            mRunList.removeOne(prefixHash);
+        }
+        break;
+    case MainMenu::RunFile:
+        {
+            QString exe = Dialogs::open(tr("Select Installer"), tr("Executable files (*.exe *.msi)"));
+            if (!exe.isEmpty())
+            {
+                QString prefixHash = act->property("PrefixHash").toString();
+                mRunList.append(prefixHash);
+                QString script = FS::readFile(":/run").arg(exe).arg(QString()).arg(QString());
+                Ex::Out out = Ex::debug(script, prefixHash);
+                mRunList.removeOne(prefixHash);
+                if (!Dialogs::finish(prefixHash))
+                    OutputDialog(out).exec();
+            }
+        }
+        break;
+    case MainMenu::Edit:
+        EditPrefixDialog(act->property("PrefixHash").toString()).exec();
+        break;
+    case MainMenu::Terminate:
+        {
+            QString solutinName = act->property("PrefixName").toString();
+            QString prefixHash = act->property("PrefixHash").toString();
+            if (Dialogs::confirm(tr(R"(Are you sure you want to terminate "%1"?)").arg(solutinName)))
+                Ex::wait(FS::readFile(":/terminate"), prefixHash);
+        }
+        break;
+    case MainMenu::Browse:
+        {
+            QString prefixHash = act->property("PrefixHash").toString();
+            FS::browse(FS::prefix(prefixHash).absolutePath());
+        }
+        break;
+    case MainMenu::Delete:
+        {
+            QString prefixName = act->property("PrefixName").toString();
+            QString prefixHash = act->property("PrefixHash").toString();
+            if (Dialogs::confirm(tr(R"(Are you sure you want to delete "%1"?)").arg(prefixName)))
+                FS::removePrefix(prefixHash);
+        }
+        break;
+    case MainMenu::Settings:
+        SettingsDialog().exec();
+        break;
+    case MainMenu::About:
+        AboutDialog().exec();
+        break;
+    case MainMenu::Help:
+        QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
+        break;
+    case MainMenu::Quit:
+        if (Dialogs::confirm(tr("Are you sure you want to quit from Wine Wizard?")))
+        {
+            QString termScript = FS::readFile(":/terminate");
+            for (const QString &prefixHash : mRunList)
+                Ex::wait(QString(termScript), prefixHash);
+            QApplication::quit();
+        }
+        break;
     }
 }
 
-void Wizard::install(const QString &exe)
+void Wizard::install(const QString &cmdLine)
 {
-    if (DownloadDialog(QString()).exec() != QDialog::Accepted)
-        return;
-    auto exePath = exe;
-    if (!QFile::exists(exePath))
+    QStringList cmdList = cmdLine.split('\n', QString::SkipEmptyParts);
+    QString exe = cmdList.takeFirst();
+    QString workDir = cmdList.takeFirst();
+    QString args = cmdList.join(' ');
+    if (!QFile::exists(exe))
     {
-        Dialogs::error(tr(R"(File "%1" not found!)").arg(exePath));
-        return;
-    }
-    if (!testSuffix(exePath))
-    {
-        Dialogs::error(tr(R"(File "%1" is not a valid Windows application!)").arg(exePath));
+        Dialogs::error(tr(R"(File "%1" not found!)").arg(exe));
         return;
     }
-    SolutionDialog sd;
-    if (sd.exec() == QDialog::Accepted)
+    if (!testSuffix(exe))
     {
-        if (DownloadDialog(sd.url()).exec() != QDialog::Accepted)
-            return;
+        Dialogs::error(tr(R"(File "%1" is not a valid Windows application!)").arg(exe));
+        return;
+    }
+    QString arch, bs, acs, as;
+    if (prepare(arch, bs, acs, as))
+    {       
         QSettings s(FS::temp().absoluteFilePath("solution"), QSettings::IniFormat);
         s.setIniCodec("UTF-8");
-        auto solutionName = s.value("Name").toString();
-        auto solution = FS::hash(solutionName);
-        if (mBusyList.contains(solution) || mRunList.contains(solution))
-        {
-            Dialogs::error(tr("The application \"%1\" is already running!").arg(solutionName));
-            return;
-        }
-        else
-            mBusyList.append(solution);
-        if (FS::solution(solution).exists())
-        {
-            if (Dialogs::confirm(tr(R"(Application "%1" is already installed! Are you sure you want to reinstall this application?)").arg(solutionName)))
-                FS::removeSolution(solution);
-            else
-            {
-                mBusyList.removeOne(solution);
-                return;
-            }
-        }
-        auto bw = s.value("BWine").toString();
-        auto bp = s.value("BPackages").toStringList();
-        auto bpr = required(bp);
-        auto aw = s.value("AWine").toString();
-        auto ap = s.value("APackages").toStringList();
-        auto apr = required(ap);
-        auto bscript = s.value("BScript").toString();
-        auto ascript = s.value("AScript").toString();
-        auto runScript = !(bscript.isEmpty() && ascript.isEmpty());
-        if (runScript)
-        {
-            runScript = QSettings("winewizard", "settings").value("ExecuteScripts", false).toBool();
-            if (runScript)
-                runScript = ScriptsDialog(bscript, ascript).exec() == QDialog::Accepted;
-        }
-        auto varSH = FS::readFile(FS::mainPart("variables-sh")).arg("win32");
-        auto mainSH = FS::readFile(FS::mainPart("functions-sh"));
-        mainSH += varSH;
-        Ex::wait(mainSH + FS::readFile(":/prepare").arg(bw, bpr), solution);
-        QSettings(FS::solution(solution).absoluteFilePath(".settings"), QSettings::IniFormat).setValue("Name", solutionName);
-        s.setIniCodec("UTF-8");
-        Ex::execute(FS::readFile(":/create"), solution);
-        auto wmbPath = FS::sys32(solution).absoluteFilePath("winemenubuilder.exe");
+        QString prefixName = s.value("Name").toString();
+        QString prefixHash = FS::hash(prefixName);
+        if (FS::prefix(prefixHash).exists())
+            FS::removePrefix(prefixHash);
+        mBusyList.append(prefixHash);
+        Ex::terminal(bs, prefixHash);
+        QSettings sol(FS::prefix(prefixHash).absoluteFilePath(".settings"), QSettings::IniFormat);
+        sol.setIniCodec("UTF-8");
+        sol.setValue("Name", prefixName);
+        Ex::release(FS::readFile(":/create"), prefixHash);
+        QString wmbPath = FS::sys32(prefixHash, arch).absoluteFilePath("winemenubuilder.exe");
         QFile::remove(wmbPath);
         QFile::copy(":/winemenubuilder.exe", wmbPath);
-        mainSH += FS::readFile(FS::mainPart("packages-sh"));
-        if (runScript)
-            Ex::terminal(mainSH + bscript, solution);
-        Ex::terminal(mainSH + FS::readFile(":/before").arg(bp.join(' ')), solution);
-        auto debugSH = FS::readFile(":/debug");
-        mRunList.append(solution);
-        Ex::execute(debugSH.arg(exePath), solution);
-        mRunList.removeOne(solution);
-        Ex::wait(mainSH + FS::readFile(":/prepare-after").arg(aw, apr), solution);
-        Ex::terminal(mainSH + FS::readFile(":/after").arg(ap.join(' ')), solution);
-        if (runScript)
-            Ex::terminal(mainSH + ascript, solution);
-        while (true)
+        if (arch == "64")
         {
-            auto res = Dialogs::finish(solution);
-            if (res == Dialogs::Yes)
-            {
-                ShortcutsDialog sd(solution);
-                if (sd.exec() == QDialog::Accepted)
-                {
-                    QSettings s(FS::shortcuts(solution).absoluteFilePath(sd.shortcut()), QSettings::IniFormat);
-                    s.setIniCodec("UTF-8");
-                    exePath = FS::devices(solution).absoluteFilePath(s.value("Exe").toString());
-                }
-                else
-                {
-                    killSolution(solution);
-                    return;
-                }
-            }
-            else if (res == Dialogs::No)
-            {
-                OutputDialog().exec();
-                killSolution(solution);
-                return;
-            }
-            else
-            {
-                Ex::execute(varSH + FS::readFile(":/clear"), solution);
-                return;
-            }
-            mRunList.append(solution);
-            Ex::execute(debugSH.arg(exePath), solution);
-            mRunList.removeOne(solution);
+            wmbPath = FS::sys64(prefixHash).absoluteFilePath("winemenubuilder.exe");
+            QFile::remove(wmbPath);
+            QFile::copy(":/winemenubuilder64.exe", wmbPath);
         }
+        if (!acs.isEmpty())
+            Ex::terminal(acs, prefixHash);
+        QString script = FS::readFile(":/run").arg(exe).arg(workDir).arg(args);
+        Ex::Out out = Ex::debug(script, prefixHash);
+        Ex::terminal(as, prefixHash);
+        mBusyList.removeOne(prefixHash);
+        if (!Dialogs::finish(prefixHash))
+            OutputDialog(out).exec();
     }
-}
-
-QString Wizard::required(const QStringList &packages) const
-{
-    QStringList res;
-    QSettings r(FS::mainPart("required"), QSettings::IniFormat);
-    for (auto package : packages)
-        res.append(r.value(package).toStringList());
-    return QStringList(res.toSet().toList()).join(' ');
-}
-
-void Wizard::killSolution(const QString &solution)
-{
-    FS::removeSolution(solution);
-    mBusyList.removeOne(solution);
 }
 
 bool Wizard::testSuffix(const QFileInfo &path) const
 {
-    auto suffix = path.suffix().toUpper();
+    QString suffix = path.suffix().toUpper();
     return suffix == "EXE" || suffix == "MSI";
+}
+
+bool Wizard::prepare(QString &arch, QString &bs, QString &acs, QString &as) const
+{
+    QDir cache = FS::cache();
+    QString repoPath = cache.absoluteFilePath("main.wwrepo");
+    if (DownloadDialog(QStringList(REPO_URL), repoPath).exec() != QDialog::Accepted)
+        return false;
+    QSettings r(repoPath, QSettings::IniFormat);
+    r.setIniCodec("UTF-8");
+    QString repoVer = r.value("WineWizardVersion").toString();
+    if (repoVer.isEmpty())
+    {
+        Dialogs::error(tr("Incorrect repository file format!"));
+        return false;
+    }
+    QString appVer = QApplication::applicationVersion();
+    if (appVer != repoVer)
+    {
+        Dialogs::error(VERSION_ERR.arg(appVer).arg(repoVer));
+        return false;
+    }
+    clearRepository();
+    SolutionDialog solDlg(mRunList);
+    if (solDlg.exec() != QDialog::Accepted)
+        return false;
+    SelectArchDialog sad;
+    if (sad.exec() != QDialog::Accepted)
+        return false;
+    arch = sad.arch();
+    QString url = API_URL + "?c=get&slug=" + solDlg.slug() + "&arch=" + arch;
+    QString outFile = FS::temp().absoluteFilePath("solution");
+    if (DownloadDialog(QStringList(url), outFile).exec() != QDialog::Accepted)
+        return false;
+    QSettings s(FS::temp().absoluteFilePath("solution"), QSettings::IniFormat);
+    s.setIniCodec("UTF-8");
+    QString bw = s.value("BWine").toString();
+    if (bw.isEmpty())
+    {
+        Dialogs::error(tr("Incorrect solution file format!"));
+        return false;
+    }
+    QString aw = s.value("AWine").toString();
+    QStringList bp = s.value("BPackages").toStringList();
+    QStringList ap = s.value("APackages").toStringList();
+    QSet<QString> files;
+    r.beginGroup("Packages" + arch);
+    required(bw, files, &r);
+    required(aw, files, &r);
+    for (const QString &p : bp)
+        required(p, files, &r);
+    for (const QString &p : ap)
+        required(p, files, &r);
+    r.endGroup();
+    r.beginGroup("Files");
+    for (const QString &f : files)
+    {
+        r.beginGroup(f);
+        QString checksum = r.value("Sum").toString();
+        QString out = FS::cache().absoluteFilePath(f);
+        if (!QFile::exists(out) || !FS::checkFileSum(out, checksum))
+        {
+            QStringList mirrors = r.value("Mirrors").toStringList();
+            QStringList reList = r.value("RE").toStringList();
+            if (DownloadDialog(mirrors, out, nullptr, checksum, reList).exec() != QDialog::Accepted)
+                return false;
+        }
+        r.endGroup();
+    }
+    r.endGroup();
+    QString constScript = makeConstScript(arch);
+    bs = constScript;
+    QSettings settings("winewizard", "settings");
+    settings.beginGroup("VideoSettings");
+    QString scrW = settings.value("ScreenWidth").toString();
+    QString scrH = settings.value("ScreenHeight").toString();
+    QString vmSize = settings.value("VideoMemorySize").toString();
+    settings.endGroup();
+    QString is = r.value("Init").toString() + '\n';
+    bs += QString(is).arg(arch).arg(bw).arg(scrW + 'x' + scrH).arg(vmSize) + '\n';
+    if (!bp.isEmpty())
+    {
+        acs = bs;
+        for (const QString &p : bp)
+            acs += "ww_install " + p + '\n';
+    }
+    bs += "ww_install_wine " + QString(bw) + '\n';
+    as = constScript;
+    as += QString(is).arg(arch).arg(aw).arg(scrW + 'x' + scrH).arg(vmSize);
+    if (aw != bw)
+        as += "ww_install_wine " + QString(aw) + '\n';
+    for (const QString &p : ap)
+        as += "ww_install " + p + '\n';
+    as += "ww_clear_temp";
+    return true;
+}
+
+void Wizard::required(const QString &package, QSet<QString> &res, QSettings *r) const
+{
+    r->beginGroup(package);
+    for (const QString &f : r->value("Files").toStringList())
+        res.insert(f);
+    QStringList req = r->value("Required").toStringList();
+    r->endGroup();
+    for (const QString &p : req)
+        required(p, res, r);
+}
+
+void Wizard::clearRepository() const
+{
+    QDir cache = FS::cache();
+    QSettings r(cache.absoluteFilePath("main.wwrepo"), QSettings::IniFormat);
+    r.beginGroup("Files");
+    QStringList allFiles = r.childGroups();
+    r.endGroup();
+    allFiles.append("main.wwrepo");
+    for (const QFileInfo &f : cache.entryInfoList(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden))
+        if (!allFiles.contains(f.fileName()))
+        {
+            if (f.isDir())
+                QDir(f.absoluteFilePath()).removeRecursively();
+            else
+                QFile::remove(f.absoluteFilePath());
+        }
+}
+
+QString Wizard::makeConstScript(const QString &arch) const
+{
+    QString res;
+    QSettings r(FS::cache().absoluteFilePath("main.wwrepo"), QSettings::IniFormat);
+    r.beginGroup("Functions");
+    for (const QString &f : r.childGroups())
+    {
+        r.beginGroup(f);
+        QString body = r.value("Body").toString();
+        res += PREPARE_FUNCTIONS.arg(f).arg(body);
+        r.endGroup();
+    }
+    r.endGroup();
+    r.beginGroup("Packages" + arch);
+    for (const QString &p : r.childGroups())
+    {
+        r.beginGroup(p);
+        int type = r.value("Type", PT_PACKAGE).toInt();
+        if (type == PT_PACKAGE)
+        {
+            QString check = r.value("Check").toString();
+            QString install = r.value("Install").toString();
+            res += PREPARE_PACKAGES.arg(p).arg(check).arg(install);
+        }
+        r.endGroup();
+    }
+    r.endGroup();
+    return res;
 }

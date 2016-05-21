@@ -30,13 +30,13 @@
 
 namespace Ex
 {
-    QProcessEnvironment env(const QString &solution)
+    QProcessEnvironment env(const QString &prefixHash)
     {
         auto res = QProcessEnvironment::systemEnvironment();
-        if (!solution.isEmpty())
+        if (!prefixHash.isEmpty())
         {
-            res.insert("WINEPREFIX", FS::solution(solution).absolutePath());
-            auto winePath = FS::wine(solution).absolutePath();
+            res.insert("WINEPREFIX", FS::prefix(prefixHash).absolutePath());
+            auto winePath = FS::wine(prefixHash).absolutePath();
             res.insert("WINEVERPATH", winePath);
             res.insert("PATH", winePath + "/bin:" + res.value("PATH"));
             res.insert("WINESERVER", winePath + "/bin/wineserver");
@@ -48,34 +48,47 @@ namespace Ex
         return res;
     }
 
-    void execute(const QString &script, const QString &solution)
+    void release(const QString &script, const QString &prefixHash)
     {
         QProcess proc;
-        proc.setProcessEnvironment(env(solution));
+        QProcessEnvironment e = env(prefixHash);
+        e.insert("WINEDEBUG", "-all");
+        proc.setProcessEnvironment(e);
         QEventLoop loop;
         proc.connect(&proc, static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished), &loop, &QEventLoop::quit);
         proc.start("sh", QStringList("-c") << script);
         loop.exec();
     }
 
-    void wait(const QString &script, const QString &solution, QWidget *parent)
+    Out debug(const QString &script, const QString &prefixHash)
     {
         QProcess proc;
-        proc.setProcessEnvironment(env(solution));
+        proc.setProcessEnvironment(env(prefixHash));
+        QEventLoop loop;
+        proc.connect(&proc, static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished), &loop, &QEventLoop::quit);
+        proc.start("sh", QStringList("-c") << script);
+        loop.exec();
+        return qMakePair(proc.readAllStandardOutput(), proc.readAllStandardError());
+    }
+
+    void wait(const QString &script, const QString &prefixHash, QWidget *parent)
+    {
+        QProcess proc;
+        proc.setProcessEnvironment(env(prefixHash));
         WaitDialog wd(parent);
         proc.connect(&proc, static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished), &wd, &WaitDialog::accept);
         proc.start("sh", QStringList("-c") << script);
         wd.exec();
     }
 
-    void terminal(const QString &script, const QString &solution, QWidget *parent)
+    void terminal(const QString &script, const QString &prefixHash, QWidget *parent)
     {
         QProcess proc;
-        proc.setProcessEnvironment(env(solution));
+        proc.setProcessEnvironment(env(prefixHash));
         TerminalDialog td(parent);
         proc.connect(&proc, static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished), &td, &TerminalDialog::executeFinished);
-        proc.connect(&proc, &QProcess::readyReadStandardOutput, &td, [&td, &proc](){ td.appendText(proc.readAllStandardOutput()); });
-        proc.connect(&proc, &QProcess::readyReadStandardError, &td, [&td, &proc](){ td.appendText(proc.readAllStandardError()); });
+        proc.connect(&proc, &QProcess::readyReadStandardOutput, &td, [&td, &proc](){ td.appendOut(proc.readAllStandardOutput()); });
+        proc.connect(&proc, &QProcess::readyReadStandardError, &td, [&td, &proc](){ td.appendErr(proc.readAllStandardError()); });
         proc.start("sh", QStringList("-c") << script);
         td.exec();
     }

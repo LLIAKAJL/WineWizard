@@ -6,45 +6,48 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>514</width>
+    <width>614</width>
     <height>90</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Solution Download</string>
+   <string>Downloading</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="sizeConstraint">
     <enum>QLayout::SetFixedSize</enum>
    </property>
    <item>
-    <widget class="QLabel" name="file">
+    <widget class="QLabel" name="label">
      <property name="text">
-      <string notr="true">File: %1</string>
+      <string>Processing...</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
      </property>
     </widget>
    </item>
    <item>
     <widget class="QProgressBar" name="progressBar">
-     <property name="minimumSize">
-      <size>
-       <width>500</width>
-       <height>0</height>
-      </size>
-     </property>
      <property name="maximum">
-      <number>100</number>
-     </property>
-     <property name="value">
       <number>0</number>
      </property>
     </widget>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="minimumSize">
+      <size>
+       <width>600</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
      <property name="standardButtons">
       <set>QDialogButtonBox::Cancel|QDialogButtonBox::Help</set>
      </property>
@@ -56,17 +59,33 @@
  <connections>
   <connection>
    <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>DownloadDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
    <signal>rejected()</signal>
    <receiver>DownloadDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>479</x>
-     <y>79</y>
+     <x>316</x>
+     <y>260</y>
     </hint>
     <hint type="destinationlabel">
-     <x>572</x>
-     <y>97</y>
+     <x>286</x>
+     <y>274</y>
     </hint>
    </hints>
   </connection>

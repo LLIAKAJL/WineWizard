@@ -22,6 +22,7 @@
 #define OUTPUTDIALOG_H
 
 #include "singletondialog.h"
+#include "executor.h"
 
 namespace Ui {
 class OutputDialog;
@@ -32,12 +33,10 @@ class OutputDialog : public SingletonDialog
     Q_OBJECT
 
 public:
-    explicit OutputDialog(QWidget *parent = nullptr);
+    explicit OutputDialog(const Ex::Out &out, QWidget *parent = nullptr);
     ~OutputDialog() override;
 
 private slots:
-    void viewClicked();
-
     void on_buttonBox_helpRequested();
 
 private:

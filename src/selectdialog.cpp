@@ -18,45 +18,36 @@
  *                                                                         *
  ***************************************************************************/
 
-#include <QDesktopServices>
 #include <QPushButton>
-#include <QSettings>
 
-#include "ui_scriptsdialog.h"
-#include "scriptsdialog.h"
-#include "filesystem.h"
+#include "ui_selectdialog.h"
+#include "selectdialog.h"
+#include "selectmodel.h"
 
-ScriptsDialog::ScriptsDialog(const QString &before, const QString &after, QWidget *parent) :
-    SingletonDialog(parent),
-    ui(new Ui::ScriptsDialog)
+SelectDialog::SelectDialog(const QStringList &list, const QString &current, QWidget *parent) :
+    QDialog(parent),
+    ui(new Ui::SelectDialog)
 {
     ui->setupUi(this);
-    ui->iconLbl->setPixmap(style()->standardPixmap(QStyle::SP_MessageBoxWarning));
-    auto viewBtn = ui->buttonBox->addButton(tr("View Solution"), QDialogButtonBox::ActionRole);
-    connect(viewBtn, &QPushButton::clicked, this, &ScriptsDialog::viewClicked);
-    viewBtn->setIcon(style()->standardIcon(QStyle::SP_FileDialogContentsView));
-    connect(ui->buttonBox->button(QDialogButtonBox::Apply), &QPushButton::clicked, this, &ScriptsDialog::accept);
-    connect(ui->buttonBox->button(QDialogButtonBox::Discard), &QPushButton::clicked, this, &ScriptsDialog::reject);
-    QSettings s("winewizard", "settings");
-    s.beginGroup("ScriptsDialog");
-    resize(s.value("Size", size()).toSize());
-    s.endGroup();
-    ui->before->setPlainText(before);
-    ui->after->setPlainText(after);
+    auto model = new SelectModel(list, this);
+    ui->items->setModel(model);
+    auto findList = model->match(model->index(0, 0), Qt::DisplayRole, current, -1, Qt::MatchCaseSensitive);
+    if (!findList.isEmpty())
+        ui->items->setCurrentIndex(findList.first());
 }
 
-ScriptsDialog::~ScriptsDialog()
+SelectDialog::~SelectDialog()
 {
-    QSettings s("winewizard", "settings");
-    s.beginGroup("ScriptsDialog");
-    s.setValue("Size", size());
-    s.endGroup();
     delete ui;
 }
 
-void ScriptsDialog::viewClicked()
+QString SelectDialog::selectedItem() const
 {
-    QSettings s(FS::temp().absoluteFilePath("solution"), QSettings::IniFormat);
-    s.setIniCodec("UTF-8");
-    QDesktopServices::openUrl(QUrl(s.value("URL").toString()));
+    return ui->items->currentIndex().data().toString();
+}
+
+void SelectDialog::on_items_clicked(const QModelIndex &index)
+{
+    if (index.isValid())
+        accept();
 }

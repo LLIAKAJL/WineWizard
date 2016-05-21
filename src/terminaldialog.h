@@ -35,10 +35,9 @@ public:
     explicit TerminalDialog(QWidget *parent = nullptr);
     ~TerminalDialog() override;
 
-signals:
-    void appendText(const QString &text);
-
 public slots:
+    void appendOut(const QString &text);
+    void appendErr(const QString &text);
     void reject() override;
     void executeFinished(int exitCode);
 

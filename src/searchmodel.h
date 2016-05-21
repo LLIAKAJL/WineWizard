@@ -18,42 +18,34 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef FILESYSTEM_H
-#define FILESYSTEM_H
+#ifndef SEARCHMODEL_H
+#define SEARCHMODEL_H
 
-#include <QDir>
+#include <QAbstractListModel>
 
-namespace FS
+class SearchModel : public QAbstractListModel
 {
-    QDir cache();
-    QDir data();
-    QDir config();
-    QDir temp();
+    Q_OBJECT
 
-    QDir prefix(const QString &prefixHash);
-    QDir devices(const QString &prefixHash);
-    QDir drive(const QString &prefixHash, const QString &letter = "c:");
-    QDir driveTarget(const QString &prefixHash, const QString &letter = "c:");
-    QDir icons(const QString &prefixHash);
-    QDir shortcuts(const QString &prefixHash);
-    QDir links(const QString &prefixHash);
-    QDir documents(const QString &prefixHash);
-    QDir wine(const QString &prefixHash);
-    QDir packages(const QString &prefixHash);
-    QDir windows(const QString &prefixHash);
-    QDir sys32(const QString &prefixHash, const QString &arch = "32");
-    QDir sys64(const QString &prefixHash);
-    QDir users(const QString &prefixHash);
-    QDir user(const QString &prefixHash);
+    struct Solution
+    {
+        QString name, slug;
+        bool editable;
+    };
 
-    QString readFile(const QString &filePath);
-    void browse(const QString &path);
-    QString hash(const QString &str);
-    bool checkFileSum(const QString &filePath, const QString &checksum);
+public:
+    enum { CountRole = Qt::UserRole + 1, ReloadRole, ExistsRole, EditableRole, SlugRole };
 
-    void removePrefix(const QString &prefixHash, QWidget *parent = nullptr);
-    QString toWinPath(const QString &prefixHash, const QString &path);
-    QString toUnixPath(const QString &prefixHash, const QString &path);
-}
+    explicit SearchModel(QObject *parent = nullptr);
 
-#endif // FILESYSTEM_H
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
+
+private:
+    QList<Solution> mList;
+    int mPostsCount;
+    bool mExists;
+};
+
+#endif // SEARCHMODEL_H

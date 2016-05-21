@@ -1,3 +1,0 @@
-TEMP_DIR="${TMPDIR-/tmp}/.winewizard"
-wine start /Unix "%1" 2> "$TEMP_DIR/errors"
-wineserver -w

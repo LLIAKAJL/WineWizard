@@ -18,47 +18,31 @@
  *                                                                         *
  ***************************************************************************/
 
-#include <QSortFilterProxyModel>
-#include <QDesktopServices>
-#include <QPushButton>
-#include <QUrl>
+#include "selectmodel.h"
 
-#include "ui_shortcutsdialog.h"
-#include "shortcutsdialog.h"
-#include "shortcutsmodel.h"
-#include "dialogs.h"
-
-ShortcutsDialog::ShortcutsDialog(const QString &solution, QWidget *parent) :
-    SingletonDialog(parent),
-    ui(new Ui::ShortcutsDialog)
+SelectModel::SelectModel(const QStringList &list, QObject *parent) :
+    QAbstractListModel(parent),
+    mList(list)
 {
-    ui->setupUi(this);
-    auto model = new ShortcutsModel(this);
-    model->setData(QModelIndex(), solution, Qt::UserRole);
-    auto sortModel = new QSortFilterProxyModel(this);
-    sortModel->setSourceModel(model);
-    sortModel->sort(0);
-    ui->shortcuts->setModel(sortModel);
-    ui->shortcuts->setCurrentIndex(sortModel->index(0, 0));
 }
 
-ShortcutsDialog::~ShortcutsDialog()
+int SelectModel::rowCount(const QModelIndex &/*parent*/) const
 {
-    delete ui;
+    return mList.count();
 }
 
-QString ShortcutsDialog::shortcut() const
+QVariant SelectModel::data(const QModelIndex &index, int role) const
 {
-    return ui->shortcuts->currentIndex().data(Qt::UserRole).toString();
-}
-
-void ShortcutsDialog::reject()
-{
-    if (Dialogs::confirm(tr("Are you sure you want to break debugger session?"), this))
-        QDialog::reject();
-}
-
-void ShortcutsDialog::on_buttonBox_helpRequested()
-{
-    QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
+    if (index.isValid())
+    {
+        switch (role)
+        {
+        case Qt::DisplayRole:
+            return mList.at(index.row());
+            break;
+        case Qt::TextAlignmentRole:
+            return Qt::AlignCenter;
+        }
+    }
+    return QVariant();
 }

@@ -18,42 +18,27 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef FILESYSTEM_H
-#define FILESYSTEM_H
+#ifndef SELECTARCHDIALOG_H
+#define SELECTARCHDIALOG_H
 
-#include <QDir>
+#include "singletondialog.h"
 
-namespace FS
-{
-    QDir cache();
-    QDir data();
-    QDir config();
-    QDir temp();
-
-    QDir prefix(const QString &prefixHash);
-    QDir devices(const QString &prefixHash);
-    QDir drive(const QString &prefixHash, const QString &letter = "c:");
-    QDir driveTarget(const QString &prefixHash, const QString &letter = "c:");
-    QDir icons(const QString &prefixHash);
-    QDir shortcuts(const QString &prefixHash);
-    QDir links(const QString &prefixHash);
-    QDir documents(const QString &prefixHash);
-    QDir wine(const QString &prefixHash);
-    QDir packages(const QString &prefixHash);
-    QDir windows(const QString &prefixHash);
-    QDir sys32(const QString &prefixHash, const QString &arch = "32");
-    QDir sys64(const QString &prefixHash);
-    QDir users(const QString &prefixHash);
-    QDir user(const QString &prefixHash);
-
-    QString readFile(const QString &filePath);
-    void browse(const QString &path);
-    QString hash(const QString &str);
-    bool checkFileSum(const QString &filePath, const QString &checksum);
-
-    void removePrefix(const QString &prefixHash, QWidget *parent = nullptr);
-    QString toWinPath(const QString &prefixHash, const QString &path);
-    QString toUnixPath(const QString &prefixHash, const QString &path);
+namespace Ui {
+class SelectArchDialog;
 }
 
-#endif // FILESYSTEM_H
+class SelectArchDialog : public SingletonDialog
+{
+    Q_OBJECT
+
+public:
+    explicit SelectArchDialog(QWidget *parent = nullptr);
+    ~SelectArchDialog() override;
+
+    QString arch() const;
+
+private:
+    Ui::SelectArchDialog *ui;
+};
+
+#endif // SELECTARCHDIALOG_H

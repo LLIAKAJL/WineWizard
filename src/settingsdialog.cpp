@@ -18,25 +18,27 @@
  *                                                                         *
  ***************************************************************************/
 
-#include <QDesktopServices>
-#include <QPushButton>
-#include <QUrl>
+#include <QSettings>
 
 #include "ui_settingsdialog.h"
 #include "settingsdialog.h"
-#include "filesystem.h"
-#include "dialogs.h"
 
-SettingsDialog::SettingsDialog(const QModelIndex &index, QWidget *parent) :
+SettingsDialog::SettingsDialog(QWidget *parent) :
     SingletonDialog(parent),
-    ui(new Ui::SettingsDialog),
-    mIndex(index)
+    ui(new Ui::SettingsDialog)
 {
     ui->setupUi(this);
-    ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
-    ui->name->setValidator(new QRegExpValidator(QRegExp(R"([^\\]*)"), this));
-    ui->name->setText(index.data().toString());
-    ui->icon->setIcon(index.data(Qt::DecorationRole).value<QIcon>());
+    QSettings s("winewizard", "settings");
+    s.beginGroup("VideoSettings");
+    int sw = s.value("ScreenWidth", -1).toInt();
+    int sh = s.value("ScreenHeight", -1).toInt();
+    int vm = s.value("VideoMemorySize", -1).toInt();
+    s.endGroup();
+    ui->scrSizeAuto->setChecked(sw < 0 || sh < 0);
+    ui->vmAuto->setChecked(vm < 0);
+    ui->width->setValue(sw);
+    ui->height->setValue(sh);
+    ui->vm->setValue(vm);
 }
 
 SettingsDialog::~SettingsDialog()
@@ -46,51 +48,19 @@ SettingsDialog::~SettingsDialog()
 
 void SettingsDialog::accept()
 {
-    auto model = const_cast<QAbstractItemModel *>(mIndex.model());
-    model->setData(mIndex, ui->name->text());
-    if (!mIcon.isEmpty())
-        model->setData(mIndex, mIcon, Qt::DecorationRole);
-    QDialog::accept();
-}
-
-void SettingsDialog::on_name_textChanged(const QString &name)
-{
-    if (name.isEmpty())
+    QSettings s("winewizard", "settings");
+    s.beginGroup("VideoSettings");
+    if (ui->scrSizeAuto->isChecked())
     {
-        ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
-        ui->status->setText(tr("Empty name!"));
-    }
-    else if (exists(name))
-    {
-        ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
-        ui->status->setText(tr("Name is already used!"));
+        s.setValue("ScreenWidth", -1);
+        s.setValue("ScreenHeight", -1);
     }
     else
     {
-        ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
-        ui->status->setText(tr("OK"));
+        s.setValue("ScreenWidth", ui->width->value());
+        s.setValue("ScreenHeight", ui->height->value());
     }
-}
-
-bool SettingsDialog::exists(const QString &name) const
-{
-    if (mIndex.data().toString() == name)
-        return false;
-    auto model = mIndex.model();
-    return !model->match(model->index(0, 0), Qt::DisplayRole, name, -1, Qt::MatchCaseSensitive).isEmpty();
-}
-
-void SettingsDialog::on_icon_clicked()
-{
-    auto path = Dialogs::open(tr("Select Icon"), tr("Icon files (*.png)"), this);
-    if (!path.isEmpty())
-    {
-        mIcon = path;
-        ui->icon->setIcon(QIcon(mIcon));
-    }
-}
-
-void SettingsDialog::on_buttonBox_helpRequested()
-{
-    QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
+    s.setValue("VideoMemorySize", ui->vmAuto->isChecked() ? -1 : ui->vm->value());
+    s.endGroup();
+    QDialog::accept();
 }

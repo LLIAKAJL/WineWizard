@@ -1,3 +1,0 @@
-export WINEDEBUG=-all
-wine start /Unix "%1"
-wineserver -w

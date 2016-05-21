@@ -18,32 +18,35 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef SOLUTIONMODEL_H
-#define SOLUTIONMODEL_H
+#ifndef POSTDIALOG_H
+#define POSTDIALOG_H
 
-#include <QAbstractListModel>
-#include <QIcon>
+#include "netdialog.h"
 
-class SolutionModel : public QAbstractListModel
+namespace Ui {
+class PostDialog;
+}
+
+class PostDialog : public NetDialog
 {
     Q_OBJECT
 
-    struct Solution
-    {
-        QString name, hash;
-        QIcon icon;
-    };
-
 public:
-    explicit SolutionModel(QObject *parent = nullptr);
+    explicit PostDialog(const QString &url, const QUrlQuery &data, QWidget *parent = nullptr);
+    ~PostDialog() override;
 
-    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
-    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
-    bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
+public slots:
+    void reject() override;
+
+private slots:
+    void postFinished();
 
 private:
-    QList<Solution> mList;
+    Ui::PostDialog *ui;
+    QString mUrl;
+    QUrlQuery mData;
+
+    void post();
 };
 
-#endif // SOLUTIONMODEL_H
+#endif // POSTDIALOG_H

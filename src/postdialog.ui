@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>WaitDialog</class>
- <widget class="QDialog" name="WaitDialog">
+ <class>PostDialog</class>
+ <widget class="QDialog" name="PostDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -34,9 +34,6 @@
        <width>450</width>
        <height>0</height>
       </size>
-     </property>
-     <property name="minimum">
-      <number>0</number>
      </property>
      <property name="maximum">
       <number>0</number>

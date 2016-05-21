@@ -7,31 +7,162 @@
     <x>0</x>
     <y>0</y>
     <width>564</width>
-    <height>68</height>
+    <height>604</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Select Solution</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
-   <property name="sizeConstraint">
-    <enum>QLayout::SetFixedSize</enum>
-   </property>
    <item>
-    <widget class="QLineEdit" name="url">
+    <widget class="QLineEdit" name="search">
+     <property name="maxLength">
+      <number>100</number>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
      <property name="placeholderText">
-      <string>Enter Solution URL</string>
+      <string>Enter solution name</string>
      </property>
     </widget>
    </item>
    <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QPushButton" name="searchBtn">
+       <property name="text">
+        <string>Search</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="pageLSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="prevBtn">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="navLbl">
+       <property name="text">
+        <string>Empty</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="nextBtn">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="pageRSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="addBtn">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Add</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QListView" name="solutions"/>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0,0,0,0">
+     <item>
+      <widget class="QPushButton" name="edit32Btn">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Win32 Edit</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="editLSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="viewBtn">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>View</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="editRSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="edit64Btn">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Win64 Edit</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
     <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="minimumSize">
-      <size>
-       <width>550</width>
-       <height>0</height>
-      </size>
-     </property>
      <property name="standardButtons">
       <set>QDialogButtonBox::Cancel|QDialogButtonBox::Help|QDialogButtonBox::Ok</set>
      </property>
@@ -40,6 +171,14 @@
   </layout>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <tabstops>
+  <tabstop>search</tabstop>
+  <tabstop>searchBtn</tabstop>
+  <tabstop>addBtn</tabstop>
+  <tabstop>solutions</tabstop>
+  <tabstop>edit32Btn</tabstop>
+  <tabstop>edit64Btn</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
@@ -49,8 +188,8 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>326</x>
-     <y>230</y>
+     <x>340</x>
+     <y>596</y>
     </hint>
     <hint type="destinationlabel">
      <x>546</x>
@@ -65,8 +204,8 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>308</x>
-     <y>232</y>
+     <x>322</x>
+     <y>596</y>
     </hint>
     <hint type="destinationlabel">
      <x>552</x>
@@ -74,5 +213,40 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>searchBtn</sender>
+   <signal>clicked()</signal>
+   <receiver>SolutionDialog</receiver>
+   <slot>searchExecute()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>55</x>
+     <y>47</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-62</x>
+     <y>47</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>search</sender>
+   <signal>returnPressed()</signal>
+   <receiver>searchBtn</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>291</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>61</x>
+     <y>48</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
+ <slots>
+  <slot>searchExecute()</slot>
+ </slots>
 </ui>

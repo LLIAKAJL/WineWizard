@@ -33,13 +33,7 @@ SingletonWidget::~SingletonWidget()
     mList.removeOne(this);
 }
 
-bool SingletonWidget::activate()
+bool SingletonWidget::exists()
 {
-    for (auto singleton : mList)
-        if (singleton->mWidget->isVisible())
-        {
-            singleton->mWidget->activateWindow();
-            return true;
-        }
-    return false;
+    return !mList.isEmpty();
 }

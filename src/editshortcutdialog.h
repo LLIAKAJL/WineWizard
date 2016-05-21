@@ -18,42 +18,42 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef FILESYSTEM_H
-#define FILESYSTEM_H
+#ifndef EDITSHORTCUTDIALOG_H
+#define EDITSHORTCUTDIALOG_H
 
-#include <QDir>
+#include <QModelIndex>
 
-namespace FS
-{
-    QDir cache();
-    QDir data();
-    QDir config();
-    QDir temp();
+#include "singletondialog.h"
 
-    QDir prefix(const QString &prefixHash);
-    QDir devices(const QString &prefixHash);
-    QDir drive(const QString &prefixHash, const QString &letter = "c:");
-    QDir driveTarget(const QString &prefixHash, const QString &letter = "c:");
-    QDir icons(const QString &prefixHash);
-    QDir shortcuts(const QString &prefixHash);
-    QDir links(const QString &prefixHash);
-    QDir documents(const QString &prefixHash);
-    QDir wine(const QString &prefixHash);
-    QDir packages(const QString &prefixHash);
-    QDir windows(const QString &prefixHash);
-    QDir sys32(const QString &prefixHash, const QString &arch = "32");
-    QDir sys64(const QString &prefixHash);
-    QDir users(const QString &prefixHash);
-    QDir user(const QString &prefixHash);
-
-    QString readFile(const QString &filePath);
-    void browse(const QString &path);
-    QString hash(const QString &str);
-    bool checkFileSum(const QString &filePath, const QString &checksum);
-
-    void removePrefix(const QString &prefixHash, QWidget *parent = nullptr);
-    QString toWinPath(const QString &prefixHash, const QString &path);
-    QString toUnixPath(const QString &prefixHash, const QString &path);
+namespace Ui {
+class EditShortcutDialog;
 }
 
-#endif // FILESYSTEM_H
+enum { ExeRole = Qt::UserRole + 1, WorkDirRole, ArgsRole, DebugRole, HashRole, IconRole };
+
+class EditShortcutDialog : public SingletonDialog
+{
+    Q_OBJECT
+
+public:
+    explicit EditShortcutDialog(const QString &prefixHash, const QModelIndex &index, QWidget *parent = nullptr);
+    ~EditShortcutDialog() override;
+
+public slots:
+    void accept() override;
+
+private slots:
+    void on_name_textChanged(const QString &name);
+    void on_icon_clicked();
+
+    void on_browseBtn_clicked();
+
+private:
+    Ui::EditShortcutDialog *ui;
+    QModelIndex mIndex;
+    QString mIcon, mPrefixHash;
+
+    bool exists(const QString &name) const;
+};
+
+#endif // EDITSHORTCUTDIALOG_H

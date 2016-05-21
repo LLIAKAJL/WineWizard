@@ -25,93 +25,130 @@
 #include "filesystem.h"
 #include "mainmenu.h"
 
-MainMenu::MainMenu(const QStringList &runList, QWidget *parent) :
+MainMenu::MainMenu(const QStringList &runList, const QStringList &busyList, QWidget *parent) :
     QMenu(parent),
     SingletonWidget(this)
 {
     move(QCursor::pos());
-    auto pList = FS::data().entryInfoList(QDir::AllDirs | QDir::NoDotAndDotDot | QDir::Hidden, QDir::Name);
+    QAction *act = addAction(style()->standardIcon(QStyle::SP_DriveCDIcon), tr("Install Application"));
+    act->setData(Install);
+    act->setEnabled(busyList.isEmpty());
+    addSeparator();
+    QFileInfoList pList = FS::data().entryInfoList(QDir::AllDirs | QDir::NoDotAndDotDot);
     if (pList.isEmpty())
         addEmpty(this);
     else
     {
         sortList(pList);
-        for (auto solution : pList)
+        for (const QFileInfo &pInfo : pList)
         {
-            auto hash = solution.fileName();
-            auto sList = FS::shortcuts(hash).entryInfoList(QDir::Files | QDir::Hidden, QDir::Name);
+            QString hash = pInfo.fileName();
+            QFileInfoList sList = FS::shortcuts(hash).entryInfoList(QDir::Files);
             sortList(sList, false);
-            QSettings s(FS::solution(solution.fileName()).absoluteFilePath(".settings"), QSettings::IniFormat);
+            QSettings s(FS::prefix(hash).absoluteFilePath(".settings"), QSettings::IniFormat);
             s.setIniCodec("UTF-8");
-            auto pMenu = addMenu(getSolutionIcon(hash, sList), s.value("Name").toString().replace('&', "&&"));
+            QString name = s.value("Name").toString().replace('&', "&&");
+            QMenu *pMenu = addMenu(getPrefixIcon(hash), name);
+            bool run = runList.contains(hash);
+            bool busyOrRun = busyList.contains(hash) || run;
             if (sList.isEmpty())
                 addEmpty(pMenu);
             else
             {
-                for (auto shortcut : sList)
+                QDir iDir = FS::icons(hash);
+                for (const QFileInfo &shortcut : sList)
                 {
-                    auto base = shortcut.fileName();
-                    QFileInfo iconPath = FS::icons(hash).absoluteFilePath(base);
-                    auto icon = iconPath.exists() ? QIcon(iconPath.absoluteFilePath()) : style()->standardIcon(QStyle::SP_FileLinkIcon);
+                    QString base = shortcut.fileName();
+                    QIcon icon = iDir.exists(base) ? QIcon(iDir.absoluteFilePath(base)) :
+                                                     style()->standardIcon(QStyle::SP_FileLinkIcon);
                     QSettings s(shortcut.absoluteFilePath(), QSettings::IniFormat);
                     s.setIniCodec("UTF-8");
-                    auto act = pMenu->addAction(icon, s.value("Name").toString().replace('&', "&&"));
-                    act->setProperty("Solution", hash);
-                    act->setProperty("Exe", s.value("Exe").toString());
-                    act->setData(Shortcut);
+                    QString name = s.value("Name").toString().replace('&', "&&");
+                    act = pMenu->addAction(icon, name);
+                    act->setProperty("PrefixHash", hash);
+                    act->setProperty("Exe", FS::toUnixPath(hash, s.value("Exe").toString()));
+                    act->setProperty("WorkDir", FS::toUnixPath(hash, s.value("WorkDir").toString()));
+                    act->setProperty("Args", s.value("Args").toString());
+                    if (s.value("Debug", true).toBool())
+                    {
+                        act->setData(Debug);
+                        act->setProperty("Shortcut", shortcut.absoluteFilePath());
+                    }
+                    else
+                        act->setData(Run);
                 }
+                pMenu->addSeparator();
+                QMenu *ccMenu = pMenu->addMenu(style()->standardIcon(QStyle::SP_ComputerIcon), tr("Control Center"));
+                act = ccMenu->addAction(style()->standardIcon(QStyle::SP_MediaPlay), tr("Run File"));
+                act->setProperty("PrefixHash", hash);
+                act->setData(RunFile);
+                act = ccMenu->addAction(style()->standardIcon(QStyle::SP_DirOpenIcon), tr("Browse"));
+                act->setProperty("PrefixHash", hash);
+                act->setData(Browse);
+                ccMenu->addSeparator();
+                act = ccMenu->addAction(style()->standardIcon(QStyle::SP_FileDialogDetailedView), tr("Edit"));
+                act->setProperty("PrefixHash", hash);
+                act->setData(Edit);
+                act->setDisabled(busyOrRun);
+                ccMenu->addSeparator();
+                act = ccMenu->addAction(style()->standardIcon(QStyle::SP_TrashIcon), tr("Delete"));
+                act->setProperty("PrefixName", name);
+                act->setProperty("PrefixHash", hash);
+                act->setData(Delete);
+                act->setDisabled(busyOrRun);
             }
             pMenu->addSeparator();
-            auto act = pMenu->addAction(style()->standardIcon(QStyle::SP_DialogCancelButton), tr("Terminate"));
+            act = pMenu->addAction(style()->standardIcon(QStyle::SP_DialogCancelButton), tr("Terminate"));
+            act->setProperty("PrefixName", name);
+            act->setProperty("PrefixHash", hash);
             act->setData(Terminate);
-            act->setProperty("Solution", hash);
-            act->setEnabled(runList.contains(hash));
+            act->setEnabled(run);
         }
     }
     addSeparator();
-    auto act = addAction(style()->standardIcon(QStyle::SP_ComputerIcon), tr("Control Center"));
-    act->setData(Control);
+    act = addAction(style()->standardIcon(QStyle::SP_FileDialogDetailedView), tr("Settings"));
+    act->setData(Settings);
+    act->setEnabled(busyList.isEmpty() && runList.isEmpty());
     addSeparator();
     act = addAction(QIcon::fromTheme("winewizard"), tr("About"));
     act->setData(About);
     act = addAction(style()->standardIcon(QStyle::SP_DialogHelpButton), tr("Help"));
     act->setData(Help);
+    addSeparator();
+    act = addAction(style()->standardIcon(QStyle::SP_DialogCloseButton), tr("Quit"));
+    act->setData(Quit);
 }
 
 void MainMenu::addEmpty(QMenu *menu)
 {
     auto act = new QWidgetAction(menu);
-    act->setData(Empty);
     act->setText(tr("*** Empty ***"));
     menu->addAction(act);
 }
 
-QIcon MainMenu::getSolutionIcon(const QString &solution, const QFileInfoList &list) const
+QIcon MainMenu::getPrefixIcon(const QString &prefixHash) const
 {
-    auto iconPath = FS::solution(solution).absoluteFilePath(".icon");
+    QString iconPath = FS::prefix(prefixHash).absoluteFilePath(".icon");
     if (!QFile::exists(iconPath))
     {
-        auto iDir = FS::icons(solution);
-        for (auto shortcut : list)
+        QFileInfoList iList = FS::icons(prefixHash).entryInfoList(QDir::Files);
+        if (!iList.isEmpty())
         {
-            if (iDir.exists(shortcut.fileName()))
-            {
-                QFile::copy(iDir.absoluteFilePath(shortcut.fileName()), iconPath);
-                return QIcon(iconPath);
-            }
+            QFile::copy(iList.first().absoluteFilePath(), iconPath);
+            return QIcon(iconPath);
         }
         return style()->standardIcon(QStyle::SP_DirIcon);
     }
     return QIcon(iconPath);
 }
 
-void MainMenu::sortList(QFileInfoList &list, bool solution)
+void MainMenu::sortList(QFileInfoList &list, bool prefix)
 {
     QMap<QString, QString> sortList;
     for (auto item : list)
     {
         auto hash = item.fileName();
-        auto path = solution ? FS::solution(hash).absoluteFilePath(".settings") : item.absoluteFilePath();
+        auto path = prefix ? FS::prefix(hash).absoluteFilePath(".settings") : item.absoluteFilePath();
         QSettings s(path, QSettings::IniFormat);
         s.setIniCodec("UTF-8");
         sortList.insert(hash, s.value("Name").toString().replace('&', "&&"));

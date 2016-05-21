@@ -21,6 +21,9 @@
 #ifndef SOLUTIONDIALOG_H
 #define SOLUTIONDIALOG_H
 
+#include <QPushButton>
+#include <QKeyEvent>
+
 #include "singletondialog.h"
 
 namespace Ui {
@@ -32,19 +35,35 @@ class SolutionDialog : public SingletonDialog
     Q_OBJECT
 
 public:
-    explicit SolutionDialog(QWidget *parent = nullptr);
+    explicit SolutionDialog(const QStringList &runList, QWidget *parent = nullptr);
     ~SolutionDialog() override;
 
-    QString url() const;
+    QString slug() const;
+
+public slots:
+    void accept() override;
+
+protected:
+    bool eventFilter(QObject *o, QEvent *e) override;
 
 private slots:
-    void on_url_textChanged(const QString &url);
-    void searchClicked();
-
+    void getSearch();
+    void currentChanged(const QModelIndex &index);
     void on_buttonBox_helpRequested();
+    void on_search_textChanged(const QString &search);
+    void on_addBtn_clicked();
+    void on_edit32Btn_clicked();
+    void on_edit64Btn_clicked();
+    void searchExecute();
+
+    void on_viewBtn_clicked();
 
 private:
     Ui::SolutionDialog *ui;
+    int mCurrentPage;
+    QStringList mRunList;
+
+    bool getSolution(const QString &arch);
 };
 
 #endif // SOLUTIONDIALOG_H

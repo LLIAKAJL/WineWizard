@@ -18,42 +18,30 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef FILESYSTEM_H
-#define FILESYSTEM_H
+#include "packagesortmodel.h"
+#include "packagemodel.h"
 
-#include <QDir>
-
-namespace FS
+PackageSortModel::PackageSortModel(QObject *parent) :
+    QSortFilterProxyModel(parent),
+    mCategory(tr("All Packages"))
 {
-    QDir cache();
-    QDir data();
-    QDir config();
-    QDir temp();
-
-    QDir prefix(const QString &prefixHash);
-    QDir devices(const QString &prefixHash);
-    QDir drive(const QString &prefixHash, const QString &letter = "c:");
-    QDir driveTarget(const QString &prefixHash, const QString &letter = "c:");
-    QDir icons(const QString &prefixHash);
-    QDir shortcuts(const QString &prefixHash);
-    QDir links(const QString &prefixHash);
-    QDir documents(const QString &prefixHash);
-    QDir wine(const QString &prefixHash);
-    QDir packages(const QString &prefixHash);
-    QDir windows(const QString &prefixHash);
-    QDir sys32(const QString &prefixHash, const QString &arch = "32");
-    QDir sys64(const QString &prefixHash);
-    QDir users(const QString &prefixHash);
-    QDir user(const QString &prefixHash);
-
-    QString readFile(const QString &filePath);
-    void browse(const QString &path);
-    QString hash(const QString &str);
-    bool checkFileSum(const QString &filePath, const QString &checksum);
-
-    void removePrefix(const QString &prefixHash, QWidget *parent = nullptr);
-    QString toWinPath(const QString &prefixHash, const QString &path);
-    QString toUnixPath(const QString &prefixHash, const QString &path);
 }
 
-#endif // FILESYSTEM_H
+bool PackageSortModel::setData(const QModelIndex &/*index*/, const QVariant &value, int role)
+{
+    if (role == Qt::UserRole)
+    {
+        beginResetModel();
+        mCategory = value.toString();
+        endResetModel();
+        return true;
+    }
+    return false;
+}
+
+bool PackageSortModel::filterAcceptsRow(int source_row, const QModelIndex &/*source_parent*/) const
+{
+    if (mCategory == tr("All Packages"))
+        return true;
+    return sourceModel()->index(source_row, 0).data(PackageModel::CategoryRole).toString() == mCategory;
+}

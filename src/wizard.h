@@ -21,32 +21,32 @@
 #ifndef WIZARD_H
 #define WIZARD_H
 
-#include <QProcessEnvironment>
 #include <QStringList>
-#include <QSettings>
 #include <QFileInfo>
-#include <QObject>
+#include <QSettings>
 
 class Wizard : public QObject
 {
     Q_OBJECT
 
-    enum ExeType { EXE_X86, EXE_X64, EXE_INVALID };
-
 public:
     explicit Wizard(QObject *parent = nullptr);
 
 public slots:
-    void start(const QString &exe = QString());
+    void start(const QString &cmdLine = QString());
+
+private slots:
+    void showMenu();
 
 private:
     QStringList mBusyList, mRunList;
 
-    void showMenu();
-    void install(const QString &exe);
-    QString required(const QStringList &packages) const;
-    void killSolution(const QString &solution);
+    void install(const QString &cmdLine);
     bool testSuffix(const QFileInfo &path) const;
+    bool prepare(QString &arch, QString &bs, QString &acs, QString &as) const;
+    void required(const QString &package, QSet<QString> &res, QSettings *r) const;
+    void clearRepository() const;
+    QString makeConstScript(const QString &arch) const;
 };
 
 #endif // WIZARD_H

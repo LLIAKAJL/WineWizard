@@ -1,3 +1,0 @@
-export WINEDEBUG=-all
-wine winemenubuilder.exe "%1" "%2" "%3" "%4"
-wineserver -w

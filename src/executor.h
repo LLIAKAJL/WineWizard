@@ -25,9 +25,11 @@
 
 namespace Ex
 {
-    void execute(const QString &script, const QString &solution);
-    void wait(const QString &script, const QString &solution = QString(), QWidget *parent = nullptr);
-    void terminal(const QString &script, const QString &solution = QString(), QWidget *parent = nullptr);
+    typedef QPair<QString, QString> Out;
+    void release(const QString &script, const QString &prefixHash = QString());
+    Out debug(const QString &script, const QString &prefixHash = QString());
+    void wait(const QString &script, const QString &prefixHash = QString(), QWidget *parent = nullptr);
+    void terminal(const QString &script, const QString &prefixHash = QString(), QWidget *parent = nullptr);
 }
 
 #endif // EXECUTOR_H

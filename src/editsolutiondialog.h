@@ -18,42 +18,46 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef FILESYSTEM_H
-#define FILESYSTEM_H
+#ifndef EDITSOLUTIONDIALOG_H
+#define EDITSOLUTIONDIALOG_H
 
-#include <QDir>
+#include <QDialog>
 
-namespace FS
-{
-    QDir cache();
-    QDir data();
-    QDir config();
-    QDir temp();
-
-    QDir prefix(const QString &prefixHash);
-    QDir devices(const QString &prefixHash);
-    QDir drive(const QString &prefixHash, const QString &letter = "c:");
-    QDir driveTarget(const QString &prefixHash, const QString &letter = "c:");
-    QDir icons(const QString &prefixHash);
-    QDir shortcuts(const QString &prefixHash);
-    QDir links(const QString &prefixHash);
-    QDir documents(const QString &prefixHash);
-    QDir wine(const QString &prefixHash);
-    QDir packages(const QString &prefixHash);
-    QDir windows(const QString &prefixHash);
-    QDir sys32(const QString &prefixHash, const QString &arch = "32");
-    QDir sys64(const QString &prefixHash);
-    QDir users(const QString &prefixHash);
-    QDir user(const QString &prefixHash);
-
-    QString readFile(const QString &filePath);
-    void browse(const QString &path);
-    QString hash(const QString &str);
-    bool checkFileSum(const QString &filePath, const QString &checksum);
-
-    void removePrefix(const QString &prefixHash, QWidget *parent = nullptr);
-    QString toWinPath(const QString &prefixHash, const QString &path);
-    QString toUnixPath(const QString &prefixHash, const QString &path);
+namespace Ui {
+class EditSolutionDialog;
 }
 
-#endif // FILESYSTEM_H
+enum { PT_PACKAGE = 0, PT_WINE, PT_HIDDEN };
+
+class EditSolutionDialog : public QDialog
+{
+    Q_OBJECT
+
+    struct SolutionData
+    {
+        QString bWine, aWine, slug;
+        QStringList bPackages, aPackages;
+    };
+
+public:
+    explicit EditSolutionDialog(const QString &arch, QWidget *parent = nullptr);
+    ~EditSolutionDialog() override;
+
+public slots:
+    void accept() override;
+
+private slots:
+    void on_category_clicked();
+    void on_bWine_clicked();
+    void on_aWine_clicked();
+    void on_bMoveWine_clicked();
+    void on_aMoveWine_clicked();
+
+private:
+    Ui::EditSolutionDialog *ui;
+    QString mArch;
+    QStringList mWineList, mCategoryList;
+    SolutionData mSolData;
+};
+
+#endif // EDITSOLUTIONDIALOG_H

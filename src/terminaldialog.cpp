@@ -34,8 +34,9 @@ TerminalDialog::TerminalDialog(QWidget *parent) :
     QSettings s("winewizard", "settings");
     s.beginGroup("TerminalDialog");
     resize(s.value("Size", size()).toSize());
+    ui->splitter->restoreState(s.value("Splitter").toByteArray());
+    ui->close->setChecked(s.value("Close", false).toBool());
     s.endGroup();
-    connect(this, &TerminalDialog::appendText, ui->terminal, &QPlainTextEdit::appendPlainText);
     ui->buttonBox->button(QDialogButtonBox::Close)->setEnabled(false);
 }
 
@@ -44,8 +45,26 @@ TerminalDialog::~TerminalDialog()
     QSettings s("winewizard", "settings");
     s.beginGroup("TerminalDialog");
     s.setValue("Size", size());
+    s.setValue("Splitter", ui->splitter->saveState());
+    s.setValue("Close", ui->close->isChecked());
     s.endGroup();
     delete ui;
+}
+
+void TerminalDialog::appendOut(const QString &text)
+{
+    QTextCursor prev = ui->out->textCursor();
+    ui->out->moveCursor(QTextCursor::End);
+    ui->out->insertPlainText(text);
+    ui->out->setTextCursor(prev);
+}
+
+void TerminalDialog::appendErr(const QString &text)
+{
+    QTextCursor prev = ui->err->textCursor();
+    ui->err->moveCursor(QTextCursor::End);
+    ui->err->insertPlainText(text);
+    ui->err->setTextCursor(prev);
 }
 
 void TerminalDialog::reject()
@@ -54,10 +73,9 @@ void TerminalDialog::reject()
 
 void TerminalDialog::executeFinished(int exitCode)
 {
-    if (exitCode == 0)
+    if (ui->close->isChecked() && exitCode == 0)
         QDialog::accept();
-    else
-        ui->buttonBox->button(QDialogButtonBox::Close)->setEnabled(true);
+    ui->buttonBox->button(QDialogButtonBox::Close)->setEnabled(true);
 }
 
 void TerminalDialog::on_buttonBox_helpRequested()

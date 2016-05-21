@@ -10,7 +10,7 @@ QMAKE_CXXFLAGS += -std=c++11
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-VERSION = 0.4
+VERSION = 1.0
 
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 
@@ -41,22 +41,27 @@ SOURCES += src/qtsingleapplication/qtlocalpeer.cpp \
     src/executor.cpp \
     src/filesystem.cpp \
     src/main.cpp \
-    src/mainmenu.cpp \
     src/outputdialog.cpp \
-    src/shortcutsdialog.cpp \
-    src/shortcutsmodel.cpp \
-    src/singletonwidget.cpp \
     src/solutiondialog.cpp \
     src/waitdialog.cpp \
     src/wizard.cpp \
-    src/downloaddialog.cpp \
+    src/singletonwidget.cpp \
     src/singletondialog.cpp \
     src/terminaldialog.cpp \
-    src/createshortcutdialog.cpp \
-    src/controldialog.cpp \
-    src/settingsdialog.cpp \
-    src/solutionmodel.cpp \
-    src/scriptsdialog.cpp
+    src/searchmodel.cpp \
+    src/packagemodel.cpp \
+    src/packagesortmodel.cpp \
+    src/selectdialog.cpp \
+    src/selectmodel.cpp \
+    src/downloaddialog.cpp \
+    src/netdialog.cpp \
+    src/selectarchdialog.cpp \
+    src/postdialog.cpp \
+    src/mainmenu.cpp \
+    src/editshortcutdialog.cpp \
+    src/editprefixdialog.cpp \
+    src/editsolutiondialog.cpp \
+    src/settingsdialog.cpp
 
 HEADERS  += src/qtsingleapplication/qtlocalpeer.h \
     src/qtsingleapplication/qtlockedfile.h \
@@ -66,34 +71,41 @@ HEADERS  += src/qtsingleapplication/qtlocalpeer.h \
     src/dialogs.h \
     src/executor.h \
     src/filesystem.h \
-    src/mainmenu.h \
     src/outputdialog.h \
-    src/shortcutsdialog.h \
-    src/shortcutsmodel.h \
-    src/singletonwidget.h \
     src/solutiondialog.h \
     src/waitdialog.h \
     src/wizard.h \
-    src/downloaddialog.h \
+    src/singletonwidget.h \
     src/singletondialog.h \
     src/terminaldialog.h \
-    src/createshortcutdialog.h \
-    src/controldialog.h \
-    src/settingsdialog.h \
-    src/solutionmodel.h \
-    src/scriptsdialog.h
+    src/searchmodel.h \
+    src/packagemodel.h \
+    src/packagesortmodel.h \
+    src/selectdialog.h \
+    src/selectmodel.h \
+    src/downloaddialog.h \
+    src/netdialog.h \
+    src/selectarchdialog.h \
+    src/postdialog.h \
+    src/mainmenu.h \
+    src/editshortcutdialog.h \
+    src/editprefixdialog.h \
+    src/editsolutiondialog.h \
+    src/settingsdialog.h
 
 FORMS    += src/solutiondialog.ui \
     src/aboutdialog.ui \
     src/waitdialog.ui \
     src/outputdialog.ui \
-    src/shortcutsdialog.ui \
-    src/downloaddialog.ui \
     src/terminaldialog.ui \
-    src/createshortcutdialog.ui \
-    src/controldialog.ui \
-    src/settingsdialog.ui \
-    src/scriptsdialog.ui
+    src/selectdialog.ui \
+    src/downloaddialog.ui \
+    src/selectarchdialog.ui \
+    src/postdialog.ui \
+    src/editshortcutdialog.ui \
+    src/editprefixdialog.ui \
+    src/editsolutiondialog.ui \
+    src/settingsdialog.ui
 
 RESOURCES += \
     src/resources.qrc

@@ -18,42 +18,22 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef FILESYSTEM_H
-#define FILESYSTEM_H
+#include "ui_selectarchdialog.h"
+#include "selectarchdialog.h"
 
-#include <QDir>
-
-namespace FS
+SelectArchDialog::SelectArchDialog(QWidget *parent) :
+    SingletonDialog(parent),
+    ui(new Ui::SelectArchDialog)
 {
-    QDir cache();
-    QDir data();
-    QDir config();
-    QDir temp();
-
-    QDir prefix(const QString &prefixHash);
-    QDir devices(const QString &prefixHash);
-    QDir drive(const QString &prefixHash, const QString &letter = "c:");
-    QDir driveTarget(const QString &prefixHash, const QString &letter = "c:");
-    QDir icons(const QString &prefixHash);
-    QDir shortcuts(const QString &prefixHash);
-    QDir links(const QString &prefixHash);
-    QDir documents(const QString &prefixHash);
-    QDir wine(const QString &prefixHash);
-    QDir packages(const QString &prefixHash);
-    QDir windows(const QString &prefixHash);
-    QDir sys32(const QString &prefixHash, const QString &arch = "32");
-    QDir sys64(const QString &prefixHash);
-    QDir users(const QString &prefixHash);
-    QDir user(const QString &prefixHash);
-
-    QString readFile(const QString &filePath);
-    void browse(const QString &path);
-    QString hash(const QString &str);
-    bool checkFileSum(const QString &filePath, const QString &checksum);
-
-    void removePrefix(const QString &prefixHash, QWidget *parent = nullptr);
-    QString toWinPath(const QString &prefixHash, const QString &path);
-    QString toUnixPath(const QString &prefixHash, const QString &path);
+    ui->setupUi(this);
 }
 
-#endif // FILESYSTEM_H
+SelectArchDialog::~SelectArchDialog()
+{
+    delete ui;
+}
+
+QString SelectArchDialog::arch() const
+{
+    return ui->win32->isChecked() ? "32" : "64";
+}

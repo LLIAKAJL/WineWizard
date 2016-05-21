@@ -28,7 +28,6 @@
 
 const QString S_OK = QObject::tr("Is your application working correctly?");
 const QString S_FAILED = QObject::tr("The shortcuts directory is empty! Is your application working correctly?");
-const QString S_UTIL = QObject::tr(R"(Are you sure you want to execute "%1"? It might be unsafe!)");
 
 namespace Dialogs
 {
@@ -36,29 +35,6 @@ namespace Dialogs
         QMessageBox(icon, title, text, buttons, parent),
         SingletonWidget(this)
     {
-    }
-
-    //--------------------------------------------------------------------------------------------
-
-    FinishDialog::FinishDialog(bool ok) :
-        MessageDialog(ok ? Question : Warning, tr("Finish"), ok ? S_OK : S_FAILED, Yes | No)
-    {
-        connect(button(Yes), &QPushButton::clicked, this, &QDialog::accept);
-        connect(button(No), &QPushButton::clicked, this, &QDialog::reject);
-        if (ok)
-        {
-            auto cb = new QCheckBox(tr("End the debug session"), this);
-            connect(cb, &QCheckBox::toggled, button(No), &QPushButton::setDisabled);
-            cb->setChecked(!ok);
-            cb->setEnabled(ok);
-            setCheckBox(cb);
-        }
-    }
-
-    void FinishDialog::reject()
-    {
-        if ((checkBox() && !checkBox()->isChecked()) || !checkBox())
-            QDialog::reject();
     }
 
     //--------------------------------------------------------------------------------------------
@@ -86,29 +62,23 @@ namespace Dialogs
         return md.exec() == QDialog::Accepted;
     }
 
-    FinishStatus finish(const QString &solution)
-    {
-        FinishDialog fd(!FS::shortcuts(solution).entryList(QDir::Files | QDir::Hidden).isEmpty());
-        if (fd.exec() == QDialog::Accepted)
-        {
-            if (fd.checkBox())
-                return (fd.checkBox()->isChecked()) ? Finish : Yes;
-            return Finish;
-        }
-        else
-            return FinishStatus::No;
-    }
-
     QString open(const QString &title, const QString &filter, QWidget *parent, const QString &dir)
     {
         return QFileDialog::getOpenFileName(parent, title, dir, filter, nullptr, QFileDialog::DontUseNativeDialog);
     }
-
-    //--------------------------------------------------------------------------------------------
 
     QString selectDir(const QString &start, QWidget *parent)
     {
         return QFileDialog::getExistingDirectory(parent, QObject::tr("Select Directory"), start, QFileDialog::ShowDirsOnly | QFileDialog::DontUseNativeDialog);
     }
 
+    bool finish(const QString &prefixHash, QWidget *parent)
+    {
+        bool empty = FS::shortcuts(prefixHash).entryList(QDir::Files | QDir::Hidden).isEmpty();
+        MessageDialog md(QMessageBox::Question, QObject::tr("Debug"), empty ? S_FAILED : S_OK,
+                         QMessageBox::Yes| QMessageBox::No, parent);
+        md.connect(md.button(QMessageBox::Yes), &QPushButton::clicked, &md, &QMessageBox::accept);
+        md.connect(md.button(QMessageBox::No), &QPushButton::clicked, &md, &QMessageBox::reject);
+        return md.exec() == QDialog::Accepted;
+    }
 }
