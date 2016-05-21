@@ -209,8 +209,8 @@ namespace FS
         {
             for (char c = 'a'; c <= 'z'; ++c)
             {
-                QString targetDrivePath = driveTarget(prefixHash, c + ":").absolutePath();
-                QString drivePath = FS::drive(prefixHash, c + ":").absolutePath();
+                QString targetDrivePath = driveTarget(prefixHash, QString(c) + ":").absolutePath();
+                QString drivePath = FS::drive(prefixHash, QString(c) + ":").absolutePath();
                 if (res.startsWith(targetDrivePath) || res.startsWith(drivePath))
                 {
                     res.replace(targetDrivePath, QChar::toUpper(c) + ":");
@@ -230,7 +230,7 @@ namespace FS
         {
             for (char c = 'a'; c <= 'z'; ++c)
             {
-                if (res.startsWith(c + ":") || res.startsWith(QChar::toUpper(c) + ":"))
+                if (res.startsWith(QString(c) + ":") || res.startsWith(QChar::toUpper(c) + ":"))
                 {
                     res.replace(0, 1, QChar(res.at(0)).toLower());
                     break;
