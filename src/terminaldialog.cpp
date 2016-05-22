@@ -74,9 +74,10 @@ void TerminalDialog::reject()
         QDialog::reject();
 }
 
-void TerminalDialog::executeFinished(int exitCode)
+void TerminalDialog::executeFinished()
 {
-    if (ui->close->isChecked() && exitCode == 0)
+    bool empty = ui->out->toPlainText().isEmpty() && ui->err->toPlainText().isEmpty();
+    if (ui->close->isChecked() || empty)
         QDialog::accept();
     ui->buttonBox->button(QDialogButtonBox::Close)->setEnabled(true);
 }

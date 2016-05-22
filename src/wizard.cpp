@@ -361,7 +361,7 @@ bool Wizard::prepare(QString &arch, QString &bs, QString &acs, QString &as) cons
     if (!script.isEmpty() && settings.value("UseScripts", false).toBool())
         if (ScriptDialog(script).exec() == QDialog::Accepted)
             as += "ww_info 'Start additional script ...'\n" + script + '\n';
-    as += "ww_clear_temp";
+    as += r.value("Done").toString();
     return true;
 }
 

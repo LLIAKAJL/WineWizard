@@ -39,7 +39,7 @@ public slots:
     void appendOut(const QString &text);
     void appendErr(const QString &text);
     void reject() override;
-    void executeFinished(int exitCode);
+    void executeFinished();
 
 private slots:
     void on_buttonBox_helpRequested();
