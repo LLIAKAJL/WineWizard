@@ -264,6 +264,7 @@ bool Wizard::prepare(QString &arch, QString &bs, QString &acs, QString &as) cons
     if (appVer != repoVer)
     {
         Dialogs::error(VERSION_ERR.arg(appVer).arg(repoVer));
+        QDesktopServices::openUrl(QUrl("http://wwizard.net/download/"));
         return false;
     }
     clearRepository();
