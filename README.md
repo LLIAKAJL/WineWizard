@@ -6,9 +6,13 @@ Dependencies:
 
 qt5
 
-p7zip
+unzip
 
-gpg
+cabextract
+
+bzip2
+
+tar
 
 ***********************************************
 
