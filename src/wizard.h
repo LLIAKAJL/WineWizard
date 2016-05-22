@@ -40,6 +40,7 @@ private slots:
 
 private:
     QStringList mBusyList, mRunList;
+    bool mQuit;
 
     void install(const QString &cmdLine);
     bool testSuffix(const QFileInfo &path) const;

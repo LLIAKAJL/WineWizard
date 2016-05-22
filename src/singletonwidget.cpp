@@ -35,5 +35,12 @@ SingletonWidget::~SingletonWidget()
 
 bool SingletonWidget::exists()
 {
-    return !mList.isEmpty();
+    if (!mList.isEmpty())
+        for (SingletonWidget *sw : mList)
+            if (sw->mWidget->isVisible())
+            {
+                sw->mWidget->activateWindow();
+                return true;
+            }
+    return false;
 }

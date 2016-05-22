@@ -21,6 +21,7 @@
 #include <QDesktopServices>
 #include <QSystemTrayIcon>
 #include <QApplication>
+#include <QThread>
 #include <QStyle>
 #include <QMenu>
 #include <QUrl>
@@ -47,7 +48,8 @@ const QString VERSION_ERR = QObject::tr("Please install a newer version of Wine 
                                         "The required version is %2.\n\nWine Wizard will exit.");
 
 Wizard::Wizard(QObject *parent) :
-    QObject(parent)
+    QObject(parent),
+    mQuit(false)
 {
     QFile f(FS::config().absoluteFilePath("style.qss"));
     if (f.exists())
@@ -108,6 +110,8 @@ void Wizard::showMenu()
             QString script = FS::readFile(":/run").arg(exe).arg(workDir).arg(args);
             Ex::Out out = Ex::debug(script, prefixHash);
             mRunList.removeOne(prefixHash);
+            if (mQuit)
+                return;
             if (Dialogs::finish(prefixHash))
             {
                 QSettings s(shortcut, QSettings::IniFormat);
@@ -138,6 +142,8 @@ void Wizard::showMenu()
                 QString script = FS::readFile(":/run").arg(exe).arg(QString()).arg(QString());
                 Ex::Out out = Ex::debug(script, prefixHash);
                 mRunList.removeOne(prefixHash);
+                if (mQuit)
+                    return;
                 if (!Dialogs::finish(prefixHash))
                     OutputDialog(out).exec();
             }
@@ -183,6 +189,7 @@ void Wizard::showMenu()
             QString termScript = FS::readFile(":/terminate");
             for (const QString &prefixHash : mRunList)
                 Ex::wait(QString(termScript), prefixHash);
+            mQuit = true;
             QApplication::quit();
         }
         break;
@@ -219,7 +226,11 @@ void Wizard::install(const QString &cmdLine)
         QSettings sol(FS::prefix(prefixHash).absoluteFilePath(".settings"), QSettings::IniFormat);
         sol.setIniCodec("UTF-8");
         sol.setValue("Name", prefixName);
+        mRunList.append(prefixHash);
         Ex::release(FS::readFile(":/create"), prefixHash);
+        mRunList.removeOne(prefixHash);
+        if (mQuit)
+            return;
         QString wmbPath = FS::sys32(prefixHash, arch).absoluteFilePath("winemenubuilder.exe");
         QFile::remove(wmbPath);
         QFile::copy(":/winemenubuilder.exe", wmbPath);
@@ -232,7 +243,11 @@ void Wizard::install(const QString &cmdLine)
         if (!acs.isEmpty())
             Ex::terminal(acs, prefixHash);
         QString script = FS::readFile(":/run").arg(exe).arg(workDir).arg(args);
+        mRunList.append(prefixHash);
         Ex::Out out = Ex::debug(script, prefixHash);
+        mRunList.removeOne(prefixHash);
+        if (mQuit)
+            return;
         Ex::terminal(as, prefixHash);
         mBusyList.removeOne(prefixHash);
         if (!Dialogs::finish(prefixHash))

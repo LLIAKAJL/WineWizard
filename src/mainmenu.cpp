@@ -77,26 +77,26 @@ MainMenu::MainMenu(const QStringList &runList, const QStringList &busyList, QWid
                     else
                         act->setData(Run);
                 }
-                pMenu->addSeparator();
-                QMenu *ccMenu = pMenu->addMenu(style()->standardIcon(QStyle::SP_ComputerIcon), tr("Control Center"));
-                act = ccMenu->addAction(style()->standardIcon(QStyle::SP_MediaPlay), tr("Run File"));
-                act->setProperty("PrefixHash", hash);
-                act->setData(RunFile);
-                act = ccMenu->addAction(style()->standardIcon(QStyle::SP_DirOpenIcon), tr("Browse"));
-                act->setProperty("PrefixHash", hash);
-                act->setData(Browse);
-                ccMenu->addSeparator();
-                act = ccMenu->addAction(style()->standardIcon(QStyle::SP_FileDialogDetailedView), tr("Edit"));
-                act->setProperty("PrefixHash", hash);
-                act->setData(Edit);
-                act->setDisabled(busyOrRun);
-                ccMenu->addSeparator();
-                act = ccMenu->addAction(style()->standardIcon(QStyle::SP_TrashIcon), tr("Delete"));
-                act->setProperty("PrefixName", name);
-                act->setProperty("PrefixHash", hash);
-                act->setData(Delete);
-                act->setDisabled(busyOrRun);
             }
+            pMenu->addSeparator();
+            QMenu *ccMenu = pMenu->addMenu(style()->standardIcon(QStyle::SP_ComputerIcon), tr("Control Center"));
+            act = ccMenu->addAction(style()->standardIcon(QStyle::SP_MediaPlay), tr("Run File"));
+            act->setProperty("PrefixHash", hash);
+            act->setData(RunFile);
+            act = ccMenu->addAction(style()->standardIcon(QStyle::SP_DirOpenIcon), tr("Browse"));
+            act->setProperty("PrefixHash", hash);
+            act->setData(Browse);
+            ccMenu->addSeparator();
+            act = ccMenu->addAction(style()->standardIcon(QStyle::SP_FileDialogDetailedView), tr("Edit"));
+            act->setProperty("PrefixHash", hash);
+            act->setData(Edit);
+            act->setDisabled(busyOrRun);
+            ccMenu->addSeparator();
+            act = ccMenu->addAction(style()->standardIcon(QStyle::SP_TrashIcon), tr("Delete"));
+            act->setProperty("PrefixName", name);
+            act->setProperty("PrefixHash", hash);
+            act->setData(Delete);
+            act->setDisabled(busyOrRun);
             pMenu->addSeparator();
             act = pMenu->addAction(style()->standardIcon(QStyle::SP_DialogCancelButton), tr("Terminate"));
             act->setProperty("PrefixName", name);
