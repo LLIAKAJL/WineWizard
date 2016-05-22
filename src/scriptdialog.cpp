@@ -23,6 +23,7 @@
 
 #include "ui_scriptdialog.h"
 #include "scriptdialog.h"
+#include "netdialog.h"
 
 ScriptDialog::ScriptDialog(const QString &script, QWidget *parent) :
     QDialog(parent),
@@ -45,5 +46,5 @@ ScriptDialog::~ScriptDialog()
 
 void ScriptDialog::on_buttonBox_helpRequested()
 {
-    QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
+    QDesktopServices::openUrl(QUrl(HELP_URL));
 }

@@ -38,9 +38,12 @@
      <item>
       <widget class="QLabel" name="label">
        <property name="text">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;%1 %2&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;© 2016 Vitalii Kachemtsev. All right reserved.&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;The program is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;%1 %2&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;© 2016 &lt;a href=&quot;http://wwizard.net&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#008080;&quot;&gt;Vitalii Kachemtsev&lt;/span&gt;&lt;/a&gt; aka &lt;a href=&quot;http://wwizard.net&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#008080;&quot;&gt;LLIAKAJI&lt;/span&gt;&lt;/a&gt;. &lt;/p&gt;&lt;p align=&quot;center&quot;&gt;All right reserved.&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;The program is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+       <property name="openExternalLinks">
         <bool>true</bool>
        </property>
       </widget>

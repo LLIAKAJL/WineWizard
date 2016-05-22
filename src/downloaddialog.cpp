@@ -146,5 +146,5 @@ void DownloadDialog::retry()
 
 void DownloadDialog::on_buttonBox_helpRequested()
 {
-    QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
+    QDesktopServices::openUrl(QUrl(HELP_URL));
 }

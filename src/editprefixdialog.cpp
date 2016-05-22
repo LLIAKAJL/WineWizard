@@ -28,6 +28,7 @@
 #include "editshortcutdialog.h"
 #include "editprefixdialog.h"
 #include "filesystem.h"
+#include "netdialog.h"
 #include "dialogs.h"
 
 EditPrefixDialog::EditPrefixDialog(const QString &prefixHash, QWidget *parent) :
@@ -259,5 +260,5 @@ void EditPrefixDialog::on_setIconBtn_clicked()
 
 void EditPrefixDialog::on_buttonBox_helpRequested()
 {
-    QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
+    QDesktopServices::openUrl(QUrl(HELP_URL));
 }

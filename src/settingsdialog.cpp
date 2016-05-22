@@ -24,6 +24,7 @@
 
 #include "ui_settingsdialog.h"
 #include "settingsdialog.h"
+#include "netdialog.h"
 
 SettingsDialog::SettingsDialog(QWidget *parent) :
     SingletonDialog(parent),
@@ -71,5 +72,5 @@ void SettingsDialog::accept()
 
 void SettingsDialog::on_buttonBox_helpRequested()
 {
-    QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
+    QDesktopServices::openUrl(QUrl(HELP_URL));
 }

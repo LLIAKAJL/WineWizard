@@ -175,7 +175,7 @@ void Wizard::showMenu()
         AboutDialog().exec();
         break;
     case MainMenu::Help:
-        QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
+        QDesktopServices::openUrl(QUrl(HELP_URL));
         break;
     case MainMenu::Quit:
         if (Dialogs::confirm(tr("Are you sure you want to quit from Wine Wizard?")))
@@ -264,7 +264,7 @@ bool Wizard::prepare(QString &arch, QString &bs, QString &acs, QString &as) cons
     if (appVer != repoVer)
     {
         Dialogs::error(VERSION_ERR.arg(appVer).arg(repoVer));
-        QDesktopServices::openUrl(QUrl("http://wwizard.net/download/"));
+        QDesktopServices::openUrl(QUrl(DOWNLOAD_URL));
         return false;
     }
     clearRepository();

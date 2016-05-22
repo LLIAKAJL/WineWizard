@@ -25,6 +25,7 @@
 #include "ui_editshortcutdialog.h"
 #include "editshortcutdialog.h"
 #include "filesystem.h"
+#include "netdialog.h"
 #include "dialogs.h"
 
 EditShortcutDialog::EditShortcutDialog(const QString &prefixHash, const QModelIndex &index, QWidget *parent) :
@@ -120,5 +121,5 @@ void EditShortcutDialog::on_browseBtn_clicked()
 
 void EditShortcutDialog::on_buttonBox_helpRequested()
 {
-    QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
+    QDesktopServices::openUrl(QUrl(HELP_URL));
 }

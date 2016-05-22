@@ -25,6 +25,7 @@
 
 #include "ui_terminaldialog.h"
 #include "terminaldialog.h"
+#include "netdialog.h"
 
 TerminalDialog::TerminalDialog(QWidget *parent) :
     SingletonDialog(parent),
@@ -80,5 +81,5 @@ void TerminalDialog::executeFinished(int exitCode)
 
 void TerminalDialog::on_buttonBox_helpRequested()
 {
-    QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
+    QDesktopServices::openUrl(QUrl(HELP_URL));
 }

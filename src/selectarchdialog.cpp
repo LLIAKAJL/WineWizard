@@ -23,6 +23,7 @@
 
 #include "ui_selectarchdialog.h"
 #include "selectarchdialog.h"
+#include "netdialog.h"
 
 SelectArchDialog::SelectArchDialog(QWidget *parent) :
     SingletonDialog(parent),
@@ -43,5 +44,5 @@ QString SelectArchDialog::arch() const
 
 void SelectArchDialog::on_buttonBox_helpRequested()
 {
-    QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
+    QDesktopServices::openUrl(QUrl(HELP_URL));
 }

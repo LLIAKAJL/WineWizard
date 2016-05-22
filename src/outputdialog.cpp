@@ -26,6 +26,7 @@
 #include "ui_outputdialog.h"
 #include "outputdialog.h"
 #include "filesystem.h"
+#include "netdialog.h"
 #include "dialogs.h"
 
 OutputDialog::OutputDialog(const Ex::Out &out, QWidget *parent) :
@@ -75,5 +76,5 @@ OutputDialog::~OutputDialog()
 
 void OutputDialog::on_buttonBox_helpRequested()
 {
-    QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
+    QDesktopServices::openUrl(QUrl(HELP_URL));
 }

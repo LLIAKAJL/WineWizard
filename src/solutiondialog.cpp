@@ -31,6 +31,7 @@
 #include "searchmodel.h"
 #include "filesystem.h"
 #include "postdialog.h"
+#include "netdialog.h"
 #include "dialogs.h"
 
 const QString INSTALLED_MSG = QObject::tr("Application \"%1\" is already installed! " \
@@ -116,7 +117,7 @@ bool SolutionDialog::eventFilter(QObject *o, QEvent *e)
 
 void SolutionDialog::on_buttonBox_helpRequested()
 {
-    QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
+    QDesktopServices::openUrl(QUrl(HELP_URL));
 }
 
 void SolutionDialog::getSearch()
@@ -228,8 +229,6 @@ void SolutionDialog::on_view32Btn_clicked()
 {
     if (getSolution("32"))
         EditSolutionDialog("32", this, false).exec();
-/*    QString slug = ui->solutions->currentIndex().data(SearchModel::SlugRole).toString();
-    QDesktopServices::openUrl(QUrl("http://wwizard.net/solutions/" + slug));*/
 }
 
 void SolutionDialog::on_view64Btn_clicked()

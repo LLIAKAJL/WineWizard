@@ -227,5 +227,5 @@ void EditSolutionDialog::on_aMoveWine_clicked()
 
 void EditSolutionDialog::on_buttonBox_helpRequested()
 {
-    QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
+    QDesktopServices::openUrl(QUrl(HELP_URL));
 }
