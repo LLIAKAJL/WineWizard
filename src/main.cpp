@@ -52,7 +52,8 @@ int main(int argc, char *argv[])
     else
     {
         QString exe = QFileInfo(list.takeFirst()).absoluteFilePath();
-        w.start(exe + '\n' + QDir::currentPath() + '\n' + list.join('\n'));
+        if (w.start(exe + '\n' + QDir::currentPath() + '\n' + list.join('\n')))
+            return 0;
     }
     return app.exec();
 }

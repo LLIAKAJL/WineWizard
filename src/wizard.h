@@ -33,7 +33,7 @@ public:
     explicit Wizard(QObject *parent = nullptr);
 
 public slots:
-    void start(const QString &cmdLine = QString());
+    bool start(const QString &cmdLine = QString());
 
 private slots:
     void showMenu();

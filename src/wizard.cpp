@@ -65,7 +65,7 @@ Wizard::Wizard(QObject *parent) :
     }
 }
 
-void Wizard::start(const QString &cmdLine)
+bool Wizard::start(const QString &cmdLine)
 {
     if (!SingletonWidget::exists())
     {
@@ -77,11 +77,15 @@ void Wizard::start(const QString &cmdLine)
         else
         {
             if (mBusyList.isEmpty())
+            {
                 install(cmdLine);
+                return mQuit;
+            }
             else
                 Dialogs::error(tr("Another installation is already running!"));
         }
     }
+    return false;
 }
 
 void Wizard::showMenu()
@@ -190,7 +194,7 @@ void Wizard::showMenu()
             for (const QString &prefixHash : mRunList)
                 Ex::wait(QString(termScript), prefixHash);
             mQuit = true;
-            QApplication::quit();
+            QApplication::exit();
         }
         break;
     }

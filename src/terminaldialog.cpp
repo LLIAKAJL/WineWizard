@@ -70,6 +70,8 @@ void TerminalDialog::appendErr(const QString &text)
 
 void TerminalDialog::reject()
 {
+    if (ui->buttonBox->button(QDialogButtonBox::Close)->isEnabled())
+        QDialog::reject();
 }
 
 void TerminalDialog::executeFinished(int exitCode)
