@@ -18,39 +18,25 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef EDITSOLUTIONDIALOG_H
-#define EDITSOLUTIONDIALOG_H
+#ifndef SCRIPTDIALOG_H
+#define SCRIPTDIALOG_H
 
 #include <QDialog>
 
 namespace Ui {
-class EditSolutionDialog;
+class ScriptDialog;
 }
 
-enum { PT_PACKAGE = 0, PT_WINE, PT_HIDDEN };
-
-class EditSolutionDialog : public QDialog
+class ScriptDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit EditSolutionDialog(const QString &arch, QWidget *parent = nullptr, bool edit = true);
-    ~EditSolutionDialog() override;
-
-public slots:
-    void accept() override;
-
-private slots:
-    void on_category_clicked();
-    void on_bWine_clicked();
-    void on_aWine_clicked();
-    void on_bMoveWine_clicked();
-    void on_aMoveWine_clicked();
+    explicit ScriptDialog(const QString &script, QWidget *parent = nullptr);
+    ~ScriptDialog() override;
 
 private:
-    Ui::EditSolutionDialog *ui;
-    QString mArch, mSlug;
-    QStringList mWineList, mCategoryList;
+    Ui::ScriptDialog *ui;
 };
 
-#endif // EDITSOLUTIONDIALOG_H
+#endif // SCRIPTDIALOG_H

@@ -30,6 +30,8 @@
 #include "postdialog.h"
 #include "dialogs.h"
 
+const int MAX_LENGTH = 5000;
+
 bool wineLessThan(const QString &l, const QString &r)
 {
     QStringList ll = l.split('.', QString::SkipEmptyParts);
@@ -59,7 +61,7 @@ bool wineLessThan(const QString &l, const QString &r)
     return ll.first().toInt() > rl.first().toInt();
 }
 
-EditSolutionDialog::EditSolutionDialog(const QString &arch, QWidget *parent) :
+EditSolutionDialog::EditSolutionDialog(const QString &arch, QWidget *parent, bool edit) :
     QDialog(parent),
     ui(new Ui::EditSolutionDialog),
     mArch(arch)
@@ -67,23 +69,43 @@ EditSolutionDialog::EditSolutionDialog(const QString &arch, QWidget *parent) :
     ui->setupUi(this);
     ui->bMoveWine->setIcon(style()->standardIcon(QStyle::SP_ArrowRight));
     ui->aMoveWine->setIcon(style()->standardIcon(QStyle::SP_ArrowLeft));
+    QPushButton *okBtn = ui->buttonBox->button(QDialogButtonBox::Ok);
+    okBtn->setVisible(edit);
+    okBtn->setDefault(edit);
+    ui->buttonBox->button(QDialogButtonBox::Cancel)->setVisible(edit);
+    QPushButton *closeBtn = ui->buttonBox->button(QDialogButtonBox::Close);
+    closeBtn->setVisible(!edit);
+    closeBtn->setDefault(!edit);
+
+    ui->cPackagesFrame->setVisible(edit);
+    ui->categoryFrame->setVisible(edit);
+    ui->bWineFrame->setVisible(edit);
+    ui->aWineFrame->setVisible(edit);
+    ui->bWineView->setVisible(!edit);
+    ui->aWineView->setVisible(!edit);
+    ui->bPackages->setDragEnabled(edit);
+    ui->aPackages->setDragEnabled(edit);
+    ui->script->setReadOnly(!edit);
     QSettings settings("winewizard", "settings");
     settings.beginGroup("EditSolutionDialog");
     resize(settings.value("Size", size()).toSize());
     settings.endGroup();
     QSettings s(FS::temp().absoluteFilePath("solution"), QSettings::IniFormat);
     s.setIniCodec("UTF-8");
-    mSolData.slug = s.value("Slug").toString();
-    mSolData.bWine = s.value("BWine").toString();
-    mSolData.aWine = s.value("AWine").toString();
-    mSolData.bPackages = s.value("BPackages").toStringList();
-    mSolData.aPackages = s.value("APackages").toStringList();
+    QStringList bPackages = s.value("BPackages").toStringList();
+    QStringList aPackages = s.value("APackages").toStringList();
+    mSlug = s.value("Slug").toString();
     setWindowTitle(s.value("Name").toString());
+    ui->bWine->setText(s.value("BWine").toString());
+    ui->aWine->setText(s.value("AWine").toString());
+    ui->bWineView->setText(ui->bWine->text());
+    ui->aWineView->setText(ui->aWine->text());
+    ui->script->setPlainText(s.value("Script").toString());
     QSettings r(FS::cache().absoluteFilePath("main.wwrepo"), QSettings::IniFormat);
     r.setIniCodec("UTF-8");
     r.beginGroup("Packages" + arch);
     PackageModel::PackageList all, bList, aList;
-    for (auto name : mSolData.bPackages)
+    for (auto name : bPackages)
     {
         r.beginGroup(name);
         QString category = r.value("Category", tr("Other")).toString();
@@ -91,7 +113,7 @@ EditSolutionDialog::EditSolutionDialog(const QString &arch, QWidget *parent) :
         bList.append(PackageModel::Package{ name, category, tooltip, PT_PACKAGE});
         r.endGroup();
     }
-    for (auto name : mSolData.aPackages)
+    for (auto name : aPackages)
     {
         r.beginGroup(name);
         QString category = r.value("Category", tr("Other")).toString();
@@ -106,7 +128,7 @@ EditSolutionDialog::EditSolutionDialog(const QString &arch, QWidget *parent) :
         switch (type)
         {
         case PT_PACKAGE:
-            if (!mSolData.bPackages.contains(name) && !mSolData.aPackages.contains(name))
+            if (!bPackages.contains(name) && !aPackages.contains(name))
             {
                 QString category = r.value("Category", tr("Other")).toString();
                 QString tooltip = r.value("Help").toString();
@@ -124,8 +146,6 @@ EditSolutionDialog::EditSolutionDialog(const QString &arch, QWidget *parent) :
     mCategoryList = r.value("Categories").toStringList();
     mCategoryList.sort();
     mCategoryList.insert(0, tr("All Packages"));
-    ui->bWine->setText(mSolData.bWine);
-    ui->aWine->setText(mSolData.aWine);
     auto cModel = new PackageModel(all, this);
     auto cSortModel = new PackageSortModel(this);
     cSortModel->setSourceModel(cModel);
@@ -150,9 +170,10 @@ EditSolutionDialog::~EditSolutionDialog()
 void EditSolutionDialog::accept()
 {
     QUrlQuery data;
-    data.addQueryItem("slug", mSolData.slug);
+    data.addQueryItem("slug", /*mSolData.slug*/mSlug);
     data.addQueryItem("bw", ui->bWine->text());
     data.addQueryItem("aw", ui->aWine->text());
+    data.addQueryItem("as", ui->script->toPlainText().trimmed());
     auto bpModel = ui->bPackages->model();
     for (auto i = 0, count = bpModel->rowCount(); i < count; ++i)
         data.addQueryItem("bp[]", bpModel->index(i, 0).data().toString());

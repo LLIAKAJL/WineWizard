@@ -10,7 +10,7 @@ QMAKE_CXXFLAGS += -std=c++11
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-VERSION = 1.0
+VERSION = 1.1
 
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 
@@ -61,7 +61,8 @@ SOURCES += src/qtsingleapplication/qtlocalpeer.cpp \
     src/editshortcutdialog.cpp \
     src/editprefixdialog.cpp \
     src/editsolutiondialog.cpp \
-    src/settingsdialog.cpp
+    src/settingsdialog.cpp \
+    src/scriptdialog.cpp
 
 HEADERS  += src/qtsingleapplication/qtlocalpeer.h \
     src/qtsingleapplication/qtlockedfile.h \
@@ -91,7 +92,8 @@ HEADERS  += src/qtsingleapplication/qtlocalpeer.h \
     src/editshortcutdialog.h \
     src/editprefixdialog.h \
     src/editsolutiondialog.h \
-    src/settingsdialog.h
+    src/settingsdialog.h \
+    src/scriptdialog.h
 
 FORMS    += src/solutiondialog.ui \
     src/aboutdialog.ui \
@@ -105,7 +107,8 @@ FORMS    += src/solutiondialog.ui \
     src/editshortcutdialog.ui \
     src/editprefixdialog.ui \
     src/editsolutiondialog.ui \
-    src/settingsdialog.ui
+    src/settingsdialog.ui \
+    src/scriptdialog.ui
 
 RESOURCES += \
     src/resources.qrc

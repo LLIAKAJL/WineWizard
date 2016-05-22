@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>470</width>
-    <height>145</height>
+    <height>173</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -128,6 +128,13 @@
        </layout>
       </item>
      </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="useScripts">
+     <property name="text">
+      <string>Use additional scripts(WARNING: unsafe option!)</string>
+     </property>
     </widget>
    </item>
    <item>

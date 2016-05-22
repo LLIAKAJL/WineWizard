@@ -55,8 +55,8 @@ private slots:
     void on_edit32Btn_clicked();
     void on_edit64Btn_clicked();
     void searchExecute();
-
-    void on_viewBtn_clicked();
+    void on_view32Btn_clicked();
+    void on_view64Btn_clicked();
 
 private:
     Ui::SolutionDialog *ui;

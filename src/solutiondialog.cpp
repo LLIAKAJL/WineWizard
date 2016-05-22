@@ -55,7 +55,8 @@ SolutionDialog::SolutionDialog(const QStringList &runList, QWidget *parent) :
     ui->addBtn->setIcon(style()->standardIcon(QStyle::SP_FileDialogNewFolder));
     ui->prevBtn->setIcon(style()->standardIcon(QStyle::SP_ArrowLeft));
     ui->nextBtn->setIcon(style()->standardIcon(QStyle::SP_ArrowRight));
-    ui->viewBtn->setIcon(style()->standardIcon(QStyle::SP_FileDialogListView));
+    ui->view32Btn->setIcon(style()->standardIcon(QStyle::SP_FileDialogListView));
+    ui->view64Btn->setIcon(style()->standardIcon(QStyle::SP_FileDialogListView));
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
     ui->solutions->setModel(new SearchModel(this));
     connect(ui->solutions->selectionModel(), &QItemSelectionModel::currentRowChanged, this, &SolutionDialog::currentChanged);
@@ -156,7 +157,10 @@ void SolutionDialog::currentChanged(const QModelIndex &index)
     bool editable = index.data(SearchModel::EditableRole).toBool();
     ui->edit32Btn->setEnabled(index.isValid() && editable);
     ui->edit64Btn->setEnabled(index.isValid() && editable);
-    ui->viewBtn->setEnabled(index.isValid());
+    ui->view32Btn->setEnabled(index.isValid());
+    ui->view64Btn->setEnabled(index.isValid());
+    ui->win32Lbl->setEnabled(index.isValid());
+    ui->win64Lbl->setEnabled(index.isValid());
 }
 
 void SolutionDialog::on_search_textChanged(const QString &/*search*/)
@@ -220,8 +224,16 @@ void SolutionDialog::searchExecute()
     getSearch();
 }
 
-void SolutionDialog::on_viewBtn_clicked()
+void SolutionDialog::on_view32Btn_clicked()
 {
-    QString slug = ui->solutions->currentIndex().data(SearchModel::SlugRole).toString();
-    QDesktopServices::openUrl(QUrl("http://wwizard.net/solutions/" + slug));
+    if (getSolution("32"))
+        EditSolutionDialog("32", this, false).exec();
+/*    QString slug = ui->solutions->currentIndex().data(SearchModel::SlugRole).toString();
+    QDesktopServices::openUrl(QUrl("http://wwizard.net/solutions/" + slug));*/
+}
+
+void SolutionDialog::on_view64Btn_clicked()
+{
+    if (getSolution("64"))
+        EditSolutionDialog("64", this, false).exec();
 }

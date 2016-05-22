@@ -39,6 +39,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->width->setValue(sw);
     ui->height->setValue(sh);
     ui->vm->setValue(vm);
+    ui->useScripts->setChecked(s.value("UseScripts", false).toBool());
 }
 
 SettingsDialog::~SettingsDialog()
@@ -62,5 +63,6 @@ void SettingsDialog::accept()
     }
     s.setValue("VideoMemorySize", ui->vmAuto->isChecked() ? -1 : ui->vm->value());
     s.endGroup();
+    s.setValue("UseScripts", ui->useScripts->isChecked());
     QDialog::accept();
 }

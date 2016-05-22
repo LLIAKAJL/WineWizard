@@ -33,6 +33,7 @@
 #include "solutiondialog.h"
 #include "settingsdialog.h"
 #include "outputdialog.h"
+#include "scriptdialog.h"
 #include "aboutdialog.h"
 #include "filesystem.h"
 #include "mainmenu.h"
@@ -288,6 +289,7 @@ bool Wizard::prepare(QString &arch, QString &bs, QString &acs, QString &as) cons
     QString aw = s.value("AWine").toString();
     QStringList bp = s.value("BPackages").toStringList();
     QStringList ap = s.value("APackages").toStringList();
+    QString script = s.value("Script").toString();
     QSet<QString> files;
     r.beginGroup("Packages" + arch);
     required(bw, files, &r);
@@ -336,6 +338,9 @@ bool Wizard::prepare(QString &arch, QString &bs, QString &acs, QString &as) cons
         as += "ww_install_wine " + QString(aw) + '\n';
     for (const QString &p : ap)
         as += "ww_install " + p + '\n';
+    if (!script.isEmpty() && settings.value("UseScripts", false).toBool())
+        if (ScriptDialog(script).exec() == QDialog::Accepted)
+            as += "ww_info 'Start additional script ...'\n" + script + '\n';
     as += "ww_clear_temp";
     return true;
 }

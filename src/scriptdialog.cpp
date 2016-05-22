@@ -18,39 +18,26 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef EDITSOLUTIONDIALOG_H
-#define EDITSOLUTIONDIALOG_H
+#include <QSettings>
 
-#include <QDialog>
+#include "ui_scriptdialog.h"
+#include "scriptdialog.h"
 
-namespace Ui {
-class EditSolutionDialog;
+ScriptDialog::ScriptDialog(const QString &script, QWidget *parent) :
+    QDialog(parent),
+    ui(new Ui::ScriptDialog)
+{
+    ui->setupUi(this);
+    ui->script->setPlainText(script);
+    QSettings s("winewizard", "settings");
+    s.beginGroup("ScriptDialog");
+    resize(s.value("Size", size()).toSize());
 }
 
-enum { PT_PACKAGE = 0, PT_WINE, PT_HIDDEN };
-
-class EditSolutionDialog : public QDialog
+ScriptDialog::~ScriptDialog()
 {
-    Q_OBJECT
-
-public:
-    explicit EditSolutionDialog(const QString &arch, QWidget *parent = nullptr, bool edit = true);
-    ~EditSolutionDialog() override;
-
-public slots:
-    void accept() override;
-
-private slots:
-    void on_category_clicked();
-    void on_bWine_clicked();
-    void on_aWine_clicked();
-    void on_bMoveWine_clicked();
-    void on_aMoveWine_clicked();
-
-private:
-    Ui::EditSolutionDialog *ui;
-    QString mArch, mSlug;
-    QStringList mWineList, mCategoryList;
-};
-
-#endif // EDITSOLUTIONDIALOG_H
+    QSettings s("winewizard", "settings");
+    s.beginGroup("ScriptDialog");
+    s.setValue("Size", size());
+    delete ui;
+}
