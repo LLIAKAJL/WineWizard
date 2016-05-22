@@ -47,6 +47,8 @@ private slots:
     void on_bMoveWine_clicked();
     void on_aMoveWine_clicked();
 
+    void on_buttonBox_helpRequested();
+
 private:
     Ui::EditSolutionDialog *ui;
     QString mArch, mSlug;

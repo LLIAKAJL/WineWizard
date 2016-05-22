@@ -48,6 +48,8 @@ private slots:
 
     void on_setIconBtn_clicked();
 
+    void on_buttonBox_helpRequested();
+
 private:
     Ui::EditPrefixDialog *ui;
     QString mPrefixName, mPrefixHash, mIcon;

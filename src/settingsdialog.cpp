@@ -18,7 +18,9 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <QDesktopServices>
 #include <QSettings>
+#include <QUrl>
 
 #include "ui_settingsdialog.h"
 #include "settingsdialog.h"
@@ -65,4 +67,9 @@ void SettingsDialog::accept()
     s.endGroup();
     s.setValue("UseScripts", ui->useScripts->isChecked());
     QDialog::accept();
+}
+
+void SettingsDialog::on_buttonBox_helpRequested()
+{
+    QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
 }

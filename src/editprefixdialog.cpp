@@ -20,7 +20,9 @@
 
 #include <QSortFilterProxyModel>
 #include <QStandardItemModel>
+#include <QDesktopServices>
 #include <QSettings>
+#include <QUrl>
 
 #include "ui_editprefixdialog.h"
 #include "editshortcutdialog.h"
@@ -253,4 +255,9 @@ void EditPrefixDialog::on_setIconBtn_clicked()
     }
     mIcon = iconPath;
     ui->icon->setIcon(QIcon(mIcon));
+}
+
+void EditPrefixDialog::on_buttonBox_helpRequested()
+{
+    QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
 }

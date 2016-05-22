@@ -18,6 +18,8 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <QDesktopServices>
+
 #include "ui_downloaddialog.h"
 #include "downloaddialog.h"
 #include "filesystem.h"
@@ -140,4 +142,9 @@ void DownloadDialog::retry()
     mMirrors.append(mMirrors.takeFirst());
     mReList.append(mReList.takeFirst());
     download();
+}
+
+void DownloadDialog::on_buttonBox_helpRequested()
+{
+    QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
 }

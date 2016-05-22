@@ -46,6 +46,8 @@ private slots:
     void downloadFinished();
     void readyRead();
 
+    void on_buttonBox_helpRequested();
+
 private:
     Ui::DownloadDialog *ui;
     QString mOutFile, mCheckSum;

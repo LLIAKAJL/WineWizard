@@ -18,6 +18,9 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <QDesktopServices>
+#include <QUrl>
+
 #include "ui_selectarchdialog.h"
 #include "selectarchdialog.h"
 
@@ -36,4 +39,9 @@ SelectArchDialog::~SelectArchDialog()
 QString SelectArchDialog::arch() const
 {
     return ui->win32->isChecked() ? "32" : "64";
+}
+
+void SelectArchDialog::on_buttonBox_helpRequested()
+{
+    QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
 }

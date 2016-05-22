@@ -38,6 +38,9 @@ public:
 public slots:
     void accept() override;
 
+private slots:
+    void on_buttonBox_helpRequested();
+
 private:
     Ui::SettingsDialog *ui;
 };

@@ -35,6 +35,9 @@ public:
     explicit ScriptDialog(const QString &script, QWidget *parent = nullptr);
     ~ScriptDialog() override;
 
+private slots:
+    void on_buttonBox_helpRequested();
+
 private:
     Ui::ScriptDialog *ui;
 };

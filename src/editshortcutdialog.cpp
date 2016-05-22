@@ -19,6 +19,8 @@
  ***************************************************************************/
 
 #include <QStandardItemModel>
+#include <QDesktopServices>
+#include <QUrl>
 
 #include "ui_editshortcutdialog.h"
 #include "editshortcutdialog.h"
@@ -114,4 +116,9 @@ void EditShortcutDialog::on_browseBtn_clicked()
     QString dir = Dialogs::selectDir(ui->workDir->text(), this);
     if (!dir.isEmpty())
         ui->workDir->setText(dir);
+}
+
+void EditShortcutDialog::on_buttonBox_helpRequested()
+{
+    QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
 }

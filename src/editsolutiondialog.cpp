@@ -18,6 +18,7 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <QDesktopServices>
 #include <QPushButton>
 #include <QSettings>
 
@@ -222,4 +223,9 @@ void EditSolutionDialog::on_bMoveWine_clicked()
 void EditSolutionDialog::on_aMoveWine_clicked()
 {
     ui->bWine->setText(ui->aWine->text());
+}
+
+void EditSolutionDialog::on_buttonBox_helpRequested()
+{
+    QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
 }

@@ -37,6 +37,9 @@ public:
 
     QString arch() const;
 
+private slots:
+    void on_buttonBox_helpRequested();
+
 private:
     Ui::SelectArchDialog *ui;
 };

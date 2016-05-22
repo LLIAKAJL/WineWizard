@@ -18,6 +18,7 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <QDesktopServices>
 #include <QSettings>
 
 #include "ui_scriptdialog.h"
@@ -40,4 +41,9 @@ ScriptDialog::~ScriptDialog()
     s.beginGroup("ScriptDialog");
     s.setValue("Size", size());
     delete ui;
+}
+
+void ScriptDialog::on_buttonBox_helpRequested()
+{
+    QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
 }

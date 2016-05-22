@@ -48,6 +48,8 @@ private slots:
 
     void on_browseBtn_clicked();
 
+    void on_buttonBox_helpRequested();
+
 private:
     Ui::EditShortcutDialog *ui;
     QModelIndex mIndex;
