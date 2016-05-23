@@ -1,4 +1,4 @@
-winewizard (1.0-1) xenial; urgency=medium
+winewizard (1.0.1) xenial; urgency=medium
 
   * Initial debian package.
 
