@@ -18,6 +18,7 @@
  *                                                                         *
  ***************************************************************************/
 
+
 #ifndef EDITSHORTCUTDIALOG_H
 #define EDITSHORTCUTDIALOG_H
 

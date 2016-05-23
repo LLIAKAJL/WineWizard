@@ -24,6 +24,7 @@
 #include <QAbstractListModel>
 #include <QDataStream>
 
+
 class PackageModel : public QAbstractListModel
 {
     Q_OBJECT

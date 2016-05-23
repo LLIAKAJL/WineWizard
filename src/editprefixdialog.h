@@ -18,6 +18,7 @@
  *                                                                         *
  ***************************************************************************/
 
+
 #ifndef EDITPREFIXDIALOG_H
 #define EDITPREFIXDIALOG_H
 
@@ -45,9 +46,7 @@ private slots:
     void on_deleteBtn_clicked();
     void on_addBtn_clicked();
     void on_editBtn_clicked();
-
     void on_setIconBtn_clicked();
-
     void on_buttonBox_helpRequested();
 
 private:
