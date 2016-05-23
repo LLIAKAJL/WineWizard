@@ -1,0 +1,19 @@
+Source: winewizard
+Section: contrib/otherosfs
+Priority: optional
+Maintainer: Svyatoslav Gryaznov <nightuser@ya.ru>
+Build-Depends: debhelper (>=9),
+ qtbase5-dev, qt5-qmake
+Standards-Version: 3.9.6
+Homepage: https://github.com/LLIAKAJL/WineWizard
+
+Package: winewizard
+Architecture: all
+Depends:
+ cabextract,
+ unzip,
+ wine (>= 1.8-2) | wine-development (>= 1.9.1-1),
+ ${shlibs:Depends},
+ ${misc:Depends}
+Description: <insert up to 60 chars description>
+ <insert long description, indented with spaces>

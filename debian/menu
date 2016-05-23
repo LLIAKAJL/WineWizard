@@ -1,0 +1,2 @@
+?package(winewizard):needs="X11" section="Applications/Emulators"\
+  title="Wine Wizard" command="/usr/bin/winewizard"
