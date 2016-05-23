@@ -45,9 +45,7 @@ public slots:
 private slots:
     void on_name_textChanged(const QString &name);
     void on_icon_clicked();
-
     void on_browseBtn_clicked();
-
     void on_buttonBox_helpRequested();
 
 private:

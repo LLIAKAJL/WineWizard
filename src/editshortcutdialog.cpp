@@ -55,7 +55,6 @@ void EditShortcutDialog::accept()
     QAbstractItemModel *model = const_cast<QAbstractItemModel *>(mIndex.model());
     model->setData(mIndex, ui->name->text().trimmed());
     bool debug = false;
-//    QString dir = FS::toWinPath(mPrefixHash, ui->workDir->text());
     if (mIndex.data(WorkDirRole).toString() != ui->workDir->text())
         debug = true;
     model->setData(mIndex, ui->workDir->text(), WorkDirRole);
