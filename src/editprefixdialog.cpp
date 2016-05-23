@@ -18,7 +18,6 @@
  *                                                                         *
  ***************************************************************************/
 
-
 #include <QSortFilterProxyModel>
 #include <QStandardItemModel>
 #include <QDesktopServices>

@@ -18,7 +18,6 @@
  *                                                                         *
  ***************************************************************************/
 
-
 #ifndef EDITPREFIXDIALOG_H
 #define EDITPREFIXDIALOG_H
 

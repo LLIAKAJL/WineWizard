@@ -18,7 +18,6 @@
  *                                                                         *
  ***************************************************************************/
 
-
 #include <QStandardItemModel>
 #include <QDesktopServices>
 #include <QUrl>

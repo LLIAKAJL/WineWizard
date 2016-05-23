@@ -18,7 +18,6 @@
  *                                                                         *
  ***************************************************************************/
 
-
 #include <QCryptographicHash>
 #include <QDesktopServices>
 #include <QStandardPaths>
