@@ -153,7 +153,7 @@ bool PackageModel::dropMimeData(const QMimeData *data, Qt::DropAction action, in
         beginRow = parent.row();
     else
         beginRow = rowCount(QModelIndex());
-    auto encodedData = data->data("application/vnd.text.list");
+    QByteArray encodedData = data->data("application/vnd.text.list");
     QDataStream stream(&encodedData, QIODevice::ReadOnly);
     int rows = 0;
     QList<Package> tmpList;

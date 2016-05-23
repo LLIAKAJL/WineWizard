@@ -40,7 +40,7 @@ EditShortcutDialog::EditShortcutDialog(const QString &prefixHash, const QModelIn
 
     ui->name->setValidator(new QRegExpValidator(QRegExp(R"([^\\]*)"), this));
     ui->name->setText(index.data().toString());
-    ui->workDir->setText(FS::toUnixPath(prefixHash, index.data(WorkDirRole).toString()));
+    ui->workDir->setText(index.data(WorkDirRole).toString());
     ui->args->setText(index.data(ArgsRole).toString());
     ui->icon->setIcon(index.data(Qt::DecorationRole).value<QIcon>());
 }
@@ -55,10 +55,10 @@ void EditShortcutDialog::accept()
     QAbstractItemModel *model = const_cast<QAbstractItemModel *>(mIndex.model());
     model->setData(mIndex, ui->name->text().trimmed());
     bool debug = false;
-    QString dir = FS::toWinPath(mPrefixHash, ui->workDir->text());
-    if (mIndex.data(WorkDirRole).toString() != dir)
+//    QString dir = FS::toWinPath(mPrefixHash, ui->workDir->text());
+    if (mIndex.data(WorkDirRole).toString() != ui->workDir->text())
         debug = true;
-    model->setData(mIndex, dir, WorkDirRole);
+    model->setData(mIndex, ui->workDir->text(), WorkDirRole);
     QString tArgs = ui->args->text().trimmed();
     if (mIndex.data(ArgsRole).toString() != tArgs)
         debug = true;

@@ -22,6 +22,7 @@
 #define PACKAGEMODEL_H
 
 #include <QAbstractListModel>
+#include <QDataStream>
 
 class PackageModel : public QAbstractListModel
 {

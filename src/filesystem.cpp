@@ -160,7 +160,7 @@ namespace FS
     {
         bool res = false;
         WaitDialog wd;
-        auto worker = new QObject;
+        QObject *worker = new QObject;
         worker->moveToThread(new QThread);
         wd.connect(worker->thread(), &QThread::started, worker, [worker, &checksum, &res, &filePath]()
         {
@@ -168,9 +168,9 @@ namespace FS
             {
                 QFile f(filePath);
                 f.open(QFile::ReadOnly);
-                auto data = f.readAll();
+                QByteArray data = f.readAll();
                 f.close();
-                auto fSum = QCryptographicHash::hash(data, QCryptographicHash::Sha1).toHex();
+                QString fSum = QCryptographicHash::hash(data, QCryptographicHash::Sha1).toHex();
                 res = fSum == checksum;
             }
             else
@@ -211,13 +211,19 @@ namespace FS
             {
                 QString targetDrivePath = driveTarget(prefixHash, QString(c) + ":").absolutePath();
                 QString drivePath = FS::drive(prefixHash, QString(c) + ":").absolutePath();
-                if (res.startsWith(targetDrivePath) || res.startsWith(drivePath))
+                QString driveLetter = QString(QChar::toUpper(c)) + ":/";
+                if (res.startsWith(targetDrivePath))
                 {
-                    res.replace(targetDrivePath, QChar::toUpper(c) + ":");
+                    res.replace(0, targetDrivePath.length(), driveLetter);
+                    break;
+                }
+                else if (res.startsWith(drivePath))
+                {
+                    res.replace(0, drivePath.length(), driveLetter);
                     break;
                 }
             }
-            return res.replace('/', '\\');
+            return res.replace("//", "/").replace('/', '\\');
         }
         return res;
     }
@@ -225,18 +231,19 @@ namespace FS
     QString toUnixPath(const QString &prefixHash, const QString &path)
     {
         QString res(path);
-        res.replace('\\', '/');
-        if (res.contains('/'))
+        if (res.contains('\\'))
         {
+            res.replace('\\', '/');
             for (char c = 'a'; c <= 'z'; ++c)
-            {
-                if (res.startsWith(QString(c) + ":") || res.startsWith(QChar::toUpper(c) + ":"))
+                if (res.startsWith(QString(c) + ":/") || res.startsWith(QString(QChar::toUpper(c)) + ":/"))
                 {
-                    res.replace(0, 1, QChar(res.at(0)).toLower());
+                    QString driveLetter = QString(QChar(res.at(0)).toLower()) + ":";
+                    QString target = FS::driveTarget(prefixHash, driveLetter).absolutePath();
+                    if (!target.endsWith('/'))
+                        target += '/';
+                    res.replace(0, 3, target);
                     break;
                 }
-            }
-            return devices(prefixHash).absoluteFilePath(res);
         }
         return res;
     }

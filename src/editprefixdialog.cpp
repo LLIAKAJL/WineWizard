@@ -48,10 +48,10 @@ EditPrefixDialog::EditPrefixDialog(const QString &prefixHash, QWidget *parent) :
     ui->deleteBtn->setIcon(style()->standardIcon(QStyle::SP_TrashIcon));
     ui->setIconBtn->setIcon(style()->standardIcon(QStyle::SP_ArrowLeft));
 
-    QDir sDir = FS::prefix(prefixHash);
-    QSettings solSett(sDir.absoluteFilePath(".settings"), QSettings::IniFormat);
+    QDir pDir = FS::prefix(prefixHash);
+    QSettings solSett(pDir.absoluteFilePath(".settings"), QSettings::IniFormat);
     mPrefixName = solSett.value("Name").toString();
-    QIcon icon = sDir.exists(".icon") ? QIcon(sDir.absoluteFilePath(".icon")) :
+    QIcon icon = pDir.exists(".icon") ? QIcon(pDir.absoluteFilePath(".icon")) :
                                         style()->standardIcon(QStyle::SP_DirIcon);;
     ui->icon->setIcon(icon);
     ui->name->setText(mPrefixName);
@@ -65,8 +65,8 @@ EditPrefixDialog::EditPrefixDialog(const QString &prefixHash, QWidget *parent) :
         QSettings s(shDir.absoluteFilePath(shortcut), QSettings::IniFormat);
         s.setIniCodec("UTF-8");
         QString name = s.value("Name").toString();
-        QString exe = s.value("Exe").toString();
-        QString workDir = s.value("WorkDir").toString();
+        QString exe = FS::toUnixPath(mPrefixHash, s.value("Exe").toString());
+        QString workDir = FS::toUnixPath(mPrefixHash, s.value("WorkDir").toString());
         QString args = s.value("Args").toString();
         bool debug = s.value("Debug", true).toBool();
         QStandardItem *item = new QStandardItem(icon, name);
@@ -111,8 +111,8 @@ void EditPrefixDialog::accept()
         item->setData(hash, HashRole);
         QSettings s(sDir.absoluteFilePath(hash), QSettings::IniFormat);
         s.setValue("Name", item->text());
-        s.setValue("Exe", item->data(ExeRole));
-        s.setValue("WorkDir", item->data(WorkDirRole));
+        s.setValue("Exe", FS::toWinPath(mPrefixHash, item->data(ExeRole).toString()));
+        s.setValue("WorkDir", FS::toWinPath(mPrefixHash, item->data(WorkDirRole).toString()));
         s.setValue("Args", item->data(ArgsRole));
         s.setValue("Debug", item->data(DebugRole));
         QString iconPath = item->data(IconRole).toString();
@@ -197,9 +197,12 @@ void EditPrefixDialog::currentChanged(const QModelIndex &index)
         if (iconPath.isEmpty())
         {
             QString shortcutHash = index.data(HashRole).toString();
-            QDir iDir = FS::icons(mPrefixHash);
-            if (iDir.exists(shortcutHash))
-                iconPath = iDir.absoluteFilePath(shortcutHash);
+            if (!shortcutHash.isEmpty())
+            {
+                QDir iDir = FS::icons(mPrefixHash);
+                if (iDir.exists(shortcutHash))
+                    iconPath = iDir.absoluteFilePath(shortcutHash);
+            }
         }
         ui->setIconBtn->setDisabled(iconPath.isEmpty());
     }
@@ -228,8 +231,8 @@ void EditPrefixDialog::on_addBtn_clicked()
             name += '0';
         QIcon icon = QApplication::style()->standardIcon(QStyle::SP_FileLinkIcon);
         QStandardItem *item = new QStandardItem(icon, name);
-        item->setData(exe, ExeRole);
-        item->setData(info.absolutePath(), WorkDirRole);
+        item->setData(FS::toUnixPath(mPrefixHash, FS::toWinPath(mPrefixHash, exe)), ExeRole);
+        item->setData(FS::toUnixPath(mPrefixHash, FS::toWinPath(mPrefixHash, info.absolutePath())), WorkDirRole);
         item->setData(true, DebugRole);
         model->appendRow(item);
         ui->shortcuts->setCurrentIndex(model->index(model->rowCount() - 1, 0));
