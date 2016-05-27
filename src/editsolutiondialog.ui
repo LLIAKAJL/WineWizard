@@ -49,19 +49,6 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QLabel" name="wineHeader">
-            <property name="frameShape">
-             <enum>QFrame::Box</enum>
-            </property>
-            <property name="text">
-             <string>Wine</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item>
            <layout class="QHBoxLayout" name="horizontalLayout">
             <property name="spacing">
              <number>0</number>
@@ -93,6 +80,19 @@
              </widget>
             </item>
            </layout>
+          </item>
+          <item>
+           <widget class="QLabel" name="wineHeader">
+            <property name="frameShape">
+             <enum>QFrame::Box</enum>
+            </property>
+            <property name="text">
+             <string>Wine</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
           </item>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -419,8 +419,8 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>262</x>
-     <y>771</y>
+     <x>269</x>
+     <y>599</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -435,8 +435,8 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>330</x>
-     <y>771</y>
+     <x>337</x>
+     <y>599</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>
