@@ -14,6 +14,12 @@ Other features:
 - Automatic creation, easy manage and deletion of prefixes and application shortcuts.
 - Automatic cleaning of temporary files after installation.
 
+Installation of Win-application:
+
+1)Double click on the .exe/.msi file or select "Install Application" from menu.
+
+2) Select solution from list and click "OK".
+
 ***********************************************
 
 Dependencies:
