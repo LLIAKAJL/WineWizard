@@ -29,9 +29,9 @@ SelectDialog::SelectDialog(const QStringList &list, const QString &current, QWid
     ui(new Ui::SelectDialog)
 {
     ui->setupUi(this);
-    auto model = new SelectModel(list, this);
+    SelectModel *model = new SelectModel(list, this);
     ui->items->setModel(model);
-    auto findList = model->match(model->index(0, 0), Qt::DisplayRole, current, -1, Qt::MatchCaseSensitive);
+    QModelIndexList findList = model->match(model->index(0, 0), Qt::DisplayRole, current, -1, Qt::MatchCaseSensitive);
     if (!findList.isEmpty())
         ui->items->setCurrentIndex(findList.first());
 }

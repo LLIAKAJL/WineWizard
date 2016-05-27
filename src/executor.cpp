@@ -32,11 +32,11 @@ namespace Ex
 {
     QProcessEnvironment env(const QString &prefixHash)
     {
-        auto res = QProcessEnvironment::systemEnvironment();
+        QProcessEnvironment res = QProcessEnvironment::systemEnvironment();
         if (!prefixHash.isEmpty())
         {
             res.insert("WINEPREFIX", FS::prefix(prefixHash).absolutePath());
-            auto winePath = FS::wine(prefixHash).absolutePath();
+            QString winePath = FS::wine(prefixHash).absolutePath();
             res.insert("WINEVERPATH", winePath);
             res.insert("PATH", winePath + "/bin:" + res.value("PATH"));
             res.insert("WINESERVER", winePath + "/bin/wineserver");

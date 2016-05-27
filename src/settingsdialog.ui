@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>470</width>
-    <height>173</height>
+    <height>270</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -131,6 +131,35 @@
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="trayGB">
+     <property name="title">
+      <string>System Tray</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="QCheckBox" name="showTray">
+        <property name="text">
+         <string>Show application icon in system tray</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="quit">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>Exit after the last process has been finished</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <widget class="QCheckBox" name="useScripts">
      <property name="text">
       <string>Use additional scripts(WARNING: unsafe option!)</string>
@@ -164,8 +193,8 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>225</x>
-     <y>128</y>
+     <x>232</x>
+     <y>262</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -180,8 +209,8 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>293</x>
-     <y>134</y>
+     <x>300</x>
+     <y>262</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>
@@ -266,6 +295,22 @@
     <hint type="destinationlabel">
      <x>443</x>
      <y>79</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>showTray</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>quit</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>145</x>
+     <y>152</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>140</x>
+     <y>185</y>
     </hint>
    </hints>
   </connection>

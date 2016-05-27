@@ -37,7 +37,7 @@ DownloadDialog::DownloadDialog(const QStringList &mirrors, const QString &outFil
 {
     ui->setupUi(this);
     if (mReList.isEmpty())
-        for (auto i = mMirrors.count() - 1; i >= 0; --i)
+        for (int i = mMirrors.count() - 1; i >= 0; --i)
             mReList.append(QString());
     download();
 }
@@ -61,26 +61,17 @@ void DownloadDialog::downloadProgress(qint64 bytesReceived, qint64 bytesTotal)
 
 void DownloadDialog::downloadFinished()
 {
-    auto reply = static_cast<QNetworkReply *>(sender());
-    auto netErr = reply->error() != QNetworkReply::NoError && reply->error() != QNetworkReply::OperationCanceledError;
-    if (netErr)
+    QNetworkReply *reply = static_cast<QNetworkReply *>(sender());
+    if (reply->error() == QNetworkReply::NoError)
     {
-        auto errMsg = tr("Network error: %1").arg(reply->errorString());
-        if (Dialogs::retry(errMsg, this))
-            retry();
-        else
-            QDialog::reject();
-    }
-    else
-    {
-        auto redirect = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toString();
+        QString redirect = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toString();
         if (redirect.isEmpty())
         {
             if (mReList.first().isEmpty())
             {
                 if (!mCheckSum.isEmpty() && !FS::checkFileSum(mOutFile, mCheckSum))
                 {
-                    auto errMsg = tr("Invalid checksum for file!");
+                    QString errMsg = tr("Invalid checksum for file!");
                     if (Dialogs::retry(errMsg, this))
                         retry();
                     else
@@ -95,7 +86,7 @@ void DownloadDialog::downloadFinished()
             }
             else
             {
-                auto data = FS::readFile(mOutFile);
+                QString data = FS::readFile(mOutFile);
                 QRegExp re(mReList.first());
                 re.setMinimal(true);
                 re.indexIn(data);
@@ -110,31 +101,45 @@ void DownloadDialog::downloadFinished()
             download();
         }
     }
+    else if (reply->error() != QNetworkReply::OperationCanceledError)
+    {
+        QString errMsg = tr("Network error: %1").arg(reply->errorString());
+        if (Dialogs::retry(errMsg, this))
+            retry();
+        else
+            QDialog::reject();
+    }
+    else
+        QDialog::reject();
     reply->deleteLater();
 }
 
 void DownloadDialog::readyRead()
 {
-    auto reply = static_cast<QNetworkReply *>(sender());
-    QFile f(mOutFile);
-    f.open(QFile::Append);
-    f.write(reply->readAll());
+    QNetworkReply *reply = static_cast<QNetworkReply *>(sender());
+    if (reply->error() == QNetworkReply::NoError)
+    {
+        QFile f(mOutFile);
+        f.open(QFile::Append);
+        f.write(reply->readAll());
+    }
 }
 
 void DownloadDialog::download()
 {
     ui->label->setText(mMirrors.first());
-    QFile::remove(mOutFile);
+    if (QFile::exists(mOutFile))
+        QFile::remove(mOutFile);
     QNetworkRequest request(mMirrors.first());
-    auto conf = request.sslConfiguration();
+    QSslConfiguration conf = request.sslConfiguration();
     conf.setPeerVerifyMode(QSslSocket::VerifyNone);
     request.setSslConfiguration(conf);
     request.setRawHeader("User-Agent", "Mozilla Firefox");
-    auto reply = mNam.get(request);
+    QNetworkReply *reply = mNam.get(request);
     connect(reply, &QNetworkReply::finished, this, &DownloadDialog::downloadFinished);
     connect(reply, &QNetworkReply::downloadProgress, this, &DownloadDialog::downloadProgress);
     connect(reply, &QNetworkReply::readyRead, this, &DownloadDialog::readyRead);
-    connect(this, &DownloadDialog::rejected, reply, &QNetworkReply::deleteLater);
+    connect(this, SIGNAL(rejected()), reply, SLOT(deleteLater()));
 }
 
 void DownloadDialog::retry()

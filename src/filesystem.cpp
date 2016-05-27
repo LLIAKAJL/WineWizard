@@ -188,7 +188,7 @@ namespace FS
     void removePrefix(const QString &prefixHash, QWidget *parent)
     {
         WaitDialog wd(parent);
-        auto worker = new QObject;
+        QObject *worker = new QObject;
         worker->moveToThread(new QThread);
         wd.connect(worker->thread(), &QThread::started, worker, [worker, prefixHash]()
         {

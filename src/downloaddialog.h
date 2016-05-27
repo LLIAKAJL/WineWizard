@@ -45,7 +45,6 @@ private slots:
     void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
     void downloadFinished();
     void readyRead();
-
     void on_buttonBox_helpRequested();
 
 private:

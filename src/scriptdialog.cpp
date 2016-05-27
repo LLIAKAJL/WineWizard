@@ -25,12 +25,13 @@
 #include "scriptdialog.h"
 #include "netdialog.h"
 
-ScriptDialog::ScriptDialog(const QString &script, QWidget *parent) :
+ScriptDialog::ScriptDialog(const QString &bScript, const QString &aScript, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::ScriptDialog)
 {
     ui->setupUi(this);
-    ui->script->setPlainText(script);
+    ui->bScript->setPlainText(bScript);
+    ui->aScript->setPlainText(aScript);
     QSettings s("winewizard", "settings");
     s.beginGroup("ScriptDialog");
     resize(s.value("Size", size()).toSize());

@@ -21,6 +21,7 @@
 #ifndef WIZARD_H
 #define WIZARD_H
 
+#include <QSystemTrayIcon>
 #include <QStringList>
 #include <QFileInfo>
 #include <QSettings>
@@ -30,17 +31,17 @@ class Wizard : public QObject
     Q_OBJECT
 
 public:
-    explicit Wizard(QObject *parent = nullptr);
+    explicit Wizard(bool trayVisible, bool autoclose, QObject *parent = nullptr);
 
 public slots:
-    bool start(const QString &cmdLine = QString());
+    void start(const QString &cmdLine = QString());
 
 private slots:
     void showMenu();
 
 private:
     QStringList mBusyList, mRunList;
-    bool mQuit;
+    QSystemTrayIcon *mTray;
 
     void install(const QString &cmdLine);
     bool testSuffix(const QFileInfo &path) const;

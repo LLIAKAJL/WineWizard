@@ -99,7 +99,7 @@ Qt::ItemFlags PackageModel::flags(const QModelIndex &index) const
 bool PackageModel::insertRows(int row, int count, const QModelIndex &parent)
 {
     beginInsertRows(parent, row, row + count - 1);
-    for (auto i = 0; i < count; ++i)
+    for (int i = 0; i < count; ++i)
         mList.insert(row, Package{ QString(), tr("Other"), QString(), 0 });
     endInsertRows();
     return true;
@@ -108,7 +108,7 @@ bool PackageModel::insertRows(int row, int count, const QModelIndex &parent)
 bool PackageModel::removeRows(int row, int count, const QModelIndex &parent)
 {
     beginRemoveRows(parent, row, row + count - 1);
-    for (auto i = 0; i < count; ++i)
+    for (int i = 0; i < count; ++i)
         mList.takeAt(row);
     endRemoveRows();
     return true;
@@ -121,7 +121,7 @@ QStringList PackageModel::mimeTypes() const
 
 QMimeData *PackageModel::mimeData(const QModelIndexList &indexes) const
 {
-    auto *mimeData = new QMimeData;
+    QMimeData *mimeData = new QMimeData;
     QByteArray encodedData;
     QDataStream stream(&encodedData, QIODevice::WriteOnly);
     foreach (QModelIndex index, indexes)

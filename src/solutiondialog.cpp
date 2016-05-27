@@ -125,7 +125,7 @@ void SolutionDialog::getSearch()
     QString searchEncode = QUrl::toPercentEncoding(ui->search->text().trimmed());
     QString url = API_URL + "?c=search&sv=" + searchEncode + "&pagenum=" + QString::number(mCurrentPage);
     QString outPath = FS::temp().absoluteFilePath("search");
-    DownloadDialog dd(QStringList(url), outPath, this->isVisible() ? this : nullptr);
+    DownloadDialog dd(QStringList(url), outPath, isVisible() ? this : nullptr);
     if (dd.exec() == QDialog::Accepted)
     {
         QAbstractItemModel *model = ui->solutions->model();
@@ -205,11 +205,12 @@ bool SolutionDialog::getSolution(const QString &arch)
     QString id = ui->solutions->currentIndex().data(SearchModel::SlugRole).toString();
     QString url = API_URL + "?c=get&slug=" + id + "&arch=" + arch;
     QString outFile = FS::temp().absoluteFilePath("solution");
-    if (DownloadDialog(QStringList(url), outFile, this).exec() == QDialog::Accepted)
+    DownloadDialog dd(QStringList(url), outFile, this);
+    if (dd.exec() == QDialog::Accepted)
     {
         QSettings s(outFile, QSettings::IniFormat);
         s.setIniCodec("UTF-8");
-        auto bw = s.value("BWine").toString();
+        QString bw = s.value("BWine").toString();
         if (bw.isEmpty())
         {
             Dialogs::error(tr("Incorrect solution file format!"), this);

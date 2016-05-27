@@ -19,6 +19,7 @@
  ***************************************************************************/
 
 #include <QDesktopServices>
+#include <QSystemTrayIcon>
 #include <QSettings>
 #include <QUrl>
 
@@ -37,6 +38,15 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     int sh = s.value("ScreenHeight", -1).toInt();
     int vm = s.value("VideoMemorySize", -1).toInt();
     s.endGroup();
+    s.beginGroup("Tray");
+    ui->showTray->setChecked(s.value("Visible", false).toBool());
+    ui->quit->setChecked(s.value("Autoclose", true).toBool());
+    s.endGroup();
+    if (!QSystemTrayIcon::isSystemTrayAvailable())
+    {
+        ui->showTray->setEnabled(false);
+        ui->quit->setEnabled(false);
+    }
     ui->scrSizeAuto->setChecked(sw < 0 || sh < 0);
     ui->vmAuto->setChecked(vm < 0);
     ui->width->setValue(sw);
@@ -65,6 +75,10 @@ void SettingsDialog::accept()
         s.setValue("ScreenHeight", ui->height->value());
     }
     s.setValue("VideoMemorySize", ui->vmAuto->isChecked() ? -1 : ui->vm->value());
+    s.endGroup();
+    s.beginGroup("Tray");
+    s.setValue("Visible", ui->showTray->isChecked());
+    s.setValue("Autoclose", ui->quit->isChecked());
     s.endGroup();
     s.setValue("UseScripts", ui->useScripts->isChecked());
     QDialog::accept();

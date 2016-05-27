@@ -103,7 +103,7 @@ void EditShortcutDialog::on_name_textChanged(const QString &name)
 
 void EditShortcutDialog::on_icon_clicked()
 {
-    auto path = Dialogs::open(tr("Select Icon"), tr("Icon files (*.png)"), this);
+    QString path = Dialogs::open(tr("Select Icon"), tr("Icon files (*.png)"), this);
     if (!path.isEmpty())
     {
         mIcon = path;

@@ -21,7 +21,6 @@
 #include <QDesktopServices>
 #include <QSystemTrayIcon>
 #include <QApplication>
-#include <QThread>
 #include <QStyle>
 #include <QMenu>
 #include <QUrl>
@@ -47,9 +46,9 @@ const QString PREPARE_FUNCTIONS = "ww_%1()\n{\n%2\n}\n";
 const QString VERSION_ERR = QObject::tr("Please install a newer version of Wine Wizard.\n\nThe current version is %1.\n" \
                                         "The required version is %2.\n\nWine Wizard will exit.");
 
-Wizard::Wizard(QObject *parent) :
+Wizard::Wizard(bool trayVisible, bool autoclose, QObject *parent) :
     QObject(parent),
-    mQuit(false)
+    mTray(trayVisible ? new QSystemTrayIcon(QIcon::fromTheme("winewizard"), this) : nullptr)
 {
     QFile f(FS::config().absoluteFilePath("style.qss"));
     if (f.exists())
@@ -57,40 +56,33 @@ Wizard::Wizard(QObject *parent) :
         f.open(QFile::ReadOnly);
         qApp->setStyleSheet(f.readAll());
     }
-    if (QSystemTrayIcon::isSystemTrayAvailable())
+    if (mTray)
     {
-        QSystemTrayIcon *tray = new QSystemTrayIcon(QIcon::fromTheme("winewizard"), this);
-        connect(tray, &QSystemTrayIcon::activated, this, [this]{ if (!SingletonWidget::exists()) showMenu(); });
-        tray->show();
+        mTray->setProperty("Autoclose", autoclose);
+        connect(mTray, &QSystemTrayIcon::activated, this, [this]{ if (!SingletonWidget::exists()) showMenu(); });
+        mTray->show();
     }
 }
 
-bool Wizard::start(const QString &cmdLine)
+void Wizard::start(const QString &cmdLine)
 {
     if (!SingletonWidget::exists())
     {
         if (cmdLine.isEmpty())
         {
-            if (!QSystemTrayIcon::isSystemTrayAvailable())
+            if ((mTray && mTray->property("Autoclose").toBool()) || !mTray)
                 showMenu();
         }
+        else if (mBusyList.isEmpty())
+            install(cmdLine);
         else
-        {
-            if (mBusyList.isEmpty())
-            {
-                install(cmdLine);
-                return mQuit;
-            }
-            else
-                Dialogs::error(tr("Another installation is already running!"));
-        }
+            Dialogs::error(tr("Another installation is already running!"));
     }
-    return false;
 }
 
 void Wizard::showMenu()
 {
-    MainMenu menu(mRunList, mBusyList);
+    MainMenu menu(mTray ? mTray->property("Autoclose").toBool() : true, mRunList, mBusyList);
     QAction *act = menu.exec();
     if (!act)
         return;
@@ -114,7 +106,7 @@ void Wizard::showMenu()
             QString script = FS::readFile(":/run").arg(exe).arg(workDir).arg(args);
             Ex::Out out = Ex::debug(script, prefixHash);
             mRunList.removeOne(prefixHash);
-            if (mQuit)
+            if (qApp->property("Quit").toBool())
                 return;
             if (Dialogs::finish(prefixHash))
             {
@@ -146,7 +138,7 @@ void Wizard::showMenu()
                 QString script = FS::readFile(":/run").arg(exe).arg(QString()).arg(QString());
                 Ex::Out out = Ex::debug(script, prefixHash);
                 mRunList.removeOne(prefixHash);
-                if (mQuit)
+                if (qApp->property("Quit").toBool())
                     return;
                 if (!Dialogs::finish(prefixHash))
                     OutputDialog(out).exec();
@@ -193,7 +185,7 @@ void Wizard::showMenu()
             QString termScript = FS::readFile(":/terminate");
             for (const QString &prefixHash : mRunList)
                 Ex::wait(QString(termScript), prefixHash);
-            mQuit = true;
+            qApp->setProperty("Quit", true);
             QApplication::exit();
         }
         break;
@@ -218,7 +210,7 @@ void Wizard::install(const QString &cmdLine)
     }
     QString arch, bs, acs, as;
     if (prepare(arch, bs, acs, as))
-    {       
+    {
         QSettings s(FS::temp().absoluteFilePath("solution"), QSettings::IniFormat);
         s.setIniCodec("UTF-8");
         QString prefixName = s.value("Name").toString();
@@ -233,7 +225,7 @@ void Wizard::install(const QString &cmdLine)
         mRunList.append(prefixHash);
         Ex::release(FS::readFile(":/create"), prefixHash);
         mRunList.removeOne(prefixHash);
-        if (mQuit)
+        if (qApp->property("Quit").toBool())
             return;
         QString wmbPath = FS::sys32(prefixHash, arch).absoluteFilePath("winemenubuilder.exe");
         QFile::remove(wmbPath);
@@ -250,7 +242,7 @@ void Wizard::install(const QString &cmdLine)
         mRunList.append(prefixHash);
         Ex::Out out = Ex::debug(script, prefixHash);
         mRunList.removeOne(prefixHash);
-        if (mQuit)
+        if (qApp->property("Quit").toBool())
             return;
         Ex::terminal(as, prefixHash);
         mBusyList.removeOne(prefixHash);
@@ -269,8 +261,11 @@ bool Wizard::prepare(QString &arch, QString &bs, QString &acs, QString &as) cons
 {
     QDir cache = FS::cache();
     QString repoPath = cache.absoluteFilePath("main.wwrepo");
-    if (DownloadDialog(QStringList(REPO_URL), repoPath).exec() != QDialog::Accepted)
-        return false;
+    {
+        DownloadDialog dd(QStringList(REPO_URL), repoPath);
+        if (dd.exec() != QDialog::Accepted)
+            return false;
+    }
     QSettings r(repoPath, QSettings::IniFormat);
     r.setIniCodec("UTF-8");
     QString repoVer = r.value("WineWizardVersion").toString();
@@ -296,8 +291,11 @@ bool Wizard::prepare(QString &arch, QString &bs, QString &acs, QString &as) cons
     arch = sad.arch();
     QString url = API_URL + "?c=get&slug=" + solDlg.slug() + "&arch=" + arch;
     QString outFile = FS::temp().absoluteFilePath("solution");
-    if (DownloadDialog(QStringList(url), outFile).exec() != QDialog::Accepted)
-        return false;
+    {
+        DownloadDialog dd(QStringList(url), outFile);
+        if (dd.exec() != QDialog::Accepted)
+            return false;
+    }
     QSettings s(FS::temp().absoluteFilePath("solution"), QSettings::IniFormat);
     s.setIniCodec("UTF-8");
     QString bw = s.value("BWine").toString();
@@ -309,7 +307,8 @@ bool Wizard::prepare(QString &arch, QString &bs, QString &acs, QString &as) cons
     QString aw = s.value("AWine").toString();
     QStringList bp = s.value("BPackages").toStringList();
     QStringList ap = s.value("APackages").toStringList();
-    QString script = s.value("Script").toString();
+    QString bScript = s.value("BScript").toString();
+    QString aScript = s.value("AScript").toString();
     QSet<QString> files;
     r.beginGroup("Packages" + arch);
     required(bw, files, &r);
@@ -329,7 +328,8 @@ bool Wizard::prepare(QString &arch, QString &bs, QString &acs, QString &as) cons
         {
             QStringList mirrors = r.value("Mirrors").toStringList();
             QStringList reList = r.value("RE").toStringList();
-            if (DownloadDialog(mirrors, out, nullptr, checksum, reList).exec() != QDialog::Accepted)
+            DownloadDialog dd(mirrors, out, nullptr, checksum, reList);
+            if (dd.exec() != QDialog::Accepted)
                 return false;
         }
         r.endGroup();
@@ -345,7 +345,7 @@ bool Wizard::prepare(QString &arch, QString &bs, QString &acs, QString &as) cons
     settings.endGroup();
     QString is = r.value("Init").toString() + '\n';
     bs += QString(is).arg(arch).arg(bw).arg(scrW + 'x' + scrH).arg(vmSize) + '\n';
-    if (!bp.isEmpty())
+    if (!bp.isEmpty() || !bScript.isEmpty())
     {
         acs = bs;
         for (const QString &p : bp)
@@ -358,9 +358,14 @@ bool Wizard::prepare(QString &arch, QString &bs, QString &acs, QString &as) cons
         as += "ww_install_wine " + QString(aw) + '\n';
     for (const QString &p : ap)
         as += "ww_install " + p + '\n';
-    if (!script.isEmpty() && settings.value("UseScripts", false).toBool())
-        if (ScriptDialog(script).exec() == QDialog::Accepted)
-            as += "ww_info 'Start additional script ...'\n" + script + '\n';
+    if ((!bScript.isEmpty() || !aScript.isEmpty()) && settings.value("UseScripts", false).toBool())
+        if (ScriptDialog(bScript, aScript).exec() == QDialog::Accepted)
+        {
+            if (!bScript.isEmpty())
+                acs += "ww_info 'Start additional script ...'\n" + bScript + '\n';
+            if (!aScript.isEmpty())
+                as += "ww_info 'Start additional script ...'\n" + aScript + '\n';
+        }
     as += r.value("Done").toString();
     return true;
 }

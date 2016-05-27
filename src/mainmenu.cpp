@@ -25,7 +25,7 @@
 #include "filesystem.h"
 #include "mainmenu.h"
 
-MainMenu::MainMenu(const QStringList &runList, const QStringList &busyList, QWidget *parent) :
+MainMenu::MainMenu(bool autoclose, const QStringList &runList, const QStringList &busyList, QWidget *parent) :
     QMenu(parent),
     SingletonWidget(this)
 {
@@ -114,14 +114,17 @@ MainMenu::MainMenu(const QStringList &runList, const QStringList &busyList, QWid
     act->setData(About);
     act = addAction(style()->standardIcon(QStyle::SP_DialogHelpButton), tr("Help"));
     act->setData(Help);
-    addSeparator();
-    act = addAction(style()->standardIcon(QStyle::SP_DialogCloseButton), tr("Quit"));
-    act->setData(Quit);
+    if (!autoclose)
+    {
+        addSeparator();
+        act = addAction(style()->standardIcon(QStyle::SP_DialogCloseButton), tr("Quit"));
+        act->setData(Quit);
+    }
 }
 
 void MainMenu::addEmpty(QMenu *menu)
 {
-    auto act = new QWidgetAction(menu);
+    QWidgetAction *act = new QWidgetAction(menu);
     act->setText(tr("*** Empty ***"));
     menu->addAction(act);
 }
@@ -145,10 +148,10 @@ QIcon MainMenu::getPrefixIcon(const QString &prefixHash) const
 void MainMenu::sortList(QFileInfoList &list, bool prefix)
 {
     QMap<QString, QString> sortList;
-    for (auto item : list)
+    for (const QFileInfo &item : list)
     {
-        auto hash = item.fileName();
-        auto path = prefix ? FS::prefix(hash).absoluteFilePath(".settings") : item.absoluteFilePath();
+        QString hash = item.fileName();
+        QString path = prefix ? FS::prefix(hash).absoluteFilePath(".settings") : item.absoluteFilePath();
         QSettings s(path, QSettings::IniFormat);
         s.setIniCodec("UTF-8");
         sortList.insert(hash, s.value("Name").toString().replace('&', "&&"));

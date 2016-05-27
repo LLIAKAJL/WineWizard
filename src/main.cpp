@@ -30,30 +30,31 @@ int main(int argc, char *argv[])
     QtSingleApplication app(argc, argv);
     QStringList list = app.arguments();
     list.removeFirst();
+    QString cmdLine = list.isEmpty() ? QString() : QFileInfo(list.takeFirst()).absoluteFilePath();
+    if (!cmdLine.isEmpty())
+         cmdLine += '\n' + QDir::currentPath() + '\n' + list.join('\n');
     if (app.isRunning())
     {
-        if (list.isEmpty())
-            app.sendMessage(QString());
-        else
-        {
-            QString exe = QFileInfo(list.takeFirst()).absoluteFilePath();
-            app.sendMessage(exe + '\n' + QDir::currentPath() + '\n' + list.join('\n'));
-        }
+        app.sendMessage(cmdLine);
         return 0;
     }
     app.setQuitOnLastWindowClosed(false);
     app.setApplicationDisplayName("Wine Wizard");
     app.setApplicationName("winewizard");
     app.setApplicationVersion(APP_VERSION);
-    Wizard w;
-    app.connect(&app, &QtSingleApplication::messageReceived, &w, &Wizard::start);
-    if (list.isEmpty())
-        w.start(QString());
-    else
+    bool trayVisible, autoclose;
     {
-        QString exe = QFileInfo(list.takeFirst()).absoluteFilePath();
-        if (w.start(exe + '\n' + QDir::currentPath() + '\n' + list.join('\n')))
-            return 0;
+        QSettings s("winewizard", "settings");
+        s.beginGroup("Tray");
+        trayVisible = s.value("Visible", false).toBool();
+        autoclose = s.value("Autoclose", true).toBool();
+        s.endGroup();
     }
-    return app.exec();
+    Wizard w(trayVisible, autoclose);
+    app.connect(&app, &QtSingleApplication::messageReceived, &w, &Wizard::start);
+    w.start(cmdLine);
+    if (!trayVisible || autoclose || app.property("quit").toBool())
+        return 0;
+    else
+        return app.exec();
 }

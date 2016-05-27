@@ -34,7 +34,7 @@ public:
     enum { Empty, Install, Debug, Run, RunFile, Browse, Delete,
            Edit, Terminate, Settings, About, Help, Quit };
 
-    explicit MainMenu(const QStringList &runList, const QStringList &busyList, QWidget *parent = nullptr);
+    explicit MainMenu(bool autoclose, const QStringList &runList, const QStringList &busyList, QWidget *parent = nullptr);
 
 private:
     void addEmpty(QMenu *menu);

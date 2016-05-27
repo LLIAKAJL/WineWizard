@@ -43,10 +43,10 @@ void PostDialog::reject()
 
 void PostDialog::postFinished()
 {
-    auto reply = static_cast<QNetworkReply *>(sender());
+    QNetworkReply *reply = static_cast<QNetworkReply *>(sender());
     if (reply->error() != QNetworkReply::NoError)
     {
-        auto errMsg = tr("Network error: %1").arg(reply->errorString());
+        QString errMsg = tr("Network error: %1").arg(reply->errorString());
         if (reply->error() != QNetworkReply::OperationCanceledError && Dialogs::retry(errMsg, this))
             post();
         else
@@ -76,10 +76,10 @@ void PostDialog::post()
     QNetworkRequest request(mUrl);
     request.setRawHeader("User-Agent", "Mozilla Firefox");
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
-    auto conf = request.sslConfiguration();
+    QSslConfiguration conf = request.sslConfiguration();
     conf.setPeerVerifyMode(QSslSocket::VerifyNone);
     request.setSslConfiguration(conf);
-    auto reply = mNam.post(request, mData.toString(QUrl::FullyEncoded).toUtf8());
+    QNetworkReply *reply = mNam.post(request, mData.toString(QUrl::FullyEncoded).toUtf8());
     connect(reply, &QNetworkReply::finished, this, &PostDialog::postFinished);
-    connect(this, &PostDialog::rejected, reply, &QNetworkReply::deleteLater);
+    connect(this, &PostDialog::rejected, reply, &QNetworkReply::abort);
 }

@@ -349,14 +349,42 @@
      </widget>
      <widget class="QWidget" name="scriptTab">
       <attribute name="title">
-       <string>Additional Script</string>
+       <string>Additional Scripts</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_7">
+      <layout class="QVBoxLayout" name="verticalLayout_10">
        <item>
-        <widget class="QPlainTextEdit" name="script">
-         <property name="maximumBlockCount">
-          <number>5000</number>
+        <widget class="QSplitter" name="splitter">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
          </property>
+         <widget class="QGroupBox" name="bScriptGB">
+          <property name="title">
+           <string>Before Setup</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_7">
+           <item>
+            <widget class="QPlainTextEdit" name="bScript">
+             <property name="maximumBlockCount">
+              <number>5000</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QGroupBox" name="aScriptGB">
+          <property name="title">
+           <string>After Setup</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_9">
+           <item>
+            <widget class="QPlainTextEdit" name="aScript">
+             <property name="maximumBlockCount">
+              <number>5000</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
         </widget>
        </item>
       </layout>

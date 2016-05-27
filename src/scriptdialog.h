@@ -32,7 +32,7 @@ class ScriptDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit ScriptDialog(const QString &script, QWidget *parent = nullptr);
+    explicit ScriptDialog(const QString &bScript, const QString &aScript, QWidget *parent = nullptr);
     ~ScriptDialog() override;
 
 private slots:

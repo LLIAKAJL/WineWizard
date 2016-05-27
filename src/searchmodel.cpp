@@ -65,7 +65,7 @@ bool SearchModel::setData(const QModelIndex &/*index*/, const QVariant &/*value*
     {
         beginResetModel();
         mList.clear();
-        auto fData = FS::readFile(FS::temp().absoluteFilePath("search")).split('\n', QString::SkipEmptyParts);
+        QStringList fData = FS::readFile(FS::temp().absoluteFilePath("search")).split('\n', QString::SkipEmptyParts);
         mPostsCount = fData.takeFirst().toInt();
         mExists = fData.takeFirst().toInt() == 1;
         for (int i = 0, count = fData.count(); i < count; i += 3)

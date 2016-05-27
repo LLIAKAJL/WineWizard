@@ -11,14 +11,42 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Additional Script</string>
+   <string>Additional Scripts</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,0,0">
    <item>
-    <widget class="QPlainTextEdit" name="script">
-     <property name="readOnly">
-      <bool>true</bool>
+    <widget class="QSplitter" name="splitter">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
      </property>
+     <widget class="QGroupBox" name="bScriptGB">
+      <property name="title">
+       <string>Before Setup</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QPlainTextEdit" name="bScript">
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QGroupBox" name="aScriptGB">
+      <property name="title">
+       <string>After Setup</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QPlainTextEdit" name="aScript">
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
    <item>
@@ -26,7 +54,7 @@
      <item>
       <widget class="QLabel" name="useLbl">
        <property name="text">
-        <string>Use this script?</string>
+        <string>Use this scripts?</string>
        </property>
       </widget>
      </item>
