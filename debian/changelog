@@ -1,0 +1,5 @@
+winewizard (1.0.1) xenial; urgency=medium
+
+  * Initial debian package.
+
+ -- Svyatoslav Gryaznov <nightuser@ya.ru>  Mon, 23 May 2016 20:12:21 +0300
