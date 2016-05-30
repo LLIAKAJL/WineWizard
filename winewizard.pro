@@ -22,7 +22,7 @@ target.path = $$PREFIX/
 
 TEMPLATE = app
 
-icon.path = /usr/share/icons/hicolor/48x48/apps/
+icon.path = /usr/share/icons/hicolor/128x128/apps/
 icon.files = winewizard.png
 desktop.path = /usr/share/applications/
 desktop.files = winewizard.desktop
