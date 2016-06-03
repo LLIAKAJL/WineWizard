@@ -29,8 +29,8 @@
 #include "singletondialog.h"
 
 const QString API_URL = "http://wwizard.net/api/";
-const QString HELP_URL = "https://github.com/LLIAKAJL/WineWizard/wiki";
-const QString DOWNLOAD_URL = "https://github.com/LLIAKAJL/WineWizard";
+const QString HELP_URL = "http://wwizard.net/wine-wizard/";
+const QString DOWNLOAD_URL = "http://wwizard.net/wine-wizard/#installation";
 const QString REPO_URL = "https://raw.githubusercontent.com/LLIAKAJL/WineWizard-Utils/master/main.wwrepo";
 
 class NetDialog : public SingletonDialog

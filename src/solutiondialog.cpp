@@ -210,14 +210,11 @@ bool SolutionDialog::getSolution(const QString &arch)
     {
         QSettings s(outFile, QSettings::IniFormat);
         s.setIniCodec("UTF-8");
-        QString bw = s.value("BWine").toString();
-        if (bw.isEmpty())
-        {
-            Dialogs::error(tr("Incorrect solution file format!"), this);
-            return false;
-        }
+        if (!s.value("BWine").toString().isEmpty())
+            return true;
+        Dialogs::error(tr("Incorrect solution file format!"), this);
     }
-    return true;
+    return false;
 }
 
 void SolutionDialog::searchExecute()

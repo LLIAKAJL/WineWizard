@@ -10,7 +10,7 @@ QMAKE_CXXFLAGS += -std=c++11
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-VERSION = 1.0.2
+VERSION = 1.0.3
 
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 
