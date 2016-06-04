@@ -175,7 +175,7 @@ void EditSolutionDialog::accept()
 {
     QUrlQuery data;
     data.addQueryItem("slug", /*mSolData.slug*/mSlug);
-    QRegExp rx("[^0-9\\.]"); 
+    QRegExp rx("[^0-9a-zA-Z-\\.]"); 
     data.addQueryItem("bw", ui->bWine->text().replace(rx,""));
     data.addQueryItem("aw", ui->aWine->text().replace(rx,""));
     data.addQueryItem("bs", ui->bScript->toPlainText().trimmed());
