@@ -21,6 +21,7 @@
 #include <QDesktopServices>
 #include <QPushButton>
 #include <QSettings>
+#include <QRegExp>
 
 #include "ui_editsolutiondialog.h"
 #include "editsolutiondialog.h"
@@ -174,8 +175,9 @@ void EditSolutionDialog::accept()
 {
     QUrlQuery data;
     data.addQueryItem("slug", /*mSolData.slug*/mSlug);
-    data.addQueryItem("bw", ui->bWine->text());
-    data.addQueryItem("aw", ui->aWine->text());
+    QRegExp rx("[^0-9a-zA-Z-\\.]"); 
+    data.addQueryItem("bw", ui->bWine->text().replace(rx,""));
+    data.addQueryItem("aw", ui->aWine->text().replace(rx,""));
     data.addQueryItem("bs", ui->bScript->toPlainText().trimmed());
     data.addQueryItem("as", ui->aScript->toPlainText().trimmed());
     QAbstractItemModel *bpModel = ui->bPackages->model();
