@@ -64,12 +64,12 @@ namespace Dialogs
 
     QString open(const QString &title, const QString &filter, QWidget *parent, const QString &dir)
     {
-        return QFileDialog::getOpenFileName(parent, title, dir, filter, nullptr, QFileDialog::DontUseNativeDialog);
+        return QFileDialog::getOpenFileName(parent, title, dir, filter, nullptr);
     }
 
     QString selectDir(const QString &start, QWidget *parent)
     {
-        return QFileDialog::getExistingDirectory(parent, QObject::tr("Select Directory"), start, QFileDialog::ShowDirsOnly | QFileDialog::DontUseNativeDialog);
+        return QFileDialog::getExistingDirectory(parent, QObject::tr("Select Directory"), start, QFileDialog::ShowDirsOnly);
     }
 
     bool finish(const QString &prefixHash, QWidget *parent)

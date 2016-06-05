@@ -130,10 +130,11 @@ void Wizard::showMenu()
         break;
     case MainMenu::RunFile:
         {
-            QString exe = Dialogs::open(tr("Select Installer"), tr("Executable files (*.exe *.msi)"));
+            QString prefixHash = act->property("PrefixHash").toString();
+            QString dir = FS::drive(prefixHash).absolutePath();
+            QString exe = Dialogs::open(tr("Select Installer"), tr("Executable files (*.exe *.msi)"), nullptr, dir);
             if (!exe.isEmpty())
             {
-                QString prefixHash = act->property("PrefixHash").toString();
                 mRunList.append(prefixHash);
                 QString script = FS::readFile(":/run").arg(exe).arg(QString()).arg(QString());
                 Ex::Out out = Ex::debug(script, prefixHash);
@@ -208,12 +209,9 @@ void Wizard::install(const QString &cmdLine)
         Dialogs::error(tr(R"(File "%1" is not a valid Windows application!)").arg(exe));
         return;
     }
-    QString arch, bs, acs, as;
-    if (prepare(arch, bs, acs, as))
+    QString prefixName, arch, bs, acs, as;
+    if (prepare(prefixName, arch, bs, acs, as))
     {
-        QSettings s(FS::temp().absoluteFilePath("solution"), QSettings::IniFormat);
-        s.setIniCodec("UTF-8");
-        QString prefixName = s.value("Name").toString();
         QString prefixHash = FS::hash(prefixName);
         if (FS::prefix(prefixHash).exists())
             FS::removePrefix(prefixHash);
@@ -257,7 +255,7 @@ bool Wizard::testSuffix(const QFileInfo &path) const
     return suffix == "EXE" || suffix == "MSI";
 }
 
-bool Wizard::prepare(QString &arch, QString &bs, QString &acs, QString &as) const
+bool Wizard::prepare(QString &name, QString &arch, QString &bs, QString &acs, QString &as) const
 {
     QDir cache = FS::cache();
     QString repoPath = cache.absoluteFilePath("main.wwrepo");
@@ -296,19 +294,28 @@ bool Wizard::prepare(QString &arch, QString &bs, QString &acs, QString &as) cons
         if (dd.exec() != QDialog::Accepted)
             return false;
     }
-    QSettings s(FS::temp().absoluteFilePath("solution"), QSettings::IniFormat);
-    s.setIniCodec("UTF-8");
-    QString bw = s.value("BWine").toString();
-    if (bw.isEmpty())
+    QByteArray data = FS::readFile(FS::temp().absoluteFilePath("solution")).toUtf8();
+    QJsonParseError err;
+    QJsonDocument jd = QJsonDocument::fromJson(data, &err);
+    if (err.error != QJsonParseError::NoError)
     {
         Dialogs::error(tr("Incorrect solution file format!"));
         return false;
     }
-    QString aw = s.value("AWine").toString();
-    QStringList bp = s.value("BPackages").toStringList();
-    QStringList ap = s.value("APackages").toStringList();
-    QString bScript = s.value("BScript").toString();
-    QString aScript = s.value("AScript").toString();
+    QJsonObject jo = jd.object();
+    name = jo.value("name").toString();
+    QString bw = jo.value("bw").toString();
+    QString aw = jo.value("aw").toString();
+    QStringList bp;
+    QJsonArray bpArr = jo.value("bp").toArray();
+    for(QJsonArray::const_iterator iter = bpArr.begin(); iter != bpArr.end(); ++iter)
+        bp.append((*iter).toString());
+    QStringList ap;
+    QJsonArray apArr = jo.value("ap").toArray();
+    for(QJsonArray::const_iterator iter = apArr.begin(); iter != apArr.end(); ++iter)
+        ap.append((*iter).toString());
+    QString bScript = jo.value("bs").toString();
+    QString aScript = jo.value("as").toString();
     QSet<QString> files;
     r.beginGroup("Packages" + arch);
     required(bw, files, &r);
@@ -337,12 +344,12 @@ bool Wizard::prepare(QString &arch, QString &bs, QString &acs, QString &as) cons
     r.endGroup();
     QString constScript = makeConstScript(arch);
     bs = constScript;
-    QSettings settings("winewizard", "settings");
-    settings.beginGroup("VideoSettings");
-    QString scrW = settings.value("ScreenWidth").toString();
-    QString scrH = settings.value("ScreenHeight").toString();
-    QString vmSize = settings.value("VideoMemorySize").toString();
-    settings.endGroup();
+    QSettings s("winewizard", "settings");
+    s.beginGroup("VideoSettings");
+    QString scrW = s.value("ScreenWidth").toString();
+    QString scrH = s.value("ScreenHeight").toString();
+    QString vmSize = s.value("VideoMemorySize").toString();
+    s.endGroup();
     QString is = r.value("Init").toString() + '\n';
     bs += QString(is).arg(arch).arg(bw).arg(scrW + 'x' + scrH).arg(vmSize) + '\n';
     if (!bp.isEmpty() || !bScript.isEmpty())
@@ -358,13 +365,13 @@ bool Wizard::prepare(QString &arch, QString &bs, QString &acs, QString &as) cons
         as += "ww_install_wine " + QString(aw) + '\n';
     for (const QString &p : ap)
         as += "ww_install " + p + '\n';
-    if ((!bScript.isEmpty() || !aScript.isEmpty()) && settings.value("UseScripts", false).toBool())
+    if ((!bScript.isEmpty() || !aScript.isEmpty()) && s.value("UseScripts", false).toBool())
         if (ScriptDialog(bScript, aScript).exec() == QDialog::Accepted)
         {
             if (!bScript.isEmpty())
-                acs += "ww_info 'Start additional script ...'\n" + bScript + '\n';
+                acs += "ww_info 'Start additional script ...'\n" + bScript.replace("\\", "\\\\") + '\n';
             if (!aScript.isEmpty())
-                as += "ww_info 'Start additional script ...'\n" + aScript + '\n';
+                as += "ww_info 'Start additional script ...'\n" + aScript.replace("\\", "\\\\") + '\n';
         }
     as += r.value("Done").toString();
     return true;

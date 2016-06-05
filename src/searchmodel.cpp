@@ -18,6 +18,10 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+
 #include "searchmodel.h"
 #include "filesystem.h"
 
@@ -65,14 +69,17 @@ bool SearchModel::setData(const QModelIndex &/*index*/, const QVariant &/*value*
     {
         beginResetModel();
         mList.clear();
-        QStringList fData = FS::readFile(FS::temp().absoluteFilePath("search")).split('\n', QString::SkipEmptyParts);
-        mPostsCount = fData.takeFirst().toInt();
-        mExists = fData.takeFirst().toInt() == 1;
-        for (int i = 0, count = fData.count(); i < count; i += 3)
+        QByteArray data = FS::readFile(FS::temp().absoluteFilePath("search")).toUtf8();
+        QJsonObject jo = QJsonDocument::fromJson(data).object();
+        mPostsCount = jo.value("count").toInt();
+        mExists = jo.value("exists").toBool();
+        QJsonArray items = jo.value("items").toArray();
+        for(QJsonArray::const_iterator iter = items.begin(); iter != items.end(); ++iter)
         {
-            QString name = fData.at(i);
-            bool editable = fData.at(i + 1).toInt() == 1;
-            QString slug = fData.at(i + 2);
+            QJsonObject item = (*iter).toObject();
+            QString name = item.value("name").toString();
+            bool editable = item.value("editable").toBool();
+            QString slug = item.value("slug").toString();
             mList.append(Solution{ name, slug, editable });
         }
         endResetModel();

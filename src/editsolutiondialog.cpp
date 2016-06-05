@@ -88,27 +88,35 @@ EditSolutionDialog::EditSolutionDialog(const QString &arch, QWidget *parent, boo
     ui->aPackages->setDragEnabled(edit);
     ui->bScript->setReadOnly(!edit);
     ui->aScript->setReadOnly(!edit);
-    QSettings settings("winewizard", "settings");
-    settings.beginGroup("EditSolutionDialog");
-    resize(settings.value("Size", size()).toSize());
-    settings.endGroup();
-    QSettings s(FS::temp().absoluteFilePath("solution"), QSettings::IniFormat);
-    s.setIniCodec("UTF-8");
-    QStringList bPackages = s.value("BPackages").toStringList();
-    QStringList aPackages = s.value("APackages").toStringList();
-    mSlug = s.value("Slug").toString();
-    setWindowTitle(s.value("Name").toString());
-    ui->bWine->setText(s.value("BWine").toString());
-    ui->aWine->setText(s.value("AWine").toString());
-    ui->bWineView->setText(ui->bWine->text());
-    ui->aWineView->setText(ui->aWine->text());
-    ui->bScript->setPlainText(s.value("BScript").toString());
-    ui->aScript->setPlainText(s.value("AScript").toString());
+    QSettings s("winewizard", "settings");
+    s.beginGroup("EditSolutionDialog");
+    resize(s.value("Size", size()).toSize());
+    s.endGroup();
+
+    QByteArray data = FS::readFile(FS::temp().absoluteFilePath("solution")).toUtf8();
+    QJsonObject jo = QJsonDocument::fromJson(data).object();
+    QStringList bp;
+    QJsonArray bpArr = jo.value("bp").toArray();
+    for(QJsonArray::const_iterator iter = bpArr.begin(); iter != bpArr.end(); ++iter)
+        bp.append((*iter).toString());
+    QStringList ap;
+    QJsonArray apArr = jo.value("ap").toArray();
+    for(QJsonArray::const_iterator iter = apArr.begin(); iter != apArr.end(); ++iter)
+        ap.append((*iter).toString());
+    mSlug = jo.value("slug").toString();
+    setWindowTitle(jo.value("name").toString());
+    ui->bWineView->setText(jo.value("bw").toString());
+    ui->aWineView->setText(jo.value("aw").toString());
+    ui->bWine->setText(ui->bWineView->text());
+    ui->aWine->setText(ui->aWineView->text());
+    ui->bScript->setPlainText(jo.value("bs").toString());
+    ui->aScript->setPlainText(jo.value("as").toString());
+
     QSettings r(FS::cache().absoluteFilePath("main.wwrepo"), QSettings::IniFormat);
     r.setIniCodec("UTF-8");
     r.beginGroup("Packages" + arch);
     PackageModel::PackageList all, bList, aList;
-    for (const QString &name : bPackages)
+    for (const QString &name : bp)
     {
         r.beginGroup(name);
         QString category = r.value("Category", tr("Other")).toString();
@@ -116,7 +124,7 @@ EditSolutionDialog::EditSolutionDialog(const QString &arch, QWidget *parent, boo
         bList.append(PackageModel::Package{ name, category, tooltip, PT_PACKAGE});
         r.endGroup();
     }
-    for (const QString &name : aPackages)
+    for (const QString &name : ap)
     {
         r.beginGroup(name);
         QString category = r.value("Category", tr("Other")).toString();
@@ -131,7 +139,7 @@ EditSolutionDialog::EditSolutionDialog(const QString &arch, QWidget *parent, boo
         switch (type)
         {
         case PT_PACKAGE:
-            if (!bPackages.contains(name) && !aPackages.contains(name))
+            if (!bp.contains(name) && !ap.contains(name))
             {
                 QString category = r.value("Category", tr("Other")).toString();
                 QString tooltip = r.value("Help").toString();
@@ -172,20 +180,24 @@ EditSolutionDialog::~EditSolutionDialog()
 
 void EditSolutionDialog::accept()
 {
-    QUrlQuery data;
-    data.addQueryItem("slug", /*mSolData.slug*/mSlug);
-    data.addQueryItem("bw", ui->bWine->text());
-    data.addQueryItem("aw", ui->aWine->text());
-    data.addQueryItem("bs", ui->bScript->toPlainText().trimmed());
-    data.addQueryItem("as", ui->aScript->toPlainText().trimmed());
+    QJsonObject data;
+    data.insert("arch", mArch);
+    data.insert("slug", mSlug);
+    data.insert("bw", ui->bWineView->text());
+    data.insert("aw", ui->aWineView->text());
+    QJsonArray bp;
     QAbstractItemModel *bpModel = ui->bPackages->model();
     for (int i = 0, count = bpModel->rowCount(); i < count; ++i)
-        data.addQueryItem("bp[]", bpModel->index(i, 0).data().toString());
+        bp.append(bpModel->index(i, 0).data().toString());
+    data.insert("bp", bp);
+    QJsonArray ap;
     QAbstractItemModel *apModel = ui->aPackages->model();
     for (int i = 0, count = apModel->rowCount(); i < count; ++i)
-        data.addQueryItem("ap[]", apModel->index(i, 0).data().toString());
-    data.addQueryItem("arch", mArch);
-    PostDialog pd(API_URL + "?c=update", data, this);
+        ap.append(apModel->index(i, 0).data().toString());
+    data.insert("ap", ap);
+    data.insert("bs", ui->bScript->toPlainText().trimmed());
+    data.insert("as", ui->aScript->toPlainText().trimmed());
+    PostDialog pd(API_URL + "?c=update", QJsonDocument(data), this);
     if (pd.exec() == QDialog::Accepted)
         QDialog::accept();
 }
@@ -204,28 +216,36 @@ void EditSolutionDialog::on_category_clicked()
 
 void EditSolutionDialog::on_bWine_clicked()
 {
-    SelectDialog sd(mWineList, ui->bWine->text(), this);
+    SelectDialog sd(mWineList, ui->bWineView->text(), this);
     sd.setWindowTitle(tr("Select Wine"));
     if (sd.exec() == QDialog::Accepted)
-        ui->bWine->setText(sd.selectedItem());
+    {
+        ui->bWineView->setText(sd.selectedItem());
+        ui->bWine->setText(ui->bWineView->text());
+    }
 }
 
 void EditSolutionDialog::on_aWine_clicked()
 {
-    SelectDialog sd(mWineList, ui->aWine->text(), this);
+    SelectDialog sd(mWineList, ui->aWineView->text(), this);
     sd.setWindowTitle(tr("Select Wine"));
     if (sd.exec() == QDialog::Accepted)
-        ui->aWine->setText(sd.selectedItem());
+    {
+        ui->aWineView->setText(sd.selectedItem());
+        ui->aWine->setText(ui->aWineView->text());
+    }
 }
 
 void EditSolutionDialog::on_bMoveWine_clicked()
 {
-    ui->aWine->setText(ui->bWine->text());
+    ui->aWineView->setText(ui->bWineView->text());
+    ui->aWine->setText(ui->bWineView->text());
 }
 
 void EditSolutionDialog::on_aMoveWine_clicked()
 {
-    ui->bWine->setText(ui->aWine->text());
+    ui->bWineView->setText(ui->aWineView->text());
+    ui->bWine->setText(ui->aWineView->text());
 }
 
 void EditSolutionDialog::on_buttonBox_helpRequested()

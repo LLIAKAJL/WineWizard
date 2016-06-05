@@ -32,7 +32,7 @@ class PostDialog : public NetDialog
     Q_OBJECT
 
 public:
-    explicit PostDialog(const QString &url, const QUrlQuery &data, QWidget *parent = nullptr);
+    explicit PostDialog(const QString &url, const QJsonDocument &data, QWidget *parent = nullptr);
     ~PostDialog() override;
 
 public slots:
@@ -44,7 +44,7 @@ private slots:
 private:
     Ui::PostDialog *ui;
     QString mUrl;
-    QUrlQuery mData;
+    QJsonDocument mData;
 
     void post();
 };

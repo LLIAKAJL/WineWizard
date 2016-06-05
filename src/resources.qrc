@@ -5,5 +5,7 @@
         <file alias="winemenubuilder.exe">files/winemenubuilder.exe</file>
         <file alias="run">files/run-sh</file>
         <file alias="winemenubuilder64.exe">files/winemenubuilder64.exe</file>
+        <file alias="regedit">files/regedit.png</file>
+        <file alias="winecfg">files/winecfg.png</file>
     </qresource>
 </RCC>

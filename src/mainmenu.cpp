@@ -47,8 +47,8 @@ MainMenu::MainMenu(bool autoclose, const QStringList &runList, const QStringList
             sortList(sList, false);
             QSettings s(FS::prefix(hash).absoluteFilePath(".settings"), QSettings::IniFormat);
             s.setIniCodec("UTF-8");
-            QString name = s.value("Name").toString().replace('&', "&&");
-            QMenu *pMenu = addMenu(getPrefixIcon(hash), name);
+            QString name = s.value("Name").toString();
+            QMenu *pMenu = addMenu(getPrefixIcon(hash), QString(name).replace('&', "&&"));
             bool run = runList.contains(hash);
             bool busyOrRun = busyList.contains(hash) || run;
             if (sList.isEmpty())
@@ -63,8 +63,8 @@ MainMenu::MainMenu(bool autoclose, const QStringList &runList, const QStringList
                                                      style()->standardIcon(QStyle::SP_FileLinkIcon);
                     QSettings s(shortcut.absoluteFilePath(), QSettings::IniFormat);
                     s.setIniCodec("UTF-8");
-                    QString name = s.value("Name").toString().replace('&', "&&");
-                    act = pMenu->addAction(icon, name);
+                    QString name = s.value("Name").toString();
+                    act = pMenu->addAction(icon, QString(name).replace('&', "&&"));
                     act->setProperty("PrefixHash", hash);
                     act->setProperty("Exe", FS::toUnixPath(hash, s.value("Exe").toString()));
                     act->setProperty("WorkDir", FS::toUnixPath(hash, s.value("WorkDir").toString()));
@@ -85,8 +85,17 @@ MainMenu::MainMenu(bool autoclose, const QStringList &runList, const QStringList
             act->setData(RunFile);
             act = ccMenu->addAction(style()->standardIcon(QStyle::SP_DirOpenIcon), tr("Browse"));
             act->setProperty("PrefixHash", hash);
-            act->setData(Browse);
             ccMenu->addSeparator();
+            QMenu *uMenu = ccMenu->addMenu(style()->standardIcon(QStyle::SP_DialogResetButton), tr("Utilities"));
+            uMenu->setDisabled(busyOrRun);
+            act = uMenu->addAction(QIcon(":/winecfg"), tr("Winecfg"));
+            act->setProperty("PrefixHash", hash);
+            act->setProperty("Exe", FS::toUnixPath(hash, "C:\\windows\\system32\\winecfg.exe"));
+            act->setData(Run);
+            act = uMenu->addAction(QIcon(":/regedit"), tr("Regedit"));
+            act->setProperty("PrefixHash", hash);
+            act->setProperty("Exe", FS::toUnixPath(hash, "C:\\windows\\regedit.exe"));
+            act->setData(Run);
             act = ccMenu->addAction(style()->standardIcon(QStyle::SP_FileDialogDetailedView), tr("Edit"));
             act->setProperty("PrefixHash", hash);
             act->setData(Edit);

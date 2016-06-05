@@ -22,7 +22,7 @@
 #include "postdialog.h"
 #include "dialogs.h"
 
-PostDialog::PostDialog(const QString &url, const QUrlQuery &data, QWidget *parent) :
+PostDialog::PostDialog(const QString &url, const QJsonDocument &data, QWidget *parent) :
     NetDialog(parent),
     ui(new Ui::PostDialog),
     mUrl(url),
@@ -74,12 +74,12 @@ void PostDialog::postFinished()
 void PostDialog::post()
 {
     QNetworkRequest request(mUrl);
-    request.setRawHeader("User-Agent", "Mozilla Firefox");
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+    request.setHeader(QNetworkRequest::UserAgentHeader, "Mozilla Firefox");
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     QSslConfiguration conf = request.sslConfiguration();
     conf.setPeerVerifyMode(QSslSocket::VerifyNone);
     request.setSslConfiguration(conf);
-    QNetworkReply *reply = mNam.post(request, mData.toString(QUrl::FullyEncoded).toUtf8());
+    QNetworkReply *reply = mNam.post(request, mData.toJson()/*.query().toUtf8()*/);
     connect(reply, &QNetworkReply::finished, this, &PostDialog::postFinished);
     connect(this, &PostDialog::rejected, reply, &QNetworkReply::abort);
 }

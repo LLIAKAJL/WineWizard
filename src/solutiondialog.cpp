@@ -174,9 +174,9 @@ void SolutionDialog::on_addBtn_clicked()
     QString solution = ui->search->text().trimmed();
     if (Dialogs::confirm(tr("Are you sure you want to create solution \"%1\"?").arg(solution), this))
     {
-        QUrlQuery data;
-        data.addQueryItem("sname", solution);
-        PostDialog pd(API_URL + "?c=add", data, this);
+        QJsonObject jo;
+        jo.insert("sname", solution);
+        PostDialog pd(API_URL + "?c=add", QJsonDocument(jo), this);
         if (pd.exec() == QDialog::Accepted)
         {
             searchExecute();
@@ -208,9 +208,9 @@ bool SolutionDialog::getSolution(const QString &arch)
     DownloadDialog dd(QStringList(url), outFile, this);
     if (dd.exec() == QDialog::Accepted)
     {
-        QSettings s(outFile, QSettings::IniFormat);
-        s.setIniCodec("UTF-8");
-        if (!s.value("BWine").toString().isEmpty())
+        QJsonParseError err;
+        QJsonDocument::fromJson(FS::readFile(outFile).toUtf8(), &err);
+        if (err.error == QJsonParseError::NoError)
             return true;
         Dialogs::error(tr("Incorrect solution file format!"), this);
     }

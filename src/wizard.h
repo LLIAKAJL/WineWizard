@@ -45,7 +45,7 @@ private:
 
     void install(const QString &cmdLine);
     bool testSuffix(const QFileInfo &path) const;
-    bool prepare(QString &arch, QString &bs, QString &acs, QString &as) const;
+    bool prepare(QString &name, QString &arch, QString &bs, QString &acs, QString &as) const;
     void required(const QString &package, QSet<QString> &res, QSettings *r) const;
     void clearRepository() const;
     QString makeConstScript(const QString &arch) const;

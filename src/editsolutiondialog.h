@@ -46,7 +46,6 @@ private slots:
     void on_aWine_clicked();
     void on_bMoveWine_clicked();
     void on_aMoveWine_clicked();
-
     void on_buttonBox_helpRequested();
 
 private:
