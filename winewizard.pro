@@ -10,9 +10,14 @@ QMAKE_CXXFLAGS += -std=c++11
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-VERSION = 1.1.0
+VERSION = 2.0.0
 
-DEFINES += APP_VERSION=\\\"$$VERSION\\\"
+isEmpty(OS) {
+ OS = linux
+}
+
+DEFINES += APP_VERSION=\\\"$$VERSION\\\" \
+           OS=\\\"$$OS\\\"
 
 TARGET = winewizard
 isEmpty(PREFIX) {
@@ -30,6 +35,8 @@ INSTALLS += target \
             icon \
             desktop
 
+TRANSLATIONS += ru.ts
+
 SOURCES += src/qtsingleapplication/qtlocalpeer.cpp \
     src/qtsingleapplication/qtlockedfile.cpp \
     src/qtsingleapplication/qtlockedfile_unix.cpp \
@@ -41,28 +48,29 @@ SOURCES += src/qtsingleapplication/qtlocalpeer.cpp \
     src/executor.cpp \
     src/filesystem.cpp \
     src/main.cpp \
-    src/outputdialog.cpp \
-    src/solutiondialog.cpp \
-    src/waitdialog.cpp \
     src/wizard.cpp \
-    src/singletonwidget.cpp \
-    src/singletondialog.cpp \
-    src/terminaldialog.cpp \
     src/searchmodel.cpp \
     src/packagemodel.cpp \
     src/packagesortmodel.cpp \
-    src/selectdialog.cpp \
-    src/selectmodel.cpp \
-    src/downloaddialog.cpp \
-    src/netdialog.cpp \
-    src/selectarchdialog.cpp \
-    src/postdialog.cpp \
     src/mainmenu.cpp \
-    src/editshortcutdialog.cpp \
-    src/editprefixdialog.cpp \
-    src/editsolutiondialog.cpp \
     src/settingsdialog.cpp \
-    src/scriptdialog.cpp
+    src/installwizard.cpp \
+    src/intropage.cpp \
+    src/winpage.cpp \
+    src/installpage.cpp \
+    src/solutionmodel.cpp \
+    src/mainwindow.cpp \
+    src/shortcutmodel.cpp \
+    src/repository.cpp \
+    src/categorymodel.cpp \
+    src/centercombobox.cpp \
+    src/winemodel.cpp \
+    src/winesortmodel.cpp \
+    src/categorysortmodel.cpp \
+    src/debugpage.cpp \
+    src/solutionpage.cpp \
+    src/solutiondialog.cpp \
+    src/prefixmodel.cpp
 
 HEADERS  += src/qtsingleapplication/qtlocalpeer.h \
     src/qtsingleapplication/qtlockedfile.h \
@@ -72,43 +80,41 @@ HEADERS  += src/qtsingleapplication/qtlocalpeer.h \
     src/dialogs.h \
     src/executor.h \
     src/filesystem.h \
-    src/outputdialog.h \
-    src/solutiondialog.h \
-    src/waitdialog.h \
     src/wizard.h \
-    src/singletonwidget.h \
-    src/singletondialog.h \
-    src/terminaldialog.h \
     src/searchmodel.h \
     src/packagemodel.h \
     src/packagesortmodel.h \
-    src/selectdialog.h \
-    src/selectmodel.h \
-    src/downloaddialog.h \
-    src/netdialog.h \
-    src/selectarchdialog.h \
-    src/postdialog.h \
     src/mainmenu.h \
-    src/editshortcutdialog.h \
-    src/editprefixdialog.h \
-    src/editsolutiondialog.h \
     src/settingsdialog.h \
-    src/scriptdialog.h
+    src/installwizard.h \
+    src/intropage.h \
+    src/winpage.h \
+    src/installpage.h \
+    src/solutionmodel.h \
+    src/mainwindow.h \
+    src/shortcutmodel.h \
+    src/repository.h \
+    src/categorymodel.h \
+    src/centercombobox.h \
+    src/winemodel.h \
+    src/winesortmodel.h \
+    src/categorysortmodel.h \
+    src/debugpage.h \
+    src/solutionpage.h \
+    src/solutiondialog.h \
+    src/prefixmodel.h
 
-FORMS    += src/solutiondialog.ui \
+FORMS    += \
     src/aboutdialog.ui \
-    src/waitdialog.ui \
-    src/outputdialog.ui \
-    src/terminaldialog.ui \
-    src/selectdialog.ui \
-    src/downloaddialog.ui \
-    src/selectarchdialog.ui \
-    src/postdialog.ui \
-    src/editshortcutdialog.ui \
-    src/editprefixdialog.ui \
-    src/editsolutiondialog.ui \
     src/settingsdialog.ui \
-    src/scriptdialog.ui
+    src/installwizard.ui \
+    src/intropage.ui \
+    src/winpage.ui \
+    src/installpage.ui \
+    src/mainwindow.ui \
+    src/debugpage.ui \
+    src/solutionpage.ui \
+    src/solutiondialog.ui
 
 RESOURCES += \
     src/resources.qrc

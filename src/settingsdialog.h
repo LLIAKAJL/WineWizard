@@ -21,17 +21,19 @@
 #ifndef SETTINGSDIALOG_H
 #define SETTINGSDIALOG_H
 
-#include "singletondialog.h"
+#include <QDialog>
 
 namespace Ui {
 class SettingsDialog;
 }
 
-class SettingsDialog : public SingletonDialog
+class SettingsDialog : public QDialog
 {
     Q_OBJECT
 
 public:
+    enum { GuiWindow, GuiMenu };
+
     explicit SettingsDialog(QWidget *parent = nullptr);
     ~SettingsDialog() override;
 

@@ -18,117 +18,159 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <QSortFilterProxyModel>
+#include <QDesktopServices>
 #include <QWidgetAction>
+#include <QApplication>
 #include <QSettings>
 #include <QStyle>
+#include <QUrl>
 
+#include "installwizard.h"
+#include "shortcutmodel.h"
+#include "aboutdialog.h"
+#include "prefixmodel.h"
+#include "mainwindow.h"
 #include "filesystem.h"
+#include "executor.h"
 #include "mainmenu.h"
+#include "dialogs.h"
+#include "wizard.h"
 
-MainMenu::MainMenu(bool autoclose, const QStringList &runList, const QStringList &busyList, QWidget *parent) :
-    QMenu(parent),
-    SingletonWidget(this)
+MainMenu *MainMenu::mInstance = nullptr;
+
+MainMenu::MainMenu(QWidget *parent) :
+    QMenu(parent)
 {
-    move(QCursor::pos());
-    QAction *act = addAction(style()->standardIcon(QStyle::SP_DriveCDIcon), tr("Install Application"));
-    act->setData(Install);
-    act->setEnabled(busyList.isEmpty());
+    mInstance = this;
+    setAttribute(Qt::WA_DeleteOnClose);
+    QAction *act = addAction(style()->standardIcon(QStyle::SP_ComputerIcon), tr("&Control Center"));
+    connect(act, &QAction::triggered, this, &MainMenu::controlCenter);
     addSeparator();
-    QFileInfoList pList = FS::data().entryInfoList(QDir::AllDirs | QDir::NoDotAndDotDot);
-    if (pList.isEmpty())
+    PrefixModel model;
+    if (model.rowCount() == 0)
         addEmpty(this);
     else
     {
-        sortList(pList);
-        for (const QFileInfo &pInfo : pList)
+        QSortFilterProxyModel sortModel;
+        sortModel.setSourceModel(&model);
+        sortModel.sort(0);
+
+        for (int i = 0, count = sortModel.rowCount(); i < count; ++i)
         {
-            QString hash = pInfo.fileName();
-            QFileInfoList sList = FS::shortcuts(hash).entryInfoList(QDir::Files);
-            sortList(sList, false);
-            QSettings s(FS::prefix(hash).absoluteFilePath(".settings"), QSettings::IniFormat);
-            s.setIniCodec("UTF-8");
-            QString name = s.value("Name").toString();
-            QMenu *pMenu = addMenu(getPrefixIcon(hash), QString(name).replace('&', "&&"));
-            bool run = runList.contains(hash);
-            bool busyOrRun = busyList.contains(hash) || run;
-            if (sList.isEmpty())
+            QModelIndex pi = sortModel.index(i, 0);
+            QString prefix = pi.data(PrefixModel::PrefixRole).toString();
+            QString name = pi.data().toString();
+            QIcon icon = pi.data(Qt::DecorationRole).value<QIcon>();
+            QMenu *pMenu = addMenu(icon, QString(name).replace('&', "&&"));
+            ShortcutModel sm;
+            sm.setData(QModelIndex(), prefix, ShortcutModel::ResetRole);
+            QSortFilterProxyModel ssm;
+            ssm.setSourceModel(&sm);
+            ssm.sort(0);
+            if (ssm.rowCount() == 0)
                 addEmpty(pMenu);
             else
             {
-                QDir iDir = FS::icons(hash);
-                for (const QFileInfo &shortcut : sList)
+                for (int i = 0, count = ssm.rowCount(); i < count; ++i)
                 {
-                    QString base = shortcut.fileName();
-                    QIcon icon = iDir.exists(base) ? QIcon(iDir.absoluteFilePath(base)) :
-                                                     style()->standardIcon(QStyle::SP_FileLinkIcon);
-                    QSettings s(shortcut.absoluteFilePath(), QSettings::IniFormat);
-                    s.setIniCodec("UTF-8");
-                    QString name = s.value("Name").toString();
-                    act = pMenu->addAction(icon, QString(name).replace('&', "&&"));
-                    act->setProperty("PrefixHash", hash);
-                    act->setProperty("Exe", FS::toUnixPath(hash, s.value("Exe").toString()));
-                    act->setProperty("WorkDir", FS::toUnixPath(hash, s.value("WorkDir").toString()));
-                    act->setProperty("Args", s.value("Args").toString());
-                    if (s.value("Debug", true).toBool())
-                    {
-                        act->setData(Debug);
-                        act->setProperty("Shortcut", shortcut.absoluteFilePath());
-                    }
-                    else
-                        act->setData(Run);
+                    QModelIndex si = ssm.index(i, 0);
+                    QString name = si.data().toString().replace('&', "&&");
+                    QIcon icon = si.data(Qt::DecorationRole).value<QIcon>();
+                    QAction *act = pMenu->addAction(icon, name);
+                    QString exe = si.data(ShortcutModel::ExeRole).toString();
+                    QString workDir = si.data(ShortcutModel::WorkDirRole).toString();
+                    QString args = si.data(ShortcutModel::ArgsRole).toString();
+                    act->setProperty("prefix", prefix);
+                    act->setProperty("exe", exe);
+                    act->setProperty("dir", workDir);
+                    act->setProperty("args", args);
+                    connect(act, &QAction::triggered, this, &MainMenu::run);
                 }
+                pMenu->addSeparator();
+                QAction *act = pMenu->addAction(style()->standardIcon(QStyle::SP_MediaStop),
+                                                tr("&Terminate"));
+                act->setShortcut(QKeySequence(QString("Ctrl+T")));
+                act->setProperty("name", name);
+                act->setProperty("prefix", prefix);
+                connect(act, &QAction::triggered, this, &MainMenu::terminate);
+                act->setEnabled(Executor::contains(prefix));
             }
-            pMenu->addSeparator();
-            QMenu *ccMenu = pMenu->addMenu(style()->standardIcon(QStyle::SP_ComputerIcon), tr("Control Center"));
-            act = ccMenu->addAction(style()->standardIcon(QStyle::SP_MediaPlay), tr("Run File"));
-            act->setProperty("PrefixHash", hash);
-            act->setData(RunFile);
-            act = ccMenu->addAction(style()->standardIcon(QStyle::SP_DirOpenIcon), tr("Browse"));
-            act->setProperty("PrefixHash", hash);
-            ccMenu->addSeparator();
-            QMenu *uMenu = ccMenu->addMenu(style()->standardIcon(QStyle::SP_DialogResetButton), tr("Utilities"));
-            uMenu->setDisabled(busyOrRun);
-            act = uMenu->addAction(QIcon(":/winecfg"), tr("Winecfg"));
-            act->setProperty("PrefixHash", hash);
-            act->setProperty("Exe", FS::toUnixPath(hash, "C:\\windows\\system32\\winecfg.exe"));
-            act->setData(Run);
-            act = uMenu->addAction(QIcon(":/regedit"), tr("Regedit"));
-            act->setProperty("PrefixHash", hash);
-            act->setProperty("Exe", FS::toUnixPath(hash, "C:\\windows\\regedit.exe"));
-            act->setData(Run);
-            act = ccMenu->addAction(style()->standardIcon(QStyle::SP_FileDialogDetailedView), tr("Edit"));
-            act->setProperty("PrefixHash", hash);
-            act->setData(Edit);
-            act->setDisabled(busyOrRun);
-            ccMenu->addSeparator();
-            act = ccMenu->addAction(style()->standardIcon(QStyle::SP_TrashIcon), tr("Delete"));
-            act->setProperty("PrefixName", name);
-            act->setProperty("PrefixHash", hash);
-            act->setData(Delete);
-            act->setDisabled(busyOrRun);
-            pMenu->addSeparator();
-            act = pMenu->addAction(style()->standardIcon(QStyle::SP_DialogCancelButton), tr("Terminate"));
-            act->setProperty("PrefixName", name);
-            act->setProperty("PrefixHash", hash);
-            act->setData(Terminate);
-            act->setEnabled(run);
         }
     }
     addSeparator();
-    act = addAction(style()->standardIcon(QStyle::SP_FileDialogDetailedView), tr("Settings"));
-    act->setData(Settings);
-    act->setEnabled(busyList.isEmpty() && runList.isEmpty());
+    act = addAction(style()->standardIcon(QStyle::SP_MediaStop), tr("Terminate &All"));
+    act->setShortcut(QKeySequence(QString("Ctrl+Shift+T")));
+    connect(act, &QAction::triggered, this, &MainMenu::terminateAll);
+    act->setDisabled(Executor::instances().isEmpty());
     addSeparator();
-    act = addAction(QIcon::fromTheme("winewizard"), tr("About"));
-    act->setData(About);
-    act = addAction(style()->standardIcon(QStyle::SP_DialogHelpButton), tr("Help"));
-    act->setData(Help);
-    if (!autoclose)
+    act = addAction(style()->standardIcon(QStyle::SP_DialogHelpButton), tr("&Help"));
+    act->setShortcut(QKeySequence::HelpContents);
+    connect(act, &QAction::triggered, this, &MainMenu::help);
+    act = addAction(style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("About"));
+    connect(act, &QAction::triggered, this, &MainMenu::about);
+    if (!Wizard::autoquit())
     {
         addSeparator();
-        act = addAction(style()->standardIcon(QStyle::SP_DialogCloseButton), tr("Quit"));
-        act->setData(Quit);
+        act = addAction(QIcon::fromTheme("application-exit", QIcon(":/icons/quit")), tr("&Quit"));
+        act->setShortcut(QKeySequence::Quit);
+        connect(act, &QAction::triggered, this, &MainMenu::quit);
     }
+}
+
+MainMenu::~MainMenu()
+{
+    mInstance = nullptr;
+    Wizard::update();
+}
+
+MainMenu *MainMenu::instance()
+{
+    return mInstance;
+}
+
+void MainMenu::controlCenter()
+{
+    (new MainWindow)->showNormal();
+}
+
+void MainMenu::terminateAll()
+{
+    if (Dialogs::confirm(tr("Are you sure you want to terminate all applications?")))
+        for (Executor *e : Executor::instances())
+            e->deleteLater();
+}
+
+void MainMenu::terminate()
+{
+    QString name = sender()->property("name").toString();
+    if (Dialogs::confirm(tr("Are you sure you want to terminate \"%1\"?").arg(name)))
+    {
+        QString prefix = sender()->property("prefix").toString();
+        for (Executor *e : Executor::instances())
+            if (e->prefix() == prefix)
+                e->deleteLater();
+    }
+}
+
+void MainMenu::about()
+{
+    AboutDialog().exec();
+}
+
+void MainMenu::quit()
+{
+    if (Dialogs::confirm(tr("Are you sure you want to quit from Wine Wizard?")))
+    {
+        for (Executor *e : Executor::instances())
+            e->deleteLater();
+        QApplication::quit();
+    }
+}
+
+void MainMenu::help()
+{
+    QDesktopServices::openUrl(QUrl("http://wwizard.net/help/"));
 }
 
 void MainMenu::addEmpty(QMenu *menu)
@@ -138,35 +180,13 @@ void MainMenu::addEmpty(QMenu *menu)
     menu->addAction(act);
 }
 
-QIcon MainMenu::getPrefixIcon(const QString &prefixHash) const
+void MainMenu::run()
 {
-    QString iconPath = FS::prefix(prefixHash).absoluteFilePath(".icon");
-    if (!QFile::exists(iconPath))
-    {
-        QFileInfoList iList = FS::icons(prefixHash).entryInfoList(QDir::Files);
-        if (!iList.isEmpty())
-        {
-            QFile::copy(iList.first().absoluteFilePath(), iconPath);
-            return QIcon(iconPath);
-        }
-        return style()->standardIcon(QStyle::SP_DirIcon);
-    }
-    return QIcon(iconPath);
-}
-
-void MainMenu::sortList(QFileInfoList &list, bool prefix)
-{
-    QMap<QString, QString> sortList;
-    for (const QFileInfo &item : list)
-    {
-        QString hash = item.fileName();
-        QString path = prefix ? FS::prefix(hash).absoluteFilePath(".settings") : item.absoluteFilePath();
-        QSettings s(path, QSettings::IniFormat);
-        s.setIniCodec("UTF-8");
-        sortList.insert(hash, s.value("Name").toString().replace('&', "&&"));
-    }
-    qSort(list.begin(), list.end(), [&sortList](const QFileInfo &l, const QFileInfo &r)
-    {
-        return sortList.value(l.fileName()) < sortList.value(r.fileName());
-    });
+    QString prefix = sender()->property("prefix").toString();
+    QString exe = sender()->property("exe").toString();
+    QString workDir = sender()->property("dir").toString();
+    QString args = sender()->property("args").toString();
+    QString script = QString(FS::readFile(":/run")).arg(exe).arg(workDir).arg(args);
+    Executor *e = new Executor(prefix);
+    e->start(script, false, QProcess::ForwardedChannels);
 }

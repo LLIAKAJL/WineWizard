@@ -22,19 +22,26 @@
 #define SEARCHMODEL_H
 
 #include <QAbstractListModel>
+#include <QColor>
+
+#include "solutionmodel.h"
 
 class SearchModel : public QAbstractListModel
 {
     Q_OBJECT
 
-    struct Solution
+    struct Item
     {
-        QString name, slug;
-        bool editable;
+        int id, solution, aRating, rating;
+        QString name, prefix;
+        SolutionModel *model;
+        bool approved;
     };
+    typedef QList<Item> ItemList;
 
 public:
-    enum { CountRole = Qt::UserRole + 1, ReloadRole, ExistsRole, EditableRole, SlugRole };
+    enum { ResetRole = Qt::UserRole + 1, IdRole, CountRole, ExistsRole,
+           PrefixRole, SolutionRole, ModelRole };
 
     explicit SearchModel(QObject *parent = nullptr);
 
@@ -43,9 +50,11 @@ public:
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
 
 private:
-    QList<Solution> mList;
-    int mPostsCount;
+    ItemList mList;
+    int mCount;
     bool mExists;
+
+    QIcon ratingToIcon(const QModelIndex &index) const;
 };
 
 #endif // SEARCHMODEL_H

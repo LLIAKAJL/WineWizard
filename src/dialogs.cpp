@@ -18,67 +18,71 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <QInputDialog>
 #include <QFileDialog>
 #include <QPushButton>
 #include <QSettings>
 #include <QCheckBox>
+#include <QLayout>
 
 #include "filesystem.h"
 #include "dialogs.h"
 
-const QString S_OK = QObject::tr("Is your application working correctly?");
-const QString S_FAILED = QObject::tr("The shortcuts directory is empty! Is your application working correctly?");
-
 namespace Dialogs
 {
-    MessageDialog::MessageDialog(QMessageBox::Icon icon, const QString &title, const QString &text, QMessageBox::StandardButtons buttons, QWidget *parent) :
-        QMessageBox(icon, title, text, buttons, parent),
-        SingletonWidget(this)
-    {
-    }
-
-    //--------------------------------------------------------------------------------------------
-
     void error(const QString &text, QWidget *parent)
     {
-        MessageDialog md(QMessageBox::Critical, QObject::tr("Error"), text, QMessageBox::Ok, parent);
-        md.connect(md.button(QMessageBox::Ok), &QPushButton::clicked, &md, &QMessageBox::accept);
-        md.exec();
+        QMessageBox::critical(parent, QObject::tr("Error"), text, QMessageBox::Ok);
     }
 
     bool confirm(const QString &text, QWidget *parent)
     {
-        MessageDialog md(QMessageBox::Warning, QObject::tr("Warning"), text, QMessageBox::Yes | QMessageBox::No, parent);
-        md.connect(md.button(QMessageBox::Yes), &QPushButton::clicked, &md, &QMessageBox::accept);
-        md.connect(md.button(QMessageBox::No), &QPushButton::clicked, &md, &QMessageBox::reject);
-        return md.exec() == QDialog::Accepted;
+        return QMessageBox::warning(parent, QObject::tr("Warning"), text,
+                                    QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes;
+    }
+
+    bool question(const QString &text, QWidget *parent)
+    {
+        return QMessageBox::question(parent, QObject::tr("Confirm"), text,
+                                    QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes;
     }
 
     bool retry(const QString &text, QWidget *parent)
     {
-        MessageDialog md(QMessageBox::Critical, QObject::tr("Error"), text, QMessageBox::Retry | QMessageBox::Cancel, parent);
-        md.connect(md.button(QMessageBox::Retry), &QPushButton::clicked, &md, &QMessageBox::accept);
-        md.connect(md.button(QMessageBox::Cancel), &QPushButton::clicked, &md, &QMessageBox::reject);
-        return md.exec() == QDialog::Accepted;
+        return QMessageBox::critical(parent, QObject::tr("Error"), text,
+                                    QMessageBox::Retry | QMessageBox::Cancel) == QMessageBox::Retry;
     }
 
     QString open(const QString &title, const QString &filter, QWidget *parent, const QString &dir)
     {
-        return QFileDialog::getOpenFileName(parent, title, dir, filter, nullptr);
+        return QFileDialog::getOpenFileName(parent, title, dir, filter);
     }
 
-    QString selectDir(const QString &start, QWidget *parent)
+    QString dir(const QString &start, QWidget *parent)
     {
-        return QFileDialog::getExistingDirectory(parent, QObject::tr("Select Directory"), start, QFileDialog::ShowDirsOnly);
+        return QFileDialog::getExistingDirectory(parent,
+                   QObject::tr("Select Directory"), start, QFileDialog::ShowDirsOnly);
     }
 
-    bool finish(const QString &prefixHash, QWidget *parent)
+    bool getText(const QString &title, const QString &label, QString &text, QWidget *parent)
     {
-        bool empty = FS::shortcuts(prefixHash).entryList(QDir::Files | QDir::Hidden).isEmpty();
-        MessageDialog md(QMessageBox::Question, QObject::tr("Debug"), empty ? S_FAILED : S_OK,
-                         QMessageBox::Yes| QMessageBox::No, parent);
-        md.connect(md.button(QMessageBox::Yes), &QPushButton::clicked, &md, &QMessageBox::accept);
-        md.connect(md.button(QMessageBox::No), &QPushButton::clicked, &md, &QMessageBox::reject);
-        return md.exec() == QDialog::Accepted;
+        QInputDialog id(parent);
+        id.setInputMode(QInputDialog::TextInput);
+        id.setWindowTitle(title);
+        id.resize(550, id.height());
+        id.setLabelText(label);
+        id.setTextValue(text);
+        if (id.exec() == QInputDialog::Accepted)
+        {
+            text = id.textValue();
+            return true;
+        }
+        return false;
     }
+
+    QString save(const QString &title, const QString &filter, QWidget *parent, const QString &dir)
+    {
+        return QFileDialog::getSaveFileName(parent, title, dir, filter);
+    }
+
 }

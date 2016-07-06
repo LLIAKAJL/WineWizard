@@ -22,17 +22,20 @@
 
 #include "ui_aboutdialog.h"
 #include "aboutdialog.h"
+#include "wizard.h"
 
 AboutDialog::AboutDialog(QWidget *parent) :
-    SingletonDialog(parent),
+    QDialog(parent),
     ui(new Ui::AboutDialog)
 {
     ui->setupUi(this);
     ui->icon->setPixmap(QIcon::fromTheme("winewizard").pixmap(QSize(128, 128)));
-    ui->label->setText(ui->label->text().arg(qApp->applicationDisplayName(), qApp->applicationVersion()));
+    ui->label->setText(ui->label->text().arg(qApp->applicationDisplayName(),
+                                             qApp->applicationVersion()));
 }
 
 AboutDialog::~AboutDialog()
 {
     delete ui;
+    Wizard::update();
 }

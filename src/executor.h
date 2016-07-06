@@ -21,15 +21,42 @@
 #ifndef EXECUTOR_H
 #define EXECUTOR_H
 
+#include <QProcess>
 #include <QWidget>
 
-namespace Ex
+class Executor : public QObject
 {
-    typedef QPair<QString, QString> Out;
-    void release(const QString &script, const QString &prefixHash = QString());
-    Out debug(const QString &script, const QString &prefixHash = QString());
-    void wait(const QString &script, const QString &prefixHash = QString(), QWidget *parent = nullptr);
-    void terminal(const QString &script, const QString &prefixHash = QString(), QWidget *parent = nullptr);
-}
+    Q_OBJECT
+
+    typedef QList<Executor *> ExList;
+
+public:
+    explicit Executor(const QString &prefix = QString(), QObject *parent = nullptr);
+    ~Executor() override;
+
+    void start(const QString &script, bool release = false,
+               QProcess::ProcessChannelMode mode = QProcess::SeparateChannels);
+    const QString &prefix() const;
+
+    static ExList &instances();
+    static bool contains(const QString &prefix);
+
+signals:
+    void readyOutput(const QByteArray &output);
+    void readyError(const QByteArray &data);
+    void started();
+    void finished(int code);
+
+private slots:
+    void readyReadOutput();
+    void readyReadError();
+
+private:
+    static ExList mInstances;
+    QProcess mProc;
+    QString mPrefix;
+
+    QProcessEnvironment env() const;
+};
 
 #endif // EXECUTOR_H

@@ -18,43 +18,53 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <QDesktopServices>
 #include <QFileInfo>
 #include <QIcon>
 #include <QDir>
 
 #include "qtsingleapplication/QtSingleApplication"
+#include "installwizard.h"
 #include "wizard.h"
 
 int main(int argc, char *argv[])
 {
     QtSingleApplication app(argc, argv);
-    QStringList list = app.arguments();
-    list.removeFirst();
-    QString cmdLine = list.isEmpty() ? QString() : QFileInfo(list.takeFirst()).absoluteFilePath();
-    if (!cmdLine.isEmpty())
-         cmdLine += '\n' + QDir::currentPath() + '\n' + list.join('\n');
     if (app.isRunning())
     {
-        app.sendMessage(cmdLine);
-        return 0;
+        switch (argc)
+        {
+        case 3:
+            app.sendMessage(QString(argv[1]) + '\n' + argv[2]);
+            return 0;
+        case 2:
+            app.sendMessage(QFileInfo(argv[1]).absoluteFilePath());
+            return 0;
+        default:
+            app.sendMessage(QString());
+            return 0;
+        }
     }
+
     app.setQuitOnLastWindowClosed(false);
     app.setApplicationDisplayName("Wine Wizard");
     app.setApplicationName("winewizard");
     app.setApplicationVersion(APP_VERSION);
-    bool trayVisible, autoclose;
+
+    Wizard w;
+    w.connect(&app, &QtSingleApplication::messageReceived, &w, &Wizard::start);
+    switch (argc)
     {
-        QSettings s("winewizard", "settings");
-        s.beginGroup("Tray");
-        trayVisible = s.value("Visible", false).toBool();
-        autoclose = s.value("Autoclose", true).toBool();
-        s.endGroup();
+    case 3:
+        w.start(QString(argv[1]) + '\n' + argv[2]);
+        break;
+    case 2:
+        w.start(QFileInfo(argv[1]).absoluteFilePath());
+        break;
+    default:
+        w.start();
+        break;
     }
-    Wizard w(trayVisible, autoclose);
-    app.connect(&app, &QtSingleApplication::messageReceived, &w, &Wizard::start);
-    w.start(cmdLine);
-    if (!trayVisible || autoclose || app.property("quit").toBool())
-        return 0;
-    else
-        return app.exec();
+
+    return app.exec();
 }

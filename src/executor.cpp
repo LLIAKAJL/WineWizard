@@ -18,78 +18,114 @@
  *                                                                         *
  ***************************************************************************/
 
-#include <QApplication>
-#include <QEventLoop>
 #include <QProcess>
 
-#include "terminaldialog.h"
-#include "waitdialog.h"
+#include "mainwindow.h"
 #include "filesystem.h"
 #include "executor.h"
-#include "dialogs.h"
+#include "wizard.h"
 
-namespace Ex
+#define FINISHED static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished)
+
+Executor::ExList Executor::mInstances;
+
+Executor::Executor(const QString &prefix,QObject *parent) :
+    QObject(parent),
+    mPrefix(prefix)
 {
-    QProcessEnvironment env(const QString &prefixHash)
+    mInstances.append(this);
+}
+
+Executor::~Executor()
+{
+    if (mProc.state() == QProcess::Running)
     {
-        QProcessEnvironment res = QProcessEnvironment::systemEnvironment();
-        if (!prefixHash.isEmpty())
+        mProc.disconnect();
+        if (!mPrefix.isEmpty())
         {
-            res.insert("WINEPREFIX", FS::prefix(prefixHash).absolutePath());
-            QString winePath = FS::wine(prefixHash).absolutePath();
-            res.insert("WINEVERPATH", winePath);
-            res.insert("PATH", winePath + "/bin:" + res.value("PATH"));
-            res.insert("WINESERVER", winePath + "/bin/wineserver");
-            res.insert("WINELOADER", winePath + "/bin/wine");
-            res.insert("WINEDLLPATH", winePath + "/lib/wine/fakedlls");
-            res.insert("LD_LIBRARY_PATH", winePath + "/lib:" + res.value("LD_LIBRARY_PATH"));
-            res.insert("WINEDLLOVERRIDES", "winemenubuilder.exe=n");
+            QProcess killProc;
+            killProc.setProcessEnvironment(env());
+            killProc.setProcessChannelMode(QProcess::ForwardedChannels);
+            killProc.start("sh", QStringList("-c") << FS::readFile(":/terminate"), QProcess::NotOpen);
+            killProc.waitForStarted();
+            killProc.waitForFinished();
         }
-        return res;
+        if (mProc.state() == QProcess::Running)
+        {
+            mProc.terminate();
+            mProc.waitForFinished();
+        }
     }
+    mInstances.removeOne(this);
+    MainWindow::update();
+    Wizard::update();
+}
 
-    void release(const QString &script, const QString &prefixHash)
+void Executor::start(const QString &script, bool release, QProcess::ProcessChannelMode mode)
+{
+    QProcessEnvironment e = env();
+    mProc.setProcessEnvironment(e);
+    if (mode == QProcess::SeparateChannels)
     {
-        QProcess proc;
-        QProcessEnvironment e = env(prefixHash);
+        connect(&mProc, &QProcess::readyReadStandardOutput, this, &Executor::readyReadOutput);
+        connect(&mProc, &QProcess::readyReadStandardError, this, &Executor::readyReadError);
+    }
+    else
+        mProc.setProcessChannelMode(mode);
+    if (release)
         e.insert("WINEDEBUG", "-all");
-        proc.setProcessEnvironment(e);
-        QEventLoop loop;
-        proc.connect(&proc, static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished), &loop, &QEventLoop::quit);
-        proc.start("sh", QStringList("-c") << script);
-        loop.exec();
-    }
+    connect(&mProc, FINISHED, this, &Executor::finished);
+    connect(this, &Executor::finished, this, &Executor::deleteLater);
+    connect(&mProc, &QProcess::started, this, &Executor::started);
+    mProc.start("sh", QStringList("-c") << script, (mode == QProcess::ForwardedChannels) ?
+                    QProcess::NotOpen : QProcess::ReadOnly);
+    MainWindow::update();
+}
 
-    Out debug(const QString &script, const QString &prefixHash)
-    {
-        QProcess proc;
-        proc.setProcessEnvironment(env(prefixHash));
-        QEventLoop loop;
-        proc.connect(&proc, static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished), &loop, &QEventLoop::quit);
-        proc.start("sh", QStringList("-c") << script);
-        loop.exec();
-        return qMakePair(proc.readAllStandardOutput(), proc.readAllStandardError());
-    }
+const QString &Executor::prefix() const
+{
+    return mPrefix;
+}
 
-    void wait(const QString &script, const QString &prefixHash, QWidget *parent)
-    {
-        QProcess proc;
-        proc.setProcessEnvironment(env(prefixHash));
-        WaitDialog wd(parent);
-        proc.connect(&proc, static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished), &wd, &WaitDialog::accept);
-        proc.start("sh", QStringList("-c") << script);
-        wd.exec();
-    }
+Executor::ExList &Executor::instances()
+{
+    return mInstances;
+}
 
-    void terminal(const QString &script, const QString &prefixHash, QWidget *parent)
+bool Executor::contains(const QString &prefix)
+{
+    for (Executor *e : mInstances)
+        if (e->prefix() == prefix)
+            return true;
+    return false;
+}
+
+void Executor::readyReadOutput()
+{
+    QProcess *proc = static_cast<QProcess *>(sender());
+    emit readyOutput(proc->readAllStandardOutput());
+}
+
+void Executor::readyReadError()
+{
+    QProcess *proc = static_cast<QProcess *>(sender());
+    emit readyError(proc->readAllStandardError());
+}
+
+QProcessEnvironment Executor::env() const
+{
+    QProcessEnvironment res = QProcessEnvironment::systemEnvironment();
+    if (!mPrefix.isEmpty())
     {
-        QProcess proc;
-        proc.setProcessEnvironment(env(prefixHash));
-        TerminalDialog td(parent);
-        proc.connect(&proc, static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished), &td, &TerminalDialog::executeFinished);
-        proc.connect(&proc, &QProcess::readyReadStandardOutput, &td, [&td, &proc](){ td.appendOut(proc.readAllStandardOutput()); });
-        proc.connect(&proc, &QProcess::readyReadStandardError, &td, [&td, &proc](){ td.appendErr(proc.readAllStandardError()); });
-        proc.start("sh", QStringList("-c") << script);
-        td.exec();
+        res.insert("WINEPREFIX", FS::prefix(mPrefix).absolutePath());
+        QString winePath = FS::wine(mPrefix).absolutePath();
+        res.insert("WINEVERPATH", winePath);
+        res.insert("PATH", winePath + "/bin:" + res.value("PATH"));
+        res.insert("WINESERVER", winePath + "/bin/wineserver");
+        res.insert("WINELOADER", winePath + "/bin/wine");
+        res.insert("WINEDLLPATH", winePath + "/lib/wine/fakedlls");
+        res.insert("LD_LIBRARY_PATH", winePath + "/lib:" + res.value("LD_LIBRARY_PATH"));
+        res.insert("WINEDLLOVERRIDES", "winemenubuilder.exe=n");
     }
+    return res;
 }

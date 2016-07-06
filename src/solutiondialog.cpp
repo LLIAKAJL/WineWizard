@@ -19,53 +19,115 @@
  ***************************************************************************/
 
 #include <QDesktopServices>
-#include <QDesktopWidget>
+#include <QJsonDocument>
 #include <QPushButton>
+#include <QJsonObject>
+#include <QJsonArray>
 #include <QSettings>
-#include <QUrl>
 
-#include "editsolutiondialog.h"
 #include "ui_solutiondialog.h"
+#include "categorysortmodel.h"
+#include "packagesortmodel.h"
 #include "solutiondialog.h"
-#include "downloaddialog.h"
+#include "categorymodel.h"
+#include "solutionmodel.h"
+#include "winesortmodel.h"
+#include "packagemodel.h"
 #include "searchmodel.h"
 #include "filesystem.h"
-#include "postdialog.h"
-#include "netdialog.h"
+#include "winemodel.h"
 #include "dialogs.h"
 
-const QString INSTALLED_MSG = QObject::tr("Application \"%1\" is already installed! " \
-                                          "Are you sure you want to reinstall it?");
-const int POSTS_PER_PAGE = 50;
+const int MAX_LENGTH = 5000;
 
-SolutionDialog::SolutionDialog(const QStringList &runList, QWidget *parent) :
-    SingletonDialog(parent),
+SolutionDialog::SolutionDialog(QWizard *wizard, QWidget *parent, bool debug) :
+    QDialog(parent),
     ui(new Ui::SolutionDialog),
-    mCurrentPage(1),
-    mRunList(runList)
+    mWizard(wizard),
+    mDebug(debug)
 {
     ui->setupUi(this);
+
+    QModelIndex index = mWizard->field("app").toModelIndex();
+    Repository *r = mWizard->field("repository").value<Repository *>();
+    ui->cancelBtn->setIcon(style()->standardIcon(QStyle::SP_DialogCancelButton));
+    ui->cancelBtn->hide();
+    ui->saveBtn->setIcon(style()->standardIcon(QStyle::SP_DialogSaveButton));
+    ui->saveBtn->hide();
+
+    ui->bPackages->setModel(new PackageModel(this));
+    ui->aPackages->setModel(new PackageModel(this));
+    PackageSortModel *allSortModel = new PackageSortModel(this);
+    allSortModel->setSourceModel(new PackageModel(this));
+    allSortModel->setDynamicSortFilter(true);
+    ui->allPackages->setModel(allSortModel);
+
+    WineModel *wineModel = new WineModel(r->wines(), this);
+    WineSortModel *wineSortModel = new WineSortModel(this);
+    wineSortModel->setSourceModel(wineModel);
+    wineSortModel->sort(0);
+    ui->bWine->setModel(wineSortModel);
+    ui->aWine->setModel(wineSortModel);
+
+    SolutionModel *model = index.data(SearchModel::ModelRole).value<SolutionModel *>();
+    ui->solutions->setModel(model);
+    ui->solutions->setCurrentIndex(index.data(SearchModel::SolutionRole).toInt());
+
+    CategoryModel *catModel = new CategoryModel(r->pCategories(), this);
+    CategorySortModel *catSortModel = new CategorySortModel(this);
+    catSortModel->setSourceModel(catModel);
+    catSortModel->sort(0);
+    ui->category->setModel(catSortModel);
+    setEditable(false);
+    if (mDebug)
+    {
+        setWindowTitle(tr("%1 - Debug").arg(index.data().toString()));
+        QString out = mWizard->field("out").toString();
+        QString err = mWizard->field("err").toString();
+        ui->out->appendPlainText(out);
+        ui->err->appendPlainText(err);
+        QSet<QString> reqList;
+        for (const Repository::Error &error : r->errors())
+        {
+            QRegExp re(error.re);
+            re.setMinimal(true);
+            if (re.indexIn(err) >= 0)
+            {
+                reqList.insert(r->package(error.package).name);
+                continue;
+            }
+        }
+        if (!reqList.isEmpty())
+        {
+            QStringList req = reqList.toList();
+            ui->advice->appendPlainText(tr("You can try to install next packages: %1.").
+                                        arg(req.join(", ")));
+        }
+        if (ui->advice->toPlainText().isEmpty())
+            ui->adviceWidget->hide();
+        ui->pages->setCurrentIndex(ui->pages->indexOf(ui->logPage));
+    }
+    else
+    {
+        setWindowTitle(tr("%1 - Solutions").arg(index.data().toString()));
+        ui->pages->findChild<QTabBar *>()->hide();
+        ui->pages->removeTab(ui->pages->indexOf(ui->logPage));
+    }
     QSettings s("winewizard", "settings");
     s.beginGroup("SolutionDialog");
     resize(s.value("Size", size()).toSize());
-
-    ui->search->setValidator(new QRegExpValidator(QRegExp(R"([^\\]*)"), this));
-    ui->searchBtn->setIcon(style()->standardIcon(QStyle::SP_FileDialogContentsView));
-    ui->edit32Btn->setIcon(style()->standardIcon(QStyle::SP_FileDialogDetailedView));
-    ui->edit64Btn->setIcon(style()->standardIcon(QStyle::SP_FileDialogDetailedView));
-    ui->addBtn->setIcon(style()->standardIcon(QStyle::SP_FileDialogNewFolder));
-    ui->prevBtn->setIcon(style()->standardIcon(QStyle::SP_ArrowLeft));
-    ui->nextBtn->setIcon(style()->standardIcon(QStyle::SP_ArrowRight));
-    ui->view32Btn->setIcon(style()->standardIcon(QStyle::SP_FileDialogListView));
-    ui->view64Btn->setIcon(style()->standardIcon(QStyle::SP_FileDialogListView));
-    ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
-    ui->solutions->setModel(new SearchModel(this));
-    connect(ui->solutions->selectionModel(), &QItemSelectionModel::currentRowChanged, this, &SolutionDialog::currentChanged);
-    connect(ui->nextBtn, &QPushButton::clicked, this, [this](){ ++mCurrentPage; getSearch(); });
-    connect(ui->prevBtn, &QPushButton::clicked, this, [this](){ --mCurrentPage; getSearch(); });
-    ui->search->installEventFilter(this);
-    getSearch();
-    ui->search->setFocus();
+    if (mDebug)
+    {
+        if (!ui->advice->toPlainText().isEmpty())
+            ui->vSplitter->restoreState(s.value("VSplitter").toByteArray());
+        ui->hSplitter->restoreState(s.value("HSplitter").toByteArray());
+    }
+    if (!ui->bScript->toPlainText().isEmpty() || !ui->aScript->toPlainText().isEmpty())
+    {
+        ui->shSplitter->restoreState(s.value("SHSplitter").toByteArray());
+        ui->svSplitter->restoreState(s.value("SVSplitter").toByteArray());
+    }
+    s.endGroup();
 }
 
 SolutionDialog::~SolutionDialog()
@@ -73,164 +135,156 @@ SolutionDialog::~SolutionDialog()
     QSettings s("winewizard", "settings");
     s.beginGroup("SolutionDialog");
     s.setValue("Size", size());
+    if (mDebug)
+    {
+        if (!ui->advice->toPlainText().isEmpty())
+            s.setValue("VSplitter", ui->vSplitter->saveState());
+        s.setValue("HSplitter", ui->hSplitter->saveState());
+    }
+    if (!ui->bScript->toPlainText().isEmpty() || !ui->aScript->toPlainText().isEmpty())
+    {
+        s.setValue("SHSplitter", ui->shSplitter->saveState());
+        s.setValue("SVSplitter", ui->svSplitter->saveState());
+    }
+    s.endGroup();
     delete ui;
-}
-
-QString SolutionDialog::slug() const
-{
-    return ui->solutions->currentIndex().data(SearchModel::SlugRole).toString();
 }
 
 void SolutionDialog::accept()
 {
-    QString name = ui->solutions->currentIndex().data().toString();
-    QString solution = FS::hash(name);
-    if (mRunList.contains(solution))
-    {
-        Dialogs::error(tr("The application \"%1\" is already running!").arg(name));
-        return;
-    }
-    if (FS::prefix(solution).exists())
-        if (!Dialogs::confirm(INSTALLED_MSG.arg(name), this))
-            return;
+    QModelIndex index = mWizard->field("app").toModelIndex();
+    QAbstractItemModel *model = const_cast<QAbstractItemModel *>(index.model());
+    model->setData(index, ui->solutions->currentIndex(), SearchModel::SolutionRole);
     QDialog::accept();
-}
-
-bool SolutionDialog::eventFilter(QObject *o, QEvent *e)
-{
-    if (o == ui->search)
-    {
-        if (e->type() == QEvent::KeyPress)
-        {
-            QKeyEvent *keyEvent = static_cast<QKeyEvent *>(e);
-            if (keyEvent->key() == Qt::Key_Return || keyEvent->key() == Qt::Key_Enter)
-            {
-                searchExecute();
-                return true;
-            }
-        }
-        else if(e->type() == QEvent::FocusIn)
-            ui->solutions->setCurrentIndex(QModelIndex());
-    }
-    return QDialog::eventFilter(o, e);
 }
 
 void SolutionDialog::on_buttonBox_helpRequested()
 {
-    QDesktopServices::openUrl(QUrl(HELP_URL));
+    QDesktopServices::openUrl(QUrl("http://wwizard.net/help/#edit"));
 }
 
-void SolutionDialog::getSearch()
+void SolutionDialog::on_lockBtn_toggled(bool checked)
 {
-    QString searchEncode = QUrl::toPercentEncoding(ui->search->text().trimmed());
-    QString url = API_URL + "?c=search&sv=" + searchEncode + "&pagenum=" + QString::number(mCurrentPage);
-    QString outPath = FS::temp().absoluteFilePath("search");
-    DownloadDialog dd(QStringList(url), outPath, isVisible() ? this : nullptr);
-    if (dd.exec() == QDialog::Accepted)
+    ui->lockBtn->setIcon(checked ? QIcon(":/icons/lock") : QIcon(":/icons/lock-open"));
+}
+
+void SolutionDialog::setCategory(const QModelIndex &index)
+{
+    QString catId = index.data(CategoryModel::IdRole).toString();
+    ui->allPackages->model()->setData(QModelIndex(), catId, PackageSortModel::CatIdRole);
+}
+
+void SolutionDialog::on_category_currentIndexChanged(int index)
+{
+    QString id = ui->category->itemData(index, CategoryModel::IdRole).toString();
+    ui->allPackages->model()->setData(QModelIndex(), id, PackageSortModel::CatIdRole);
+}
+
+void SolutionDialog::on_solutions_currentIndexChanged(int index)
+{
+    if (index >= 0)
     {
-        QAbstractItemModel *model = ui->solutions->model();
-        model->setData(QModelIndex(), true, SearchModel::ReloadRole);
-        bool exists = model->data(QModelIndex(), SearchModel::ExistsRole).toBool();
-        ui->addBtn->setDisabled(exists);
-        int count = model->data(QModelIndex(), SearchModel::CountRole).toInt();
-        int pageCount = count / POSTS_PER_PAGE + 1;
-        ui->prevBtn->setEnabled(mCurrentPage != 1);
-        ui->nextBtn->setEnabled(mCurrentPage != pageCount);
-        if (count == 0)
-        {
-            if (!exists)
-                ui->addBtn->setFocus();
-            ui->navLbl->setText(tr("Empty"));
-        }
-        else
-        {
-            ui->navLbl->setText(tr("%1 from %2").arg(mCurrentPage).arg(pageCount));
-            ui->solutions->setCurrentIndex(model->index(0, 0));
-            ui->solutions->setFocus();
-        }
+        Repository *r = mWizard->field("repository").value<Repository *>();
+        Repository::Wine bWine = r->wine(ui->solutions->itemData(index, SolutionModel::BWRole).toInt());
+        ui->bWine->setCurrentText(bWine.version);
+
+        Repository::Wine aWine = r->wine(ui->solutions->itemData(index, SolutionModel::AWRole).toInt());
+        ui->aWine->setCurrentText(aWine.version);
+
+        QList<int> bpIds = ui->solutions->itemData(index, SolutionModel::BPRole).value<IntList>();
+        Repository::PackageList bp = r->packagesFromArr(bpIds);
+        ui->bPackages->model()->setData(QModelIndex(), QVariant::fromValue(bp), PackageModel::ResetRole);
+
+        QList<int> apIds = ui->solutions->itemData(index, SolutionModel::APRole).value<IntList>();
+        Repository::PackageList ap = r->packagesFromArr(apIds);
+        ui->aPackages->model()->setData(QModelIndex(), QVariant::fromValue(ap), PackageModel::ResetRole);
+
+        QString bs = ui->solutions->itemData(index, SolutionModel::BSRole).toString();
+        ui->bScript->setPlainText(bs);
+        QString as = ui->solutions->itemData(index, SolutionModel::ASRole).toString();
+        ui->aScript->setPlainText(as);
+
+        ui->sw->setHidden(bs.isEmpty() && as.isEmpty());
+
+        Repository::PackageList all;
+        for (const Repository::Package &p : r->packages())
+            if (!bp.contains(p) && !ap.contains(p))
+                all.append(p);
+        PackageSortModel *allModel = static_cast<PackageSortModel *>(ui->allPackages->model());
+        allModel->sourceModel()->setData(QModelIndex(), QVariant::fromValue(all), PackageModel::ResetRole);
+        allModel->sort(0);
     }
 }
 
-void SolutionDialog::currentChanged(const QModelIndex &index)
+void SolutionDialog::setEditable(bool editable)
 {
-    QPushButton *okBtn = ui->buttonBox->button(QDialogButtonBox::Ok);
-    okBtn->setEnabled(index.isValid());
-    bool editable = index.data(SearchModel::EditableRole).toBool();
-    ui->edit32Btn->setEnabled(index.isValid() && editable);
-    ui->edit64Btn->setEnabled(index.isValid() && editable);
-    ui->view32Btn->setEnabled(index.isValid());
-    ui->view64Btn->setEnabled(index.isValid());
-    ui->win32Lbl->setEnabled(index.isValid());
-    ui->win64Lbl->setEnabled(index.isValid());
+    ui->solutions->setEnabled(!editable);
+    ui->bWine->setVisible(editable);
+    ui->aWine->setVisible(editable);
+    ui->bWineLbl->setVisible(!editable);
+    ui->aWineLbl->setVisible(!editable);
+    ui->allPackages->setVisible(editable);
+    ui->categoryFrame->setVisible(editable);
+    ui->bPackages->setDragEnabled(editable);
+    ui->aPackages->setDragEnabled(editable);
+    if (!editable)
+        on_solutions_currentIndexChanged(ui->solutions->currentIndex());
+    ui->cancelBtn->setVisible(editable);
+    ui->saveBtn->setVisible(editable);
+    ui->editBtn->setVisible(!editable);
+    ui->lockFrame->setVisible(editable);
+    ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(!editable);
+    ui->lockBtn->setChecked(true);
+    ui->bScript->setReadOnly(!editable);
+    ui->aScript->setReadOnly(!editable);
+    if (editable)
+        ui->sw->show();
+    else if (ui->bScript->toPlainText().isEmpty() && ui->aScript->toPlainText().isEmpty())
+        ui->sw->hide();
 }
 
-void SolutionDialog::on_search_textChanged(const QString &/*search*/)
+void SolutionDialog::on_editBtn_clicked()
 {
-    ui->addBtn->setEnabled(false);
+    setEditable(true);
 }
 
-void SolutionDialog::on_addBtn_clicked()
+void SolutionDialog::on_cancelBtn_clicked()
 {
-    QString solution = ui->search->text().trimmed();
-    if (Dialogs::confirm(tr("Are you sure you want to create solution \"%1\"?").arg(solution), this))
-    {
-        QJsonObject jo;
-        jo.insert("sname", solution);
-        PostDialog pd(API_URL + "?c=add", QJsonDocument(jo), this);
-        if (pd.exec() == QDialog::Accepted)
-        {
-            searchExecute();
-            QAbstractItemModel *model = ui->solutions->model();
-            QModelIndexList s = model->match(model->index(0, 0), Qt::DisplayRole, solution, -1, Qt::MatchCaseSensitive);
-            if (!s.isEmpty())
-                ui->solutions->setCurrentIndex(s.first());
-        }
-    }
+    setEditable(false);
 }
 
-void SolutionDialog::on_edit32Btn_clicked()
+void SolutionDialog::on_saveBtn_clicked()
 {
-    if (getSolution("32"))
-        EditSolutionDialog("32", this).exec();
+    int index = ui->solutions->currentIndex();
+    int bWine = ui->bWine->currentData(WineModel::IdRole).toInt();
+    ui->solutions->setItemData(index, bWine, SolutionModel::BWRole);
+    int aWine = ui->aWine->currentData(WineModel::IdRole).toInt();
+    ui->solutions->setItemData(index, aWine, SolutionModel::AWRole);
+    IntList bp;
+    QAbstractItemModel *bpModel = ui->bPackages->model();
+    for (int i = 0, count = bpModel->rowCount(); i < count; ++i)
+        bp.append(bpModel->index(i, 0).data(PackageModel::IdRole).toInt());
+    ui->solutions->setItemData(index, QVariant::fromValue(bp), SolutionModel::BPRole);
+    IntList ap;
+    QAbstractItemModel *apModel = ui->aPackages->model();
+    for (int i = 0, count = apModel->rowCount(); i < count; ++i)
+        ap.append(apModel->index(i, 0).data(PackageModel::IdRole).toInt());
+    ui->solutions->setItemData(index, QVariant::fromValue(ap), SolutionModel::APRole);
+    ui->solutions->setItemData(index, ui->bScript->toPlainText(), SolutionModel::BSRole);
+    ui->solutions->setItemData(index, ui->aScript->toPlainText(), SolutionModel::ASRole);
+    setEditable(false);
 }
 
-void SolutionDialog::on_edit64Btn_clicked()
+void SolutionDialog::on_aWine_currentIndexChanged(int index)
 {
-    if (getSolution("64"))
-        EditSolutionDialog("64", this).exec();
+    ui->aWineLbl->setText(ui->aWine->currentText());
+    if (ui->lockBtn->isChecked())
+        ui->bWine->setCurrentIndex(index);
 }
 
-bool SolutionDialog::getSolution(const QString &arch)
+void SolutionDialog::on_bWine_currentIndexChanged(int index)
 {
-    QString id = ui->solutions->currentIndex().data(SearchModel::SlugRole).toString();
-    QString url = API_URL + "?c=get&slug=" + id + "&arch=" + arch;
-    QString outFile = FS::temp().absoluteFilePath("solution");
-    DownloadDialog dd(QStringList(url), outFile, this);
-    if (dd.exec() == QDialog::Accepted)
-    {
-        QJsonParseError err;
-        QJsonDocument::fromJson(FS::readFile(outFile).toUtf8(), &err);
-        if (err.error == QJsonParseError::NoError)
-            return true;
-        Dialogs::error(tr("Incorrect solution file format!"), this);
-    }
-    return false;
-}
-
-void SolutionDialog::searchExecute()
-{
-    mCurrentPage = 1;
-    getSearch();
-}
-
-void SolutionDialog::on_view32Btn_clicked()
-{
-    if (getSolution("32"))
-        EditSolutionDialog("32", this, false).exec();
-}
-
-void SolutionDialog::on_view64Btn_clicked()
-{
-    if (getSolution("64"))
-        EditSolutionDialog("64", this, false).exec();
+    ui->bWineLbl->setText(ui->bWine->currentText());
+    if (ui->lockBtn->isChecked())
+        ui->aWine->setCurrentIndex(index);
 }

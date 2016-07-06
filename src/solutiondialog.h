@@ -21,49 +21,41 @@
 #ifndef SOLUTIONDIALOG_H
 #define SOLUTIONDIALOG_H
 
-#include <QPushButton>
-#include <QKeyEvent>
-
-#include "singletondialog.h"
+#include "installwizard.h"
 
 namespace Ui {
 class SolutionDialog;
 }
 
-class SolutionDialog : public SingletonDialog
+class SolutionDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit SolutionDialog(const QStringList &runList, QWidget *parent = nullptr);
+    explicit SolutionDialog(QWizard *wizard, QWidget *parent = nullptr, bool debug = false);
     ~SolutionDialog() override;
-
-    QString slug() const;
 
 public slots:
     void accept() override;
 
-protected:
-    bool eventFilter(QObject *o, QEvent *e) override;
-
 private slots:
-    void getSearch();
-    void currentChanged(const QModelIndex &index);
+    void setCategory(const QModelIndex &index);
     void on_buttonBox_helpRequested();
-    void on_search_textChanged(const QString &search);
-    void on_addBtn_clicked();
-    void on_edit32Btn_clicked();
-    void on_edit64Btn_clicked();
-    void searchExecute();
-    void on_view32Btn_clicked();
-    void on_view64Btn_clicked();
+    void on_lockBtn_toggled(bool checked);
+    void on_category_currentIndexChanged(int index);
+    void on_solutions_currentIndexChanged(int index);
+    void on_editBtn_clicked();
+    void on_cancelBtn_clicked();
+    void on_saveBtn_clicked();
+    void on_aWine_currentIndexChanged(int index);
+    void on_bWine_currentIndexChanged(int index);
 
 private:
     Ui::SolutionDialog *ui;
-    int mCurrentPage;
-    QStringList mRunList;
+    QWizard *mWizard;
+    bool mDebug;
 
-    bool getSolution(const QString &arch);
+    void setEditable(bool editable);
 };
 
 #endif // SOLUTIONDIALOG_H

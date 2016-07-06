@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>InstallWizard</class>
+ <widget class="QWizard" name="InstallWizard">
+  <property name="windowTitle">
+   <string>Setup</string>
+  </property>
+  <property name="wizardStyle">
+   <enum>QWizard::MacStyle</enum>
+  </property>
+  <property name="options">
+   <set>QWizard::HaveHelpButton|QWizard::NoBackButtonOnLastPage|QWizard::NoBackButtonOnStartPage|QWizard::NoCancelButtonOnLastPage</set>
+  </property>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>InstallWizard</sender>
+   <signal>currentIdChanged(int)</signal>
+   <receiver>InstallWizard</receiver>
+   <slot>pageChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>354</x>
+     <y>169</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>580</x>
+     <y>217</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>pageChanged()</slot>
+ </slots>
+</ui>

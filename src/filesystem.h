@@ -30,30 +30,28 @@ namespace FS
     QDir config();
     QDir temp();
 
-    QDir prefix(const QString &prefixHash);
-    QDir devices(const QString &prefixHash);
-    QDir drive(const QString &prefixHash, const QString &letter = "c:");
-    QDir driveTarget(const QString &prefixHash, const QString &letter = "c:");
-    QDir icons(const QString &prefixHash);
-    QDir shortcuts(const QString &prefixHash);
-    QDir links(const QString &prefixHash);
-    QDir documents(const QString &prefixHash);
-    QDir wine(const QString &prefixHash);
-    QDir packages(const QString &prefixHash);
-    QDir windows(const QString &prefixHash);
-    QDir sys32(const QString &prefixHash, const QString &arch = "32");
-    QDir sys64(const QString &prefixHash);
-    QDir users(const QString &prefixHash);
-    QDir user(const QString &prefixHash);
+    QDir prefix(const QString &prefixDirName);
+    QDir devices(const QString &prefix);
+    QDir drive(const QString &prefix, const QString &letter = "c:");
+    QDir driveTarget(const QString &prefix, const QString &letter = "c:");
+    QDir icons(const QString &prefix);
+    QDir shortcuts(const QString &prefix);
+    QDir links(const QString &prefix);
+    QDir documents(const QString &prefix);
+    QDir wine(const QString &prefix);
+    QDir packages(const QString &prefix);
+    QDir windows(const QString &prefix);
+    QDir sys32(const QString &prefix, const QString &arch = "32");
+    QDir sys64(const QString &prefix);
+    QDir users(const QString &prefix);
+    QDir user(const QString &prefix);
 
-    QString readFile(const QString &filePath);
+    QByteArray readFile(const QString &path);
     void browse(const QString &path);
     QString hash(const QString &str);
-    bool checkFileSum(const QString &filePath, const QString &checksum);
 
-    void removePrefix(const QString &prefixHash, QWidget *parent = nullptr);
-    QString toWinPath(const QString &prefixHash, const QString &path);
-    QString toUnixPath(const QString &prefixHash, const QString &path);
+    QString toWinPath(const QString &prefix, const QString &path);
+    QString toUnixPath(const QString &prefix, const QString &path);
 }
 
 #endif // FILESYSTEM_H

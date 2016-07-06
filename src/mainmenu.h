@@ -21,25 +21,31 @@
 #ifndef MAINMENU_H
 #define MAINMENU_H
 
-#include <QFileInfoList>
 #include <QMenu>
 
-#include "singletonwidget.h"
-
-class MainMenu : public QMenu, public SingletonWidget
+class MainMenu : public QMenu
 {
     Q_OBJECT
 
 public:
-    enum { Empty, Install, Debug, Run, RunFile, Browse, Delete,
-           Edit, Terminate, Settings, About, Help, Quit };
+    explicit MainMenu(QWidget *parent = nullptr);
+    ~MainMenu() override;
 
-    explicit MainMenu(bool autoclose, const QStringList &runList, const QStringList &busyList, QWidget *parent = nullptr);
+    static MainMenu *instance();
+
+private slots:
+    void controlCenter();
+    void terminateAll();
+    void terminate();
+    void about();
+    void quit();
+    void help();
+    void run();
 
 private:
+    static MainMenu *mInstance;
+
     void addEmpty(QMenu *menu);
-    QIcon getPrefixIcon(const QString &prefixHash) const;
-    void sortList(QFileInfoList &list, bool prefix = true);
 };
 
 #endif // MAINMENU_H

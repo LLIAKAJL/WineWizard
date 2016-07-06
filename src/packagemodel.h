@@ -24,22 +24,16 @@
 #include <QAbstractListModel>
 #include <QDataStream>
 
+#include "repository.h"
 
 class PackageModel : public QAbstractListModel
 {
     Q_OBJECT
 
 public:
-    struct Package
-    {
-        QString name, category, tooltip;
-        int type;
-    };
-    typedef QList<Package> PackageList;
+    enum { IdRole = Qt::UserRole + 1, ResetRole, CategoryRole };
 
-    enum { TypeRole = Qt::UserRole + 1, CategoryRole };
-
-    explicit PackageModel(const PackageList &list, QObject *parent = nullptr);
+    explicit PackageModel(QObject *parent = nullptr);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
@@ -54,8 +48,7 @@ public:
                                     int column, const QModelIndex &parent) override;
 
 private:
-    PackageList mList;
-    QString mArch;
+    Repository::PackageList mList;
 };
 
 #endif // PACKAGEMODEL_H

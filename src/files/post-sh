@@ -1,0 +1,1 @@
+wget --header='Accept-Encoding: gzip, deflate' --header='Accept-Charset: UTF-8' --header='Content-Type: application/json' -O '%3' --post-data '%2' '%1' 2>&1

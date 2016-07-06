@@ -21,36 +21,23 @@
 #ifndef DIALOGS_H
 #define DIALOGS_H
 
+#include <QInputDialog>
 #include <QMessageBox>
 #include <QDir>
 
-#include "singletonwidget.h"
-
 namespace Dialogs
 {
-    enum FinishStatus { Yes, No, Finish };
-
-    class MessageDialog : public QMessageBox, public SingletonWidget
-    {
-        Q_OBJECT
-
-        friend void error(const QString &text, QWidget *parent);
-        friend bool confirm(const QString &text, QWidget *parent);
-        friend bool retry(const QString &text, QWidget *parent);
-        friend bool finish(const QString &prefixHash, QWidget *parent);
-
-    protected:
-        explicit MessageDialog(Icon icon, const QString &title, const QString &text, QMessageBox::StandardButtons buttons, QWidget *parent = nullptr);
-    };
-
-    //--------------------------------------------------------------------------------------------
-
     void error(const QString &text, QWidget *parent = nullptr);
     bool confirm(const QString &text, QWidget *parent = nullptr);
+    bool question(const QString &text, QWidget *parent = nullptr);
     bool retry(const QString &text, QWidget *parent = nullptr);
-    bool finish(const QString &prefixHash, QWidget *parent = nullptr);
-    QString open(const QString &title, const QString &filter, QWidget *parent = nullptr, const QString &dir = QDir::homePath());
-    QString selectDir(const QString &start, QWidget *parent = nullptr);
+    QString open(const QString &title, const QString &filter,
+                 QWidget *parent = nullptr, const QString &dir = QDir::homePath());
+    QString save(const QString &title, const QString &filter,
+                 QWidget *parent = nullptr, const QString &dir = QDir::homePath());
+    QString dir(const QString &start, QWidget *parent = nullptr);
+    bool getText(const QString &title, const QString &label,
+                 QString &text, QWidget *parent = nullptr);
 }
 
 #endif // DIALOGS_H

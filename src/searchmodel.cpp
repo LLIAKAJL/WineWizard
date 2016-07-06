@@ -21,14 +21,16 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QColor>
 
 #include "searchmodel.h"
 #include "filesystem.h"
 
+const int MAX_RATING = 99;
+
 SearchModel::SearchModel(QObject *parent) :
     QAbstractListModel(parent),
-    mPostsCount(0),
-    mExists(false)
+    mCount(0)
 {
 }
 
@@ -45,45 +47,101 @@ QVariant SearchModel::data(const QModelIndex &index, int role) const
         {
         case Qt::DisplayRole:
             return mList.at(index.row()).name;
-        case EditableRole:
-            return mList.at(index.row()).editable;
-        case SlugRole:
-            return mList.at(index.row()).slug;
-        case Qt::TextAlignmentRole:
-            return Qt::AlignCenter;
+        case Qt::DecorationRole:
+            return ratingToIcon(index);
+        case Qt::ToolTipRole:
+            return data(index);
+        case IdRole:
+            return mList.at(index.row()).id;
+        case PrefixRole:
+            return FS::hash(mList.at(index.row()).name);
+        case SolutionRole:
+            return mList.at(index.row()).solution;
+        case ModelRole:
+            return QVariant::fromValue(mList.at(index.row()).model);
+        default:
+            return QVariant();
         }
     }
     switch (role)
     {
-        case ExistsRole:
-            return mExists;
-        case CountRole:
-            return mPostsCount;
+    case CountRole:
+        return mCount;
+    case ExistsRole:
+        return mExists;
+    default:
+        return QVariant();
     }
     return QVariant();
 }
 
-bool SearchModel::setData(const QModelIndex &/*index*/, const QVariant &/*value*/, int role)
+bool SearchModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-    if (role == ReloadRole)
+    if (index.isValid())
+    {
+        switch (role)
+        {
+        case SolutionRole:
+            mList[index.row()].solution = value.toInt();
+            emit dataChanged(index, index);
+            return true;
+        case ModelRole:
+            if (!mList.at(index.row()).model)
+                mList[index.row()].model = new SolutionModel(data(index, PrefixRole).toString(), this);
+            return true;
+        default:
+            return false;
+        }
+    }
+    if (role == ResetRole)
     {
         beginResetModel();
+        for (Item a : mList)
+            if (a.model)
+                a.model->deleteLater();
         mList.clear();
-        QByteArray data = FS::readFile(FS::temp().absoluteFilePath("search")).toUtf8();
-        QJsonObject jo = QJsonDocument::fromJson(data).object();
-        mPostsCount = jo.value("count").toInt();
-        mExists = jo.value("exists").toBool();
-        QJsonArray items = jo.value("items").toArray();
-        for(QJsonArray::const_iterator iter = items.begin(); iter != items.end(); ++iter)
+        if (FS::temp().exists("search"))
         {
-            QJsonObject item = (*iter).toObject();
-            QString name = item.value("name").toString();
-            bool editable = item.value("editable").toBool();
-            QString slug = item.value("slug").toString();
-            mList.append(Solution{ name, slug, editable });
+            QByteArray data = FS::readFile(FS::temp().absoluteFilePath("search"));
+            QJsonObject jo = QJsonDocument::fromJson(data).object();
+            mCount = jo.value("count").toInt();
+            mExists = jo.value("exists").toBool();
+            QJsonArray apps = jo.value("apps").toArray();
+            for (QJsonArray::Iterator i = apps.begin(); i != apps.end(); ++i)
+            {
+                QJsonObject jo = (*i).toObject();
+                Item a;
+                a.id = jo.value("i").toInt();
+                a.name = jo.value("n").toString();
+                a.approved = jo.value("a").toBool();
+                a.rating = jo.value("r").toInt();
+                a.aRating = jo.value("ar").toInt();
+                a.prefix = FS::hash(a.name);
+                a.solution = 0;
+                a.model = nullptr;
+                mList.append(a);
+            }
         }
         endResetModel();
         return true;
     }
     return false;
+}
+
+QIcon SearchModel::ratingToIcon(const QModelIndex &index) const
+{
+    const Item &item = mList.at(index.row());
+    if (item.approved)
+    {
+        if (item.aRating > 0)
+            return item.aRating >= item.rating ? QIcon(":/icons/gstar") : QIcon(":/icons/gcstar");
+        if (item.aRating == 0)
+            return QIcon(":/icons/ystar");
+        return item.aRating >= item.rating ? QIcon(":/icons/rstar") : QIcon(":/icons/rcstar");
+    }
+    if (item.rating > 0)
+        return QIcon(":/icons/gcircle");
+    if (item.rating == 0)
+        return QIcon(":/icons/ycircle");
+    return QIcon(":/icons/rcircle");
 }

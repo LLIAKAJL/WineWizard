@@ -6,9 +6,7 @@ without any warranty. Feel free to change or distribute this software.
 
 Dependencies:
 ***********************************************
-qt5
-p7zip
-gpg
+qt5, unzip, cabextract, bzip2, tar
 
 Installation:
 ***********************************************

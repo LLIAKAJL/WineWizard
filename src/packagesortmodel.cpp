@@ -23,16 +23,16 @@
 
 PackageSortModel::PackageSortModel(QObject *parent) :
     QSortFilterProxyModel(parent),
-    mCategory(tr("All Packages"))
+    mCatId(-1)
 {
 }
 
 bool PackageSortModel::setData(const QModelIndex &/*index*/, const QVariant &value, int role)
 {
-    if (role == Qt::UserRole)
+    if (role == CatIdRole)
     {
         beginResetModel();
-        mCategory = value.toString();
+        mCatId = value.toInt();
         endResetModel();
         return true;
     }
@@ -41,7 +41,8 @@ bool PackageSortModel::setData(const QModelIndex &/*index*/, const QVariant &val
 
 bool PackageSortModel::filterAcceptsRow(int source_row, const QModelIndex &/*source_parent*/) const
 {
-    if (mCategory == tr("All Packages"))
+    if (mCatId == -1)
         return true;
-    return sourceModel()->index(source_row, 0).data(PackageModel::CategoryRole).toString() == mCategory;
+    return sourceModel()->index(source_row, 0).data(PackageModel::CategoryRole).
+            value<IntList>().contains(mCatId);
 }

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>418</width>
-    <height>263</height>
+    <width>631</width>
+    <height>363</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -29,7 +29,7 @@
       <string/>
      </property>
      <property name="alignment">
-      <set>Qt::AlignCenter</set>
+      <set>Qt::AlignHCenter|Qt::AlignTop</set>
      </property>
     </widget>
    </item>
@@ -38,7 +38,7 @@
      <item>
       <widget class="QLabel" name="label">
        <property name="text">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;%1 %2&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;© 2016 &lt;a href=&quot;http://wwizard.net&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#008080;&quot;&gt;Vitalii Kachemtsev&lt;/span&gt;&lt;/a&gt; aka &lt;a href=&quot;http://wwizard.net&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#008080;&quot;&gt;LLIAKAJI&lt;/span&gt;&lt;/a&gt;. &lt;/p&gt;&lt;p align=&quot;center&quot;&gt;All right reserved.&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;The program is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;%1 %2&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;© 2016 &lt;a href=&quot;http://wwizard.net&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#008080;&quot;&gt;Vitalii «LLIAKAJI» Kachemtsev&lt;/span&gt;&lt;/a&gt;. &lt;/p&gt;&lt;p align=&quot;center&quot;&gt;All right reserved.&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM “AS IS” WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM IS WITH YOU. SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL NECESSARY SERVICING, REPAIR OR CORRECTION.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="wordWrap">
         <bool>true</bool>

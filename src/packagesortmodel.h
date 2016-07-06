@@ -27,6 +27,8 @@ class PackageSortModel : public QSortFilterProxyModel
 {
     Q_OBJECT
 public:
+    enum { CatIdRole = Qt::UserRole + 1 };
+
     explicit PackageSortModel(QObject *parent = nullptr);
 
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
@@ -35,7 +37,7 @@ protected:
     bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const override;
 
 private:
-    QString mCategory;
+    int mCatId;
 };
 
 #endif // PACKAGESORTMODEL_H

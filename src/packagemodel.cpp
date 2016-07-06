@@ -23,9 +23,8 @@
 #include "packagemodel.h"
 #include "filesystem.h"
 
-PackageModel::PackageModel(const PackageList &nameList, QObject *parent) :
-    QAbstractListModel(parent),
-    mList(nameList)
+PackageModel::PackageModel(QObject *parent) :
+    QAbstractListModel(parent)
 {
 }
 
@@ -40,12 +39,12 @@ QVariant PackageModel::data(const QModelIndex &index, int role) const
     {
         switch (role)
         {
+        case IdRole:
+            return mList.at(index.row()).id;
         case Qt::DisplayRole:
             return mList.at(index.row()).name;
-        case TypeRole:
-            return mList.at(index.row()).type;
         case CategoryRole:
-            return mList.at(index.row()).category;
+            return QVariant::fromValue(mList.at(index.row()).categories);
         case Qt::ToolTipRole:
             return mList.at(index.row()).tooltip;
         case Qt::TextAlignmentRole:
@@ -61,23 +60,32 @@ bool PackageModel::setData(const QModelIndex &index, const QVariant &value, int 
     {
         switch (role)
         {
+        case IdRole:
+            mList[index.row()].id = value.toInt();
+            emit dataChanged(index, index);
+            return true;
         case Qt::EditRole:
             mList[index.row()].name = value.toString();
             emit dataChanged(index, index);
             return true;
-        case TypeRole:
-            mList[index.row()].type = value.toInt();
-            emit dataChanged(index, index);
-            return true;
         case CategoryRole:
-            mList[index.row()].category = value.toString();
+            mList[index.row()].categories.append(value.value<IntList>());
             emit dataChanged(index, index);
             return true;
         case Qt::ToolTipRole:
             mList[index.row()].tooltip = value.toString();
             emit dataChanged(index, index);
             return true;
+        default:
+            return false;
         }
+    }
+    if (role == ResetRole)
+    {
+        beginResetModel();
+        mList = value.value<Repository::PackageList>();
+        endResetModel();
+        return true;
     }
     return false;
 }
@@ -100,7 +108,12 @@ bool PackageModel::insertRows(int row, int count, const QModelIndex &parent)
 {
     beginInsertRows(parent, row, row + count - 1);
     for (int i = 0; i < count; ++i)
-        mList.insert(row, Package{ QString(), tr("Other"), QString(), 0 });
+    {
+        Repository::Package p;
+        p.id = -1;
+        p.categories = IntList() << -1;
+        mList.insert(row, p);
+    }
     endInsertRows();
     return true;
 }
@@ -128,9 +141,9 @@ QMimeData *PackageModel::mimeData(const QModelIndexList &indexes) const
     {
         if (index.isValid())
         {
-            stream << data(index, Qt::DisplayRole).toString();
-            stream << data(index, CategoryRole).toString();
-            stream << data(index, TypeRole).toInt();
+            stream << data(index, IdRole).toInt();
+            stream << data(index).toString();
+            stream << data(index, CategoryRole).value<IntList>();
             stream << data(index, Qt::ToolTipRole).toString();
         }
     }
@@ -138,7 +151,8 @@ QMimeData *PackageModel::mimeData(const QModelIndexList &indexes) const
     return mimeData;
 }
 
-bool PackageModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent)
+bool PackageModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
+                                int row, int column, const QModelIndex &parent)
 {
     if (action == Qt::IgnoreAction)
         return true;
@@ -156,27 +170,24 @@ bool PackageModel::dropMimeData(const QMimeData *data, Qt::DropAction action, in
     QByteArray encodedData = data->data("application/vnd.text.list");
     QDataStream stream(&encodedData, QIODevice::ReadOnly);
     int rows = 0;
-    QList<Package> tmpList;
+    Repository::PackageList tmpList;
     while (!stream.atEnd())
     {
-        QString name;
-        stream >> name;
-        QString category;
-        stream >> category;
-        int type;
-        stream >> type;
-        QString tooltip;
-        stream >> tooltip;
-        tmpList.append(Package{ name, category, tooltip, type });
+        Repository::Package p;
+        stream >> p.id;
+        stream >> p.name;
+        stream >> p.categories;
+        stream >> p.tooltip;
+        tmpList.append(p);
         ++rows;
     }
     insertRows(beginRow, rows, QModelIndex());
-    for (const Package &package : tmpList)
+    for (const Repository::Package &package : tmpList)
     {
         QModelIndex idx = index(beginRow, 0, QModelIndex());
+        setData(idx, package.id, IdRole);
         setData(idx, package.name);
-        setData(idx, package.category, CategoryRole);
-        setData(idx, package.type, TypeRole);
+        setData(idx, QVariant::fromValue(package.categories), CategoryRole);
         setData(idx, package.tooltip, Qt::ToolTipRole);
         ++beginRow;
     }

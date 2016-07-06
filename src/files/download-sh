@@ -1,0 +1,3 @@
+URL="%1"
+OUT="%2"
+wget "$URL" -O "$OUT" 2>&1

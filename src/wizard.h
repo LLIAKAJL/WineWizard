@@ -22,33 +22,39 @@
 #define WIZARD_H
 
 #include <QSystemTrayIcon>
-#include <QStringList>
+#include <QTranslator>
 #include <QFileInfo>
-#include <QSettings>
+#include <QObject>
 
 class Wizard : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit Wizard(bool trayVisible, bool autoclose, QObject *parent = nullptr);
+    enum { LANG_EN, LANG_RU };
+
+    explicit Wizard(QObject *parent = nullptr);
+
+    static void update();
+    static bool autoquit();
+    static void setAutoquit(bool autoquit);
+    static void retranslate(int lang);
+    static Wizard *instance();
 
 public slots:
     void start(const QString &cmdLine = QString());
 
 private slots:
-    void showMenu();
+    void trayActivated(QSystemTrayIcon::ActivationReason reason);
 
 private:
-    QStringList mBusyList, mRunList;
-    QSystemTrayIcon *mTray;
+    static Wizard *mInstance;
+    static bool mAutoquit;
+    static QTranslator *mStdTrans, *mTrans;
 
-    void install(const QString &cmdLine);
     bool testSuffix(const QFileInfo &path) const;
-    bool prepare(QString &name, QString &arch, QString &bs, QString &acs, QString &as) const;
-    void required(const QString &package, QSet<QString> &res, QSettings *r) const;
-    void clearRepository() const;
-    QString makeConstScript(const QString &arch) const;
+    void executeShortcut(const QString &prefix, const QString &shortcut);
+    static QString langSuffix(int lang);
 };
 
 #endif // WIZARD_H
