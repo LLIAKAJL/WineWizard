@@ -30,7 +30,7 @@
 #include "executor.h"
 #include "winpage.h"
 
-const QString API_URL = "http://localhost/api2/";//"http://wwizard.net/api2/";
+const QString API_URL = "http://wwizard.net/api2/";
 
 WinPage::WinPage(QWidget *parent) :
     QWizardPage(parent),

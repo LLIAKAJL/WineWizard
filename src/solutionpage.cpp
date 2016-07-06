@@ -38,7 +38,7 @@ const int POSTS_PER_PAGE = 50;
 
 const QString SOLUTIONS_QUERY = "?c=sol_list&os=%1&arch=%2&app=%3";
 const QString DOWNLOAD_URL = "http://wwizard.net/download/";
-const QString API_URL = "http://localhost/api2/";//"http://wwizard.net/api2/";
+const QString API_URL = "http://wwizard.net/api2/";
 
 const QString UPDATE_URL = "https://raw.githubusercontent.com/LLIAKAJL/WineWizard-Utils/master/update.";
 const QString REPO_URL = "https://raw.githubusercontent.com/LLIAKAJL/WineWizard-Utils/master/%1%2.repo";
