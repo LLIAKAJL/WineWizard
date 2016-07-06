@@ -32,16 +32,16 @@ class SearchModel : public QAbstractListModel
 
     struct Item
     {
-        int id, solution, aRating, rating;
+        int id, solution, rating;
         QString name, prefix;
         SolutionModel *model;
-        bool approved;
+        bool approved, spec;
     };
     typedef QList<Item> ItemList;
 
 public:
     enum { ResetRole = Qt::UserRole + 1, IdRole, CountRole, ExistsRole,
-           PrefixRole, SolutionRole, ModelRole };
+           PrefixRole, SolutionRole, ModelRole, SpecRole, ApprovedRole };
 
     explicit SearchModel(QObject *parent = nullptr);
 

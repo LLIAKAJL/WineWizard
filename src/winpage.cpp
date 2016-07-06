@@ -30,7 +30,7 @@
 #include "executor.h"
 #include "winpage.h"
 
-const QString API_URL = "http://wwizard.net/api2/";
+const QString API_URL = "http://localhost/api2/";//"http://wwizard.net/api2/";
 
 WinPage::WinPage(QWidget *parent) :
     QWizardPage(parent),
@@ -67,6 +67,8 @@ void WinPage::initializePage()
         ap.append(p);
     jo.insert("bp", bp);
     jo.insert("ap", ap);
+    jo.insert("bs", si.data(SolutionModel::BSRole).toString());
+    jo.insert("as", si.data(SolutionModel::ASRole).toString());
     jo.insert("id", si.data(SolutionModel::IdRole).toInt());
     jo.insert("c", "fork");
     QString data = QJsonDocument(jo).toJson();

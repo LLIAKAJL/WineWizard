@@ -44,7 +44,7 @@
             </property>
             <property name="icon">
              <iconset resource="resources.qrc">
-              <normaloff>:/icons/uk</normaloff>:/icons/uk</iconset>
+              <normaloff>:/licons/uk</normaloff>:/licons/uk</iconset>
             </property>
            </item>
            <item>
@@ -53,7 +53,7 @@
             </property>
             <property name="icon">
              <iconset resource="resources.qrc">
-              <normaloff>:/icons/ru</normaloff>:/icons/ru</iconset>
+              <normaloff>:/licons/ru</normaloff>:/licons/ru</iconset>
             </property>
            </item>
           </widget>

@@ -90,6 +90,8 @@ QVariant SolutionModel::data(const QModelIndex &index, int role) const
             return mList.at(index.row()).bs;
         case ASRole:
             return mList.at(index.row()).as;
+        case ApprovedRole:
+            return mList.at(index.row()).approved;
         default:
             return QVariant();
         }
@@ -104,29 +106,59 @@ bool SolutionModel::setData(const QModelIndex &index, const QVariant &value, int
         switch (role)
         {
         case BWRole:
-            mList[index.row()].bw = value.toInt();
-            emit dataChanged(index, index);
-            return true;
+            if (mList.at(index.row()).bw != value.toInt())
+            {
+                mList[index.row()].bw = value.toInt();
+                resetItem(index);
+                emit dataChanged(index, index);
+                return true;
+            }
+            return false;
         case AWRole:
-            mList[index.row()].aw = value.toInt();
-            emit dataChanged(index, index);
-            return true;
+            if (mList.at(index.row()).aw != value.toInt())
+            {
+                mList[index.row()].aw = value.toInt();
+                resetItem(index);
+                emit dataChanged(index, index);
+                return true;
+            }
+            return false;
         case BPRole:
-            mList[index.row()].bp = value.value<IntList>();
-            emit dataChanged(index, index);
-            return true;
+            if (mList.at(index.row()).bp != value.value<IntList>())
+            {
+                mList[index.row()].bp = value.value<IntList>();
+                resetItem(index);
+                emit dataChanged(index, index);
+                return true;
+            }
+            return false;
         case APRole:
-            mList[index.row()].ap = value.value<IntList>();
-            emit dataChanged(index, index);
-            return true;
+            if (mList.at(index.row()).ap != value.value<IntList>())
+            {
+                mList[index.row()].ap = value.value<IntList>();
+                resetItem(index);
+                emit dataChanged(index, index);
+                return true;
+            }
+            return false;
         case BSRole:
-            mList[index.row()].bs = value.toString();
-            emit dataChanged(index, index);
-            return true;
+            if (mList.at(index.row()).bs != value.toString())
+            {
+                mList[index.row()].bs = value.toString();
+                resetItem(index);
+                emit dataChanged(index, index);
+                return true;
+            }
+            return false;
         case ASRole:
-            mList[index.row()].as = value.toString();
-            emit dataChanged(index, index);
-            return true;
+            if (mList.at(index.row()).as != value.toString())
+            {
+                mList[index.row()].as = value.toString();
+                resetItem(index);
+                emit dataChanged(index, index);
+                return true;
+            }
+            return false;
         }
     }
     return false;
@@ -135,9 +167,18 @@ bool SolutionModel::setData(const QModelIndex &index, const QVariant &value, int
 QIcon SolutionModel::ratingToIcon(const QModelIndex &index) const
 {
     const Item &item = mList.at(index.row());
+    bool spec = !item.bs.isEmpty() || !item.as.isEmpty();
     if (item.rating > 0)
-        return item.approved ? QIcon(":/icons/gstar") : QIcon(":/icons/gcircle");
-    if (item.rating == 0)
-        return item.approved ? QIcon(":/icons/ystar") : QIcon(":/icons/ycircle");
-    return item.approved ? QIcon(":/icons/rstar") : QIcon(":/icons/rcircle");
+        return item.approved ? QIcon(":/icons/gs") : QIcon(spec ? ":/icons/ge" : ":/icons/gc");
+    else if (item.rating == 0)
+        return item.approved ? QIcon(":/icons/ys") : QIcon(spec ? ":/icons/ye" : ":/icons/yc");
+    else
+        return item.approved ? QIcon(":/icons/rs") : QIcon(spec ? ":/icons/re" : ":/icons/rc");
+}
+
+void SolutionModel::resetItem(const QModelIndex &index)
+{
+    mList[index.row()].date = tr("New Solution");
+    mList[index.row()].rating = 0;
+    mList[index.row()].approved = false;
 }

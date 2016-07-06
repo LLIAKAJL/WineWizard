@@ -42,7 +42,7 @@ class SolutionModel : public QAbstractListModel
 
 public:
 
-    enum { IdRole = Qt::UserRole + 1, BWRole, AWRole, BPRole, APRole, BSRole, ASRole };
+    enum { IdRole = Qt::UserRole + 1, BWRole, AWRole, BPRole, APRole, BSRole, ASRole, ApprovedRole };
 
     explicit SolutionModel(const QString &prefix, QObject *parent = nullptr);
 
@@ -54,6 +54,7 @@ private:
     ItemList mList;
 
     QIcon ratingToIcon(const QModelIndex &index) const;
+    void resetItem(const QModelIndex &index);
 };
 
 #endif // SOLUTIONMODEL_H

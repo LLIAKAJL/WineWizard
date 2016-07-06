@@ -122,11 +122,8 @@ SolutionDialog::SolutionDialog(QWizard *wizard, QWidget *parent, bool debug) :
             ui->vSplitter->restoreState(s.value("VSplitter").toByteArray());
         ui->hSplitter->restoreState(s.value("HSplitter").toByteArray());
     }
-    if (!ui->bScript->toPlainText().isEmpty() || !ui->aScript->toPlainText().isEmpty())
-    {
-        ui->shSplitter->restoreState(s.value("SHSplitter").toByteArray());
-        ui->svSplitter->restoreState(s.value("SVSplitter").toByteArray());
-    }
+    ui->shSplitter->restoreState(s.value("SHSplitter").toByteArray());
+    ui->svSplitter->restoreState(s.value("SVSplitter").toByteArray());
     s.endGroup();
 }
 
@@ -141,11 +138,8 @@ SolutionDialog::~SolutionDialog()
             s.setValue("VSplitter", ui->vSplitter->saveState());
         s.setValue("HSplitter", ui->hSplitter->saveState());
     }
-    if (!ui->bScript->toPlainText().isEmpty() || !ui->aScript->toPlainText().isEmpty())
-    {
-        s.setValue("SHSplitter", ui->shSplitter->saveState());
-        s.setValue("SVSplitter", ui->svSplitter->saveState());
-    }
+    s.setValue("SHSplitter", ui->shSplitter->saveState());
+    s.setValue("SVSplitter", ui->svSplitter->saveState());
     s.endGroup();
     delete ui;
 }
@@ -166,6 +160,8 @@ void SolutionDialog::on_buttonBox_helpRequested()
 void SolutionDialog::on_lockBtn_toggled(bool checked)
 {
     ui->lockBtn->setIcon(checked ? QIcon(":/icons/lock") : QIcon(":/icons/lock-open"));
+    if (checked)
+        ui->aWine->setCurrentIndex(ui->bWine->currentIndex());
 }
 
 void SolutionDialog::setCategory(const QModelIndex &index)
@@ -182,38 +178,33 @@ void SolutionDialog::on_category_currentIndexChanged(int index)
 
 void SolutionDialog::on_solutions_currentIndexChanged(int index)
 {
-    if (index >= 0)
-    {
-        Repository *r = mWizard->field("repository").value<Repository *>();
-        Repository::Wine bWine = r->wine(ui->solutions->itemData(index, SolutionModel::BWRole).toInt());
-        ui->bWine->setCurrentText(bWine.version);
+    Repository *r = mWizard->field("repository").value<Repository *>();
+    int bwId = ui->solutions->itemData(index, SolutionModel::BWRole).toInt();
+    int awId = ui->solutions->itemData(index, SolutionModel::AWRole).toInt();
+    ui->lockBtn->setChecked(bwId == awId);
+    ui->bWine->setCurrentText(r->wine(bwId).version);
+    ui->aWine->setCurrentText(r->wine(awId).version);
 
-        Repository::Wine aWine = r->wine(ui->solutions->itemData(index, SolutionModel::AWRole).toInt());
-        ui->aWine->setCurrentText(aWine.version);
+    QList<int> bpIds = ui->solutions->itemData(index, SolutionModel::BPRole).value<IntList>();
+    Repository::PackageList bp = r->packagesFromArr(bpIds);
+    ui->bPackages->model()->setData(QModelIndex(), QVariant::fromValue(bp), PackageModel::ResetRole);
 
-        QList<int> bpIds = ui->solutions->itemData(index, SolutionModel::BPRole).value<IntList>();
-        Repository::PackageList bp = r->packagesFromArr(bpIds);
-        ui->bPackages->model()->setData(QModelIndex(), QVariant::fromValue(bp), PackageModel::ResetRole);
+    QList<int> apIds = ui->solutions->itemData(index, SolutionModel::APRole).value<IntList>();
+    Repository::PackageList ap = r->packagesFromArr(apIds);
+    ui->aPackages->model()->setData(QModelIndex(), QVariant::fromValue(ap), PackageModel::ResetRole);
 
-        QList<int> apIds = ui->solutions->itemData(index, SolutionModel::APRole).value<IntList>();
-        Repository::PackageList ap = r->packagesFromArr(apIds);
-        ui->aPackages->model()->setData(QModelIndex(), QVariant::fromValue(ap), PackageModel::ResetRole);
+    QString bs = ui->solutions->itemData(index, SolutionModel::BSRole).toString();
+    ui->bScript->setPlainText(bs);
+    QString as = ui->solutions->itemData(index, SolutionModel::ASRole).toString();
+    ui->aScript->setPlainText(as);
 
-        QString bs = ui->solutions->itemData(index, SolutionModel::BSRole).toString();
-        ui->bScript->setPlainText(bs);
-        QString as = ui->solutions->itemData(index, SolutionModel::ASRole).toString();
-        ui->aScript->setPlainText(as);
-
-        ui->sw->setHidden(bs.isEmpty() && as.isEmpty());
-
-        Repository::PackageList all;
-        for (const Repository::Package &p : r->packages())
-            if (!bp.contains(p) && !ap.contains(p))
-                all.append(p);
-        PackageSortModel *allModel = static_cast<PackageSortModel *>(ui->allPackages->model());
-        allModel->sourceModel()->setData(QModelIndex(), QVariant::fromValue(all), PackageModel::ResetRole);
-        allModel->sort(0);
-    }
+    Repository::PackageList all;
+    for (const Repository::Package &p : r->packages())
+        if (!bp.contains(p) && !ap.contains(p))
+            all.append(p);
+    PackageSortModel *allModel = static_cast<PackageSortModel *>(ui->allPackages->model());
+    allModel->sourceModel()->setData(QModelIndex(), QVariant::fromValue(all), PackageModel::ResetRole);
+    allModel->sort(0);
 }
 
 void SolutionDialog::setEditable(bool editable)
@@ -234,13 +225,9 @@ void SolutionDialog::setEditable(bool editable)
     ui->editBtn->setVisible(!editable);
     ui->lockFrame->setVisible(editable);
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(!editable);
-    ui->lockBtn->setChecked(true);
+//    ui->lockBtn->setChecked(true);
     ui->bScript->setReadOnly(!editable);
     ui->aScript->setReadOnly(!editable);
-    if (editable)
-        ui->sw->show();
-    else if (ui->bScript->toPlainText().isEmpty() && ui->aScript->toPlainText().isEmpty())
-        ui->sw->hide();
 }
 
 void SolutionDialog::on_editBtn_clicked()
@@ -255,6 +242,8 @@ void SolutionDialog::on_cancelBtn_clicked()
 
 void SolutionDialog::on_saveBtn_clicked()
 {
+    ui->bWineLbl->setText(ui->bWine->currentText());
+    ui->aWineLbl->setText(ui->aWine->currentText());
     int index = ui->solutions->currentIndex();
     int bWine = ui->bWine->currentData(WineModel::IdRole).toInt();
     ui->solutions->setItemData(index, bWine, SolutionModel::BWRole);
@@ -270,8 +259,10 @@ void SolutionDialog::on_saveBtn_clicked()
     for (int i = 0, count = apModel->rowCount(); i < count; ++i)
         ap.append(apModel->index(i, 0).data(PackageModel::IdRole).toInt());
     ui->solutions->setItemData(index, QVariant::fromValue(ap), SolutionModel::APRole);
-    ui->solutions->setItemData(index, ui->bScript->toPlainText(), SolutionModel::BSRole);
-    ui->solutions->setItemData(index, ui->aScript->toPlainText(), SolutionModel::ASRole);
+    QString bs = ui->bScript->toPlainText().trimmed();
+    ui->solutions->setItemData(index, bs, SolutionModel::BSRole);
+    QString as = ui->aScript->toPlainText().trimmed();
+    ui->solutions->setItemData(index, as, SolutionModel::ASRole);
     setEditable(false);
 }
 

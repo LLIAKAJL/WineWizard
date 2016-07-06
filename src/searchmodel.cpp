@@ -26,8 +26,6 @@
 #include "searchmodel.h"
 #include "filesystem.h"
 
-const int MAX_RATING = 99;
-
 SearchModel::SearchModel(QObject *parent) :
     QAbstractListModel(parent),
     mCount(0)
@@ -59,6 +57,27 @@ QVariant SearchModel::data(const QModelIndex &index, int role) const
             return mList.at(index.row()).solution;
         case ModelRole:
             return QVariant::fromValue(mList.at(index.row()).model);
+        case SpecRole:
+            {
+                SolutionModel *model = mList.at(index.row()).model;
+                if (model)
+                {
+                    QModelIndex si = model->index(mList.at(index.row()).solution);
+                    return !si.data(SolutionModel::BSRole).toString().isEmpty() ||
+                           !si.data(SolutionModel::ASRole).toString().isEmpty();
+                }
+            }
+            return mList.at(index.row()).spec;
+        case ApprovedRole:
+            {
+                SolutionModel *model = mList.at(index.row()).model;
+                if (model)
+                {
+                    QModelIndex si = model->index(mList.at(index.row()).solution);
+                    return si.data(SolutionModel::ApprovedRole).toBool();
+                }
+            }
+            return mList.at(index.row()).approved;
         default:
             return QVariant();
         }
@@ -115,7 +134,7 @@ bool SearchModel::setData(const QModelIndex &index, const QVariant &value, int r
                 a.name = jo.value("n").toString();
                 a.approved = jo.value("a").toBool();
                 a.rating = jo.value("r").toInt();
-                a.aRating = jo.value("ar").toInt();
+                a.spec = jo.value("s").toBool();
                 a.prefix = FS::hash(a.name);
                 a.solution = 0;
                 a.model = nullptr;
@@ -131,17 +150,13 @@ bool SearchModel::setData(const QModelIndex &index, const QVariant &value, int r
 QIcon SearchModel::ratingToIcon(const QModelIndex &index) const
 {
     const Item &item = mList.at(index.row());
-    if (item.approved)
-    {
-        if (item.aRating > 0)
-            return item.aRating >= item.rating ? QIcon(":/icons/gstar") : QIcon(":/icons/gcstar");
-        if (item.aRating == 0)
-            return QIcon(":/icons/ystar");
-        return item.aRating >= item.rating ? QIcon(":/icons/rstar") : QIcon(":/icons/rcstar");
-    }
+    if (item.model)
+        return item.model->index(item.solution).data(Qt::DecorationRole).value<QIcon>();
+    bool spec = item.spec;
     if (item.rating > 0)
-        return QIcon(":/icons/gcircle");
-    if (item.rating == 0)
-        return QIcon(":/icons/ycircle");
-    return QIcon(":/icons/rcircle");
+        return item.approved ? QIcon(":/icons/gs") : QIcon(spec ? ":/icons/ge" : ":/icons/gc");
+    else if (item.rating == 0)
+        return item.approved ? QIcon(":/icons/ys") : QIcon(spec ? ":/icons/ye" : ":/icons/yc");
+    else
+        return item.approved ? QIcon(":/icons/rs") : QIcon(spec ? ":/icons/re" : ":/icons/rc");
 }

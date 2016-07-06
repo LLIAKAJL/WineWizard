@@ -21,19 +21,22 @@
         <file alias="winecfg">icons/winecfg.png</file>
         <file alias="plus">icons/plus.png</file>
         <file alias="solution">icons/solution.png</file>
-        <file alias="gcircle">icons/gcircle.png</file>
-        <file alias="gstar">icons/gstar.png</file>
-        <file alias="rcircle">icons/rcircle.png</file>
-        <file alias="rstar">icons/rstar.png</file>
-        <file alias="ycircle">icons/ycircle.png</file>
-        <file alias="ystar">icons/ystar.png</file>
-        <file alias="rcstar">icons/rcstar.png</file>
-        <file alias="gcstar">icons/gcstar.png</file>
-        <file alias="ru">icons/ru.png</file>
-        <file alias="uk">icons/uk.png</file>
+        <file alias="gc">icons/gc.png</file>
+        <file alias="gs">icons/gs.png</file>
+        <file alias="rc">icons/rc.png</file>
+        <file alias="rs">icons/rs.png</file>
+        <file alias="yc">icons/yc.png</file>
+        <file alias="ys">icons/ys.png</file>
         <file alias="background">icons/background.png</file>
+        <file alias="re">icons/re.png</file>
+        <file alias="ye">icons/ye.png</file>
+        <file alias="ge">icons/ge.png</file>
     </qresource>
     <qresource prefix="/lang">
         <file alias="ru">lang/ru.qm</file>
+    </qresource>
+    <qresource prefix="/licons">
+        <file alias="ru">licons/ru.png</file>
+        <file alias="uk">licons/uk.png</file>
     </qresource>
 </RCC>

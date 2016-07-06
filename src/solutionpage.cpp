@@ -36,16 +36,9 @@
 
 const int POSTS_PER_PAGE = 50;
 
-const QString EXISTS = QObject::tr("Application \"%1\" is already installed! " \
-                                   "Are you sure you want to reinstall it?");
-
-const QString NEW_VER = QObject::tr("Please install a newer version of Wine Wizard.\n" \
-                                    "\nThe current version is %1.\n" \
-                                    "The required version is %2.");
-
 const QString SOLUTIONS_QUERY = "?c=sol_list&os=%1&arch=%2&app=%3";
 const QString DOWNLOAD_URL = "http://wwizard.net/download/";
-const QString API_URL = "http://wwizard.net/api2/";
+const QString API_URL = "http://localhost/api2/";//"http://wwizard.net/api2/";
 
 const QString UPDATE_URL = "https://raw.githubusercontent.com/LLIAKAJL/WineWizard-Utils/master/update.";
 const QString REPO_URL = "https://raw.githubusercontent.com/LLIAKAJL/WineWizard-Utils/master/%1%2.repo";
@@ -96,12 +89,16 @@ bool SolutionPage::validatePage()
 {
     if (!property("selected").toBool())
     {
-        QModelIndex index = field("app").toModelIndex();
+        QModelIndex index = ui->apps->currentIndex();
         QString prefix = index.data(SearchModel::PrefixRole).toString();
+        if (!index.data(SearchModel::ApprovedRole).toBool() && index.data(SearchModel::SpecRole).toBool())
+            if (!Dialogs::confirm(tr("Are you sure you want to use solution with additional scripts?"), wizard()))
+                return false;
         if (FS::prefix(prefix).exists())
         {
             QString name = index.data().toString();
-            if (!Dialogs::confirm(EXISTS.arg(name), wizard()))
+            if (!Dialogs::confirm(tr("Application \"%1\" is already installed! " \
+                                     "Are you sure you want to reinstall it?").arg(name), wizard()))
                 return false;
         }
         getSolutions(true);
@@ -196,7 +193,8 @@ void SolutionPage::solutonsFinished(int code)
         for (Executor *e : Executor::instances())
             if (e->prefix() == prefix)
                 e->deleteLater();
-        ui->apps->model()->setData(index, QVariant(), SearchModel::ModelRole);
+        QAbstractItemModel *m = ui->apps->model();
+        m->setData(index, QVariant(), SearchModel::ModelRole);
         ui->pages->setCurrentIndex(1);
         setProperty("selected", true);
         wizard()->next();
@@ -366,7 +364,9 @@ void SolutionPage::updateFinished(int code)
             QString repoVer = jo.value("version").toString();
             if (appVer != repoVer)
             {
-                Dialogs::error(NEW_VER.arg(appVer).arg(repoVer), this);
+                Dialogs::error(tr("Please install a newer version of Wine Wizard.\n" \
+                                  "\nThe current version is %1.\n" \
+                                  "The required version is %2.").arg(appVer).arg(repoVer), this);
                 QDesktopServices::openUrl(QUrl(DOWNLOAD_URL));
                 wizard()->setProperty("finish", true);
                 wizard()->reject();
