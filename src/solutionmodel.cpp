@@ -169,11 +169,11 @@ QIcon SolutionModel::ratingToIcon(const QModelIndex &index) const
     const Item &item = mList.at(index.row());
     bool spec = !item.bs.isEmpty() || !item.as.isEmpty();
     if (item.rating > 0)
-        return item.approved ? QIcon(":/icons/gs") : QIcon(spec ? ":/icons/ge" : ":/icons/gc");
+        return spec ? QIcon(":/icons/ge") : QIcon(item.approved ? ":/icons/gs" : ":/icons/gc");
     else if (item.rating == 0)
-        return item.approved ? QIcon(":/icons/ys") : QIcon(spec ? ":/icons/ye" : ":/icons/yc");
+        return spec ? QIcon(":/icons/ye") : QIcon(item.approved ? ":/icons/ys" : ":/icons/yc");
     else
-        return item.approved ? QIcon(":/icons/rs") : QIcon(spec ? ":/icons/re" : ":/icons/rc");
+        return spec ? QIcon(":/icons/re") : QIcon(item.approved ? ":/icons/rs" : ":/icons/rc");
 }
 
 void SolutionModel::resetItem(const QModelIndex &index)

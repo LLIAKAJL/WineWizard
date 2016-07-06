@@ -154,9 +154,9 @@ QIcon SearchModel::ratingToIcon(const QModelIndex &index) const
         return item.model->index(item.solution).data(Qt::DecorationRole).value<QIcon>();
     bool spec = item.spec;
     if (item.rating > 0)
-        return item.approved ? QIcon(":/icons/gs") : QIcon(spec ? ":/icons/ge" : ":/icons/gc");
+        return spec ? QIcon(":/icons/ge") : QIcon(item.approved ? ":/icons/gs" : ":/icons/gc");
     else if (item.rating == 0)
-        return item.approved ? QIcon(":/icons/ys") : QIcon(spec ? ":/icons/ye" : ":/icons/yc");
+        return spec ? QIcon(":/icons/ye") : QIcon(item.approved ? ":/icons/ys" : ":/icons/yc");
     else
-        return item.approved ? QIcon(":/icons/rs") : QIcon(spec ? ":/icons/re" : ":/icons/rc");
+        return spec ? QIcon(":/icons/re") : QIcon(item.approved ? ":/icons/rs" : ":/icons/rc");
 }

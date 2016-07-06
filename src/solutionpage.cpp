@@ -91,8 +91,8 @@ bool SolutionPage::validatePage()
     {
         QModelIndex index = ui->apps->currentIndex();
         QString prefix = index.data(SearchModel::PrefixRole).toString();
-        if (!index.data(SearchModel::ApprovedRole).toBool() && index.data(SearchModel::SpecRole).toBool())
-            if (!Dialogs::confirm(tr("Are you sure you want to use solution with additional scripts?"), wizard()))
+        if (index.data(SearchModel::SpecRole).toBool())
+            if (!Dialogs::confirm(tr("Solution uses additional scripts! Continue?"), wizard()))
                 return false;
         if (FS::prefix(prefix).exists())
         {
