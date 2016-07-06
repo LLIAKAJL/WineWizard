@@ -16,17 +16,9 @@ Other features:
 
 ***********************************************
 
-Installation of Win-application:
-
-1)Double click on the .exe/.msi file or select "Install Application" from menu.
-
-2) Select solution from list and click "OK".
-
-***********************************************
-
 Dependencies:
 
-qt5, unzip, cabextract, bzip2, tar
+qt5, unzip, cabextract, bzip2, tar, wget
 
 ***********************************************
 
@@ -41,7 +33,3 @@ $ qmake ..
 $ make
 
 # make install
-
-***********************************************
-
-P.S. System tray icon is hidden by default(tray bug in Qt5 applications) and application is finished automatically. I run Wine Wizard from icon on the KDE panel. You can change the behavior in menu "Settings".
