@@ -20,17 +20,27 @@ DEFINES += APP_VERSION=\\\"$$VERSION\\\" \
            OS=\\\"$$OS\\\"
 
 TARGET = winewizard
+
 isEmpty(PREFIX) {
- PREFIX = /usr/bin
+    PREFIX = /usr/local
 }
-target.path = $$PREFIX/
+isEmpty(BINDIR) {
+    BINDIR = $$PREFIX/bin
+}
+isEmpty(DATADIR) {
+    DATADIR = $$PREFIX/share
+}
+
+target.path = $$BINDIR
 
 TEMPLATE = app
 
-icon.path = /usr/share/icons/hicolor/128x128/apps/
 icon.files = winewizard.png
-desktop.path = /usr/share/applications/
+icon.path = $$DATADIR/icons/hicolor/128x128/apps/
+
 desktop.files = winewizard.desktop
+desktop.path = $$DATADIR/applications/
+
 INSTALLS += target \
             icon \
             desktop
