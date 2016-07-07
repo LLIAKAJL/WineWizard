@@ -23,6 +23,7 @@
 
 #include <QStringList>
 #include <QJsonArray>
+#include <QObject>
 #include <QString>
 #include <QList>
 
