@@ -45,7 +45,7 @@ Wizard::Wizard(QObject *parent) :
     mAutoquit = s.value("Autoquit").toBool();
     retranslate(s.value("Language").toInt());
 
-    QSystemTrayIcon *tray = new QSystemTrayIcon(QIcon::fromTheme("winewizard"), this);
+    QSystemTrayIcon *tray = new QSystemTrayIcon(qApp->windowIcon(), this);
     connect(tray, &QSystemTrayIcon::activated, this, &Wizard::trayActivated);
     tray->show();
 }

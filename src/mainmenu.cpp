@@ -112,7 +112,7 @@ MainMenu::MainMenu(QWidget *parent) :
     if (!Wizard::autoquit())
     {
         addSeparator();
-        act = addAction(QIcon::fromTheme("application-exit", QIcon(":/icons/quit")), tr("&Quit"));
+        act = addAction(QIcon(":/icons/quit"), tr("&Quit"));
         act->setShortcut(QKeySequence::Quit);
         connect(act, &QAction::triggered, this, &MainMenu::quit);
     }

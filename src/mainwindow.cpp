@@ -53,7 +53,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->actionTerminate->setIcon(style()->standardIcon(QStyle::SP_MediaStop));
     ui->actionBrowse->setIcon(style()->standardIcon(QStyle::SP_DirIcon));
     ui->actionTerminateAll->setIcon(style()->standardIcon(QStyle::SP_MediaStop));
-    ui->actionQuit->setIcon(QIcon::fromTheme("application-exit", QIcon(":/icons/quit")));
+    ui->actionQuit->setIcon(QIcon(":/icons/quit"));
 
     QSettings s("winewizard", "settings");
     s.beginGroup("MainWindow");

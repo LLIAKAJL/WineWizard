@@ -29,7 +29,7 @@ AboutDialog::AboutDialog(QWidget *parent) :
     ui(new Ui::AboutDialog)
 {
     ui->setupUi(this);
-    ui->icon->setPixmap(QIcon::fromTheme("winewizard").pixmap(QSize(128, 128)));
+    ui->icon->setPixmap(qApp->windowIcon().pixmap(QSize(128, 128)));
     ui->label->setText(ui->label->text().arg(qApp->applicationDisplayName(),
                                              qApp->applicationVersion()));
 }

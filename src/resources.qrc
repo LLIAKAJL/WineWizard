@@ -31,6 +31,7 @@
         <file alias="re">icons/re.png</file>
         <file alias="ye">icons/ye.png</file>
         <file alias="ge">icons/ge.png</file>
+        <file alias="main">icons/main.png</file>
     </qresource>
     <qresource prefix="/lang">
         <file alias="ru">lang/ru.qm</file>

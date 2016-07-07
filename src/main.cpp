@@ -47,6 +47,7 @@ int main(int argc, char *argv[])
     }
 
     app.setQuitOnLastWindowClosed(false);
+    app.setWindowIcon(QIcon(":/icons/main"));
     app.setApplicationDisplayName("Wine Wizard");
     app.setApplicationName("winewizard");
     app.setApplicationVersion(APP_VERSION);
