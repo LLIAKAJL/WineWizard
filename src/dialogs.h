@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJL@yandex.ru>         *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -32,8 +32,6 @@ namespace Dialogs
     bool question(const QString &text, QWidget *parent = nullptr);
     bool retry(const QString &text, QWidget *parent = nullptr);
     QString open(const QString &title, const QString &filter,
-                 QWidget *parent = nullptr, const QString &dir = QDir::homePath());
-    QString save(const QString &title, const QString &filter,
                  QWidget *parent = nullptr, const QString &dir = QDir::homePath());
     QString dir(const QString &start, QWidget *parent = nullptr);
     bool getText(const QString &title, const QString &label,

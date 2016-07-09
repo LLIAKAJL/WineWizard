@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJL@yandex.ru>         *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -79,10 +79,4 @@ namespace Dialogs
         }
         return false;
     }
-
-    QString save(const QString &title, const QString &filter, QWidget *parent, const QString &dir)
-    {
-        return QFileDialog::getSaveFileName(parent, title, dir, filter);
-    }
-
 }

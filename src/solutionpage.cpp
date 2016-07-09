@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJL@yandex.ru>         *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -22,6 +22,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QSettings>
 #include <QUrl>
 
 #include "ui_solutionpage.h"
@@ -33,11 +34,11 @@
 #include "mainwindow.h"
 #include "executor.h"
 #include "dialogs.h"
+#include "wizard.h"
 
 const int POSTS_PER_PAGE = 50;
 
 const QString SOLUTIONS_QUERY = "?c=sol_list&os=%1&arch=%2&app=%3";
-const QString DOWNLOAD_URL = "http://wwizard.net/download/";
 const QString API_URL = "http://wwizard.net/api2/";
 
 const QString UPDATE_URL = "https://raw.githubusercontent.com/LLIAKAJL/WineWizard-Utils/master/update.";
@@ -67,6 +68,8 @@ SolutionPage::~SolutionPage()
 
 void SolutionPage::initializePage()
 {
+    setTitle(tr("Data updating"));
+    setSubTitle(tr("This may take several minutes. Please wait..."));
     ui->out->clear();
     for (const QFileInfo &f : FS::temp().entryInfoList(QDir::Files))
         QFile::remove(f.absoluteFilePath());
@@ -360,19 +363,23 @@ void SolutionPage::updateFinished(int code)
         else
         {
             QJsonObject jo = jd.object();
-            QString appVer = QApplication::applicationVersion();
             QString repoVer = jo.value("version").toString();
-            if (appVer != repoVer)
+            QStringList appVerList = QString(APP_VERSION).split('.', QString::SkipEmptyParts);
+            QStringList repoVerList = repoVer.split('.', QString::SkipEmptyParts);
+            if (appVerList.first() != repoVerList.first())
             {
                 Dialogs::error(tr("Please install a newer version of Wine Wizard.\n" \
                                   "\nThe current version is %1.\n" \
-                                  "The required version is %2.").arg(appVer).arg(repoVer), this);
+                                  "The required version is %2.").arg(APP_VERSION).arg(repoVer), this);
+                QSettings("winewizard", "settings").setValue("Version", repoVer);
                 QDesktopServices::openUrl(QUrl(DOWNLOAD_URL));
                 wizard()->setProperty("finish", true);
                 wizard()->reject();
             }
             else
             {
+                if (appVerList.at(1) != repoVerList.at(1) || appVerList.last() != repoVerList.last())
+                    QSettings("winewizard", "settings").setValue("Version", repoVer);
                 mSha = jo.value("32").toString();
                 ui->out->clear();
                 QString arch = field("arch").toString();

@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJL@yandex.ru>         *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -43,7 +43,7 @@ Wizard::Wizard(QObject *parent) :
     mInstance = this;
     QSettings s("winewizard", "settings");
     mAutoquit = s.value("Autoquit").toBool();
-    retranslate(s.value("Language").toInt());
+    retranslate(s.value("Language", -1).toInt());
 
     QSystemTrayIcon *tray = new QSystemTrayIcon(qApp->windowIcon(), this);
     connect(tray, &QSystemTrayIcon::activated, this, &Wizard::trayActivated);
@@ -199,6 +199,8 @@ QString Wizard::langSuffix(int lang)
 {
     switch (lang)
     {
+    case -1:
+        return QLocale::system().name();
     case LANG_RU:
         return "ru";
     default:

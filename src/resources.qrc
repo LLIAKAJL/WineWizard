@@ -34,7 +34,7 @@
         <file alias="main">icons/main.png</file>
     </qresource>
     <qresource prefix="/lang">
-        <file alias="ru">lang/ru.qm</file>
+        <file alias="ru">translations/ru.qm</file>
     </qresource>
     <qresource prefix="/licons">
         <file alias="ru">licons/ru.png</file>

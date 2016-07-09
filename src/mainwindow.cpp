@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJL@yandex.ru>         *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -38,11 +38,14 @@
 #include "dialogs.h"
 #include "wizard.h"
 
+#include <QTimer>
+
 MainWindow *MainWindow::mInstance = nullptr;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    mNewVersion(nullptr)
 {
     mInstance = this;
     ui->setupUi(this);
@@ -60,6 +63,20 @@ MainWindow::MainWindow(QWidget *parent) :
     resize(s.value("Size", size()).toSize());
     ui->splitter->restoreState(s.value("Splitter").toByteArray());
     s.endGroup();
+
+    QString newVer = QSettings("winewizard", "settings").value("Version", APP_VERSION).toString();
+    if (newVer != APP_VERSION)
+    {
+        mNewVersion = new QLabel(tr("A new version of Wine Wizard(%1) is available!").arg(newVer), this);
+        statusBar()->addWidget(mNewVersion);
+        statusBar()->installEventFilter(this);
+        QTimer *t = new QTimer(this);
+        connect(t, &QTimer::timeout, this, &MainWindow::updateStatusBar);
+        t->start(15);
+        t->setProperty("delta", 1);
+    }
+    else
+        statusBar()->hide();
 
     QSize center = (QApplication::desktop()->size() - size()) * 0.5;
     move(center.width(), center.height());
@@ -115,6 +132,17 @@ void MainWindow::changeEvent(QEvent *e)
         ui->retranslateUi(this);
     else
         QMainWindow::changeEvent(e);
+}
+
+bool MainWindow::eventFilter(QObject *target, QEvent *event)
+{
+    if (event->type() == QEvent::MouseButtonPress)
+        if (target == statusBar() || target == mNewVersion)
+        {
+            QDesktopServices::openUrl(DOWNLOAD_URL);
+            return true;
+        }
+    return QMainWindow::eventFilter(target, event);
 }
 
 MainWindow *MainWindow::instance()
@@ -456,10 +484,23 @@ void MainWindow::on_actionTerminateAll_triggered()
 
 void MainWindow::on_actionQuit_triggered()
 {
-    if (Dialogs::confirm(tr("Are you sure you want to quit from Wine Wizard?"), this))
+    if (Executor::instances().isEmpty())
+        QApplication::quit();
+    else if (Dialogs::confirm(tr("Are you sure you want to terminate all " \
+                                 "applications and quit from Wine Wizard?"), this))
     {
         for (Executor *e : Executor::instances())
             e->deleteLater();
         QApplication::quit();
     }
+}
+
+void MainWindow::updateStatusBar()
+{
+    if (mNewVersion->x() > width() - mNewVersion->width())
+        sender()->setProperty("delta", -1);
+    else if (mNewVersion->x() < 0)
+        sender()->setProperty("delta", 1);
+        //mNewVersion->move(0, mNewVersion->y());
+    mNewVersion->move(mNewVersion->x() + sender()->property("delta").toInt(), mNewVersion->y());
 }

@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJL@yandex.ru>         *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -31,6 +31,8 @@ namespace Ui {
 class MainWindow;
 }
 
+const QString DOWNLOAD_URL = "http://wwizard.net/download/";
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -46,6 +48,7 @@ public:
 protected:
     void keyPressEvent(QKeyEvent *event) override;
     void changeEvent(QEvent *e) override;
+    bool eventFilter(QObject *target, QEvent *event) override;
 
 private slots:
     void prefixChanged(const QModelIndex &index);
@@ -71,11 +74,13 @@ private slots:
     void on_actionTerminate_triggered();
     void on_actionTerminateAll_triggered();
     void on_actionQuit_triggered();
+    void updateStatusBar();
 
 private:
     Ui::MainWindow *ui;
     QMenu *mMenu;
     static MainWindow *mInstance;
+    QLabel *mNewVersion;
 //    void addMenuEmpty(QMenu *menu);
 };
 

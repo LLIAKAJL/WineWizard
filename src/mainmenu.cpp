@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJL@yandex.ru>         *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -160,7 +160,10 @@ void MainMenu::about()
 
 void MainMenu::quit()
 {
-    if (Dialogs::confirm(tr("Are you sure you want to quit from Wine Wizard?")))
+    if (Executor::instances().isEmpty())
+        QApplication::quit();
+    else if (Dialogs::confirm(tr("Are you sure you want to terminate all " \
+                                 "applications and quit from Wine Wizard?")))
     {
         for (Executor *e : Executor::instances())
             e->deleteLater();

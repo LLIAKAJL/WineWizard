@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJL@yandex.ru>         *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -43,7 +43,11 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->height->setValue(sh);
     ui->vm->setValue(vm);
     ui->autoquit->setChecked(s.value("Autoquit").toBool());
-    ui->language->setCurrentIndex(s.value("Language").toInt());
+    int lang = s.value("Language", -1).toInt();
+    if (lang < 0)
+        ui->language->setCurrentIndex(localeToLangNum(QLocale::system().name()));
+    else
+        ui->language->setCurrentIndex(lang);
 }
 
 SettingsDialog::~SettingsDialog()
@@ -77,4 +81,11 @@ void SettingsDialog::accept()
 void SettingsDialog::on_buttonBox_helpRequested()
 {
     QDesktopServices::openUrl(QUrl("http://wwizard.net/help/#settings"));
+}
+
+int SettingsDialog::localeToLangNum(const QString &locale) const
+{
+    if (locale.startsWith("ru"))
+        return 1;
+    return 0;
 }

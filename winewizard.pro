@@ -10,7 +10,7 @@ QMAKE_CXXFLAGS += -std=c++11
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-VERSION = 2.0.0
+VERSION = 2.0.1
 
 isEmpty(OS) {
  OS = linux
@@ -45,7 +45,7 @@ INSTALLS += target \
             icon \
             desktop
 
-TRANSLATIONS += ru.ts
+TRANSLATIONS += src/translations/ru.ts
 
 SOURCES += src/qtsingleapplication/qtlocalpeer.cpp \
     src/qtsingleapplication/qtlockedfile.cpp \
