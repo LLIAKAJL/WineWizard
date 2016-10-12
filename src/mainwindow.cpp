@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>       *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -21,91 +21,77 @@
 #include <QSortFilterProxyModel>
 #include <QDesktopServices>
 #include <QDesktopWidget>
+#include <QJsonDocument>
 #include <QWidgetAction>
+#include <QLibraryInfo>
+#include <QJsonArray>
 #include <QSettings>
-#include <QLabel>
-#include <QMenu>
+#include <QWindow>
 
+#include "editshortcutdialog.h"
+#include "editprefixdialog.h"
+#include "terminatedialog.h"
 #include "settingsdialog.h"
 #include "ui_mainwindow.h"
-#include "shortcutmodel.h"
-#include "installwizard.h"
-#include "prefixmodel.h"
-#include "searchmodel.h"
+#include "setupwizard.h"
+#include "aboutdialog.h"
 #include "mainwindow.h"
-#include "filesystem.h"
-#include "executor.h"
-#include "dialogs.h"
-#include "wizard.h"
+#include "netmanager.h"
+#include "mainmodel.h"
+#include "adslabel.h"
+#include "utils.h"
 
-#include <QTimer>
-
-MainWindow *MainWindow::mInstance = nullptr;
+const QString UPDATE_URL = "http://wwizard.net/api3/?c=update&l=%1";
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    mNewVersion(nullptr)
+    ui(new Ui::MainWindow)
 {
-    mInstance = this;
     ui->setupUi(this);
-    setAttribute(Qt::WA_DeleteOnClose);
-
-    ui->actionInstall->setIcon(style()->standardIcon(QStyle::SP_DriveCDIcon));
-    ui->actionRun->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
-    ui->actionTerminate->setIcon(style()->standardIcon(QStyle::SP_MediaStop));
-    ui->actionBrowse->setIcon(style()->standardIcon(QStyle::SP_DirIcon));
-    ui->actionTerminateAll->setIcon(style()->standardIcon(QStyle::SP_MediaStop));
-    ui->actionQuit->setIcon(QIcon(":/icons/quit"));
-
+    ui->ads->hide();
+    ui->splitter->setStretchFactor(1, 1);
+    QSystemTrayIcon *tray = new QSystemTrayIcon(qApp->windowIcon(), this);
+    connect(tray, &QSystemTrayIcon::activated, this, &MainWindow::trayActivated);
+    tray->show();
+    qApp->installTranslator(&mStdTrans);
+    qApp->installTranslator(&mTrans);
     QSettings s("winewizard", "settings");
+    QLocale::Language lang = static_cast<QLocale::Language>(s.value("Language", QLocale::English).toInt());
+    setLanguage(lang);
+    getUpdate();
     s.beginGroup("MainWindow");
-    resize(s.value("Size", size()).toSize());
+    QDesktopWidget *dw = QApplication::desktop();
+    resize(s.value("Size", QSize(dw->width() * 0.7, dw->height() * 0.6)).toSize());
     ui->splitter->restoreState(s.value("Splitter").toByteArray());
     s.endGroup();
-
-    QString newVer = QSettings("winewizard", "settings").value("Version", APP_VERSION).toString();
-    if (newVer != APP_VERSION)
-    {
-        mNewVersion = new QLabel(tr("A new version of Wine Wizard(%1) is available!").arg(newVer), this);
-        statusBar()->addWidget(mNewVersion);
-        statusBar()->installEventFilter(this);
-        QTimer *t = new QTimer(this);
-        connect(t, &QTimer::timeout, this, &MainWindow::updateStatusBar);
-        t->start(15);
-        t->setProperty("delta", 1);
-    }
-    else
-        statusBar()->hide();
-
-    QSize center = (QApplication::desktop()->size() - size()) * 0.5;
-    move(center.width(), center.height());
-
-    ui->actionQuit->setVisible(!Wizard::autoquit());
-
-    ShortcutModel *shortcutModel = new ShortcutModel(this);
-    QSortFilterProxyModel *shortcutSortModel = new QSortFilterProxyModel(this);
-    shortcutSortModel->setSourceModel(shortcutModel);
-    connect(shortcutSortModel, &QSortFilterProxyModel::dataChanged, shortcutSortModel,
-            [shortcutSortModel]{ shortcutSortModel->sort(0); });
-    ui->shortcuts->setModel(shortcutSortModel);
-
-    PrefixModel *prefixModel = new PrefixModel(this);
-    QSortFilterProxyModel *prefixSortModel = new QSortFilterProxyModel(this);
-    prefixSortModel->setSourceModel(prefixModel);
-    prefixSortModel->sort(0);
-    connect(prefixSortModel, &QSortFilterProxyModel::dataChanged, prefixSortModel,
-            [prefixSortModel]{ prefixSortModel->sort(0); });
-    ui->prefixes->setModel(prefixSortModel);
-    connect(ui->prefixes->selectionModel(), &QItemSelectionModel::currentRowChanged,
-            this, &MainWindow::prefixChanged);
-
-    connect(ui->shortcuts->selectionModel(), &QItemSelectionModel::currentRowChanged,
-            this, &MainWindow::shortcutChanged);
-
-    if (prefixSortModel->rowCount() > 0)
-        ui->prefixes->setCurrentIndex(prefixSortModel->index(0, 0));
-    update();
+    setActionIcon(ui->actionInstall,   "drive-optical",        QStyle::SP_DriveCDIcon);
+    setActionIcon(ui->actionExecute,   "media-playback-start", QStyle::SP_MediaPlay);
+    setActionIcon(ui->actionTerminate, "media-playback-stop",  QStyle::SP_MediaStop);
+    setActionIcon(ui->actionBrowse,    "folder-open",          QStyle::SP_DirOpenIcon);
+    setActionIcon(ui->actionControl,   "computer",             QStyle::SP_ComputerIcon);
+    setActionIcon(ui->actionQuit,      "application-exit",     QStyle::SP_DialogCloseButton);
+    ui->actionSettings->setIcon(QIcon::fromTheme("preferences-system", QIcon(":/images/settings")));
+    setBtnIcon(ui->editPrefixBtn,     "document-properties", QStyle::SP_FileDialogDetailedView);
+    setBtnIcon(ui->editShortcutBtn,   "document-properties", QStyle::SP_FileDialogDetailedView);
+    setBtnIcon(ui->newShortcutBtn,    "list-add",            QStyle::SP_FileDialogNewFolder);
+    setBtnIcon(ui->deletePrefixBtn,   "list-remove",         QStyle::SP_TrashIcon);
+    setBtnIcon(ui->deleteShortcutBtn, "list-remove",         QStyle::SP_TrashIcon);
+    ui->prefixesEditPanel->hide();
+    ui->shortcutsEditPanel->hide();
+    QSortFilterProxyModel *m = new QSortFilterProxyModel(this);
+    m->setSourceModel(new MainModel(this));
+    m->sort(0);
+    m->setDynamicSortFilter(true);
+    ui->prefixes->setModel(m);
+    ui->shortcuts->setModel(m);
+    QItemSelectionModel *psm = ui->prefixes->selectionModel();
+    connect(psm, &QItemSelectionModel::currentRowChanged, this, &MainWindow::checkState);
+    connect(m,   &QSortFilterProxyModel::dataChanged,     this, &MainWindow::checkState);
+    connect(m,   &QSortFilterProxyModel::rowsRemoved,     this, &MainWindow::checkState);
+    connect(m,   &QSortFilterProxyModel::rowsInserted,    this, &MainWindow::rowsInserted);
+    QItemSelectionModel *ssm = ui->shortcuts->selectionModel();
+    connect(ssm, &QItemSelectionModel::currentRowChanged, this, &MainWindow::checkState);
+    ui->prefixes->setCurrentIndex(m->index(0, 0));
 }
 
 MainWindow::~MainWindow()
@@ -116,14 +102,60 @@ MainWindow::~MainWindow()
     s.setValue("Splitter", ui->splitter->saveState());
     s.endGroup();
     delete ui;
-    mInstance = nullptr;
-    Wizard::update();
 }
 
-void MainWindow::keyPressEvent(QKeyEvent *event)
+void MainWindow::start(const QString &cmdLine)
 {
-    if (event->key() == Qt::Key_Escape)
-        close();
+    ui->actionControl->setChecked(false);
+    if (cmdLine.isEmpty())
+        showNormal();
+    else if (!QFile::exists(cmdLine))
+    {
+        Utils::error(tr("The file \"%1\" was not found.").arg(cmdLine), this);
+        showNormal();
+    }
+    else if (QFileInfo(cmdLine).suffix().toUpper() == "LNK")
+    {
+        QAbstractItemModel *m = ui->prefixes->model();
+        bool exists = false;
+        for (int i = m->rowCount(); i >= 0; --i)
+        {
+            QModelIndex pi = m->index(i, 0);
+            for (int j = m->rowCount(pi); j >= 0; --j)
+            {
+                QModelIndex si = m->index(j, 0, pi);
+                if (QFileInfo(si.data(MainModel::PathRole).toString()) == cmdLine)
+                {
+                    exists = true;
+                    hide();
+                    m->setData(si, true, MainModel::ExecuteRole);
+                }
+            }
+        }
+        if (!exists)
+        {
+            Utils::error(tr("The shortcut \"%1\" was not found.").
+                         arg(QFileInfo(cmdLine).completeBaseName()), this);
+            showNormal();
+        }
+    }
+    else
+    {
+        hide();
+        SetupWizard *iw = new SetupWizard(cmdLine, ui->prefixes->model());
+        connect(iw, &SetupWizard::destroyed, this, &MainWindow::checkState);
+        iw->show();
+    }
+    checkState();
+}
+
+void MainWindow::setVisible(bool visible)
+{
+    if (visible)
+        move(QApplication::desktop()->geometry().center() - QPoint(width(), height()) * 0.5);
+    else
+        getUpdate();
+    QMainWindow::setVisible(visible);
 }
 
 void MainWindow::changeEvent(QEvent *e)
@@ -134,373 +166,274 @@ void MainWindow::changeEvent(QEvent *e)
         QMainWindow::changeEvent(e);
 }
 
-bool MainWindow::eventFilter(QObject *target, QEvent *event)
+void MainWindow::keyPressEvent(QKeyEvent *e)
 {
-    if (event->type() == QEvent::MouseButtonPress)
-        if (target == statusBar() || target == mNewVersion)
-        {
-            QDesktopServices::openUrl(DOWNLOAD_URL);
-            return true;
-        }
-    return QMainWindow::eventFilter(target, event);
+    if (!ui->actionControl->isChecked() && e->key() == Qt::Key_Escape)
+        hide();
+    QMainWindow::keyPressEvent(e);
 }
 
-MainWindow *MainWindow::instance()
+bool MainWindow::eventFilter(QObject *o, QEvent *e)
 {
-    return mInstance;
+    if (e->type() == QEvent::MouseButtonPress)
+        QDesktopServices::openUrl(o->property("url").toString());
+    return QMainWindow::eventFilter(o, e);
 }
 
-void MainWindow::update()
+void MainWindow::getUpdate()
 {
-    if (mInstance)
+    QString out = Utils::temp().absoluteFilePath(Utils::genID());
+    NetManager *nm = new NetManager(this);
+    nm->setProperty("out", out);
+    connect(nm, &NetManager::finished, this, &MainWindow::updateFinished);
+    connect(nm, &NetManager::error,    this, &MainWindow::error);
+    QSettings s("winewizard", "settings");
+    QLocale::Language lang = static_cast<QLocale::Language>(s.value("Language", QLocale::English).toInt());
+    nm->start(NetManager::RequestList() << NetManager::makeGetRequest(UPDATE_URL.arg(QLocale(lang).name()), out));
+}
+
+void MainWindow::updateFinished()
+{
+    QString out = sender()->property("out").toString();
+    QJsonObject data = Utils::readJson(out);
+    if (QFile::exists(out))
+        QFile::remove(out);
+    QJsonArray b = data.value("b").toArray();
+    for (QJsonArray::ConstIterator i = b.begin(); i != b.end(); ++i)
     {
-        bool empty = Executor::instances().isEmpty();
-        mInstance->ui->actionTerminateAll->setDisabled(empty);
-        mInstance->ui->actionInstall->setDisabled(InstallWizard::instance());
-        mInstance->ui->actionSettings->setDisabled(InstallWizard::instance() || !empty);
-        QModelIndex index = mInstance->ui->prefixes->currentIndex();
-        if (index.isValid())
-        {
-            QString prefix = index.data(PrefixModel::PrefixRole).toString();
-            bool contains = Executor::contains(prefix);
-            mInstance->ui->actionTerminate->setEnabled(contains);
-        }
-        else
-            mInstance->ui->actionTerminate->setEnabled(false);
-        if (InstallWizard::instance())
-        {
-            QVariant field = InstallWizard::instance()->field("app");
-            if (field.isValid())
-            {
-                QModelIndex ai = field.toModelIndex();
-                if (ai.isValid())
-                {
-                    QString busy = ai.data(SearchModel::PrefixRole).toString();
-                    QAbstractItemModel *model = mInstance->ui->prefixes->model();
-                    QModelIndexList l = model->match(model->index(0, 0), PrefixModel::PrefixRole,
-                                                     busy, -1, Qt::MatchFixedString);
-                    if (!l.isEmpty())
-                        model->removeRow(l.first().row());
-                }
-            }
-        }
+        QString out = Utils::temp().absoluteFilePath(Utils::genID());
+        NetManager *nm = new NetManager(this);
+        QJsonObject o = (*i).toObject();
+        nm->setProperty("out", out);
+        nm->setProperty("url", o.value("u").toString());
+        nm->setProperty("h", data.value("h").toInt());
+        nm->setProperty("m", data.value("m").toInt());
+        connect(nm, &NetManager::finished, this, &MainWindow::finished);
+        connect(nm, &NetManager::error,    this, &MainWindow::error);
+        nm->start(NetManager::RequestList() << NetManager::makeGetRequest(o.value("i").toString(), out));
     }
+    sender()->deleteLater();
 }
 
-void MainWindow::prefixChanged(const QModelIndex &index)
+void MainWindow::finished()
 {
-    QAbstractItemModel *model = ui->shortcuts->model();
-    if (index.isValid())
+    QString out = sender()->property("out").toString();
+    if (QFile::exists(out))
     {
-        QString prefix = index.data(PrefixModel::PrefixRole).toString();
-        ui->actionTerminate->setEnabled(Executor::contains(prefix));
-        model->setData(QModelIndex(), prefix, ShortcutModel::ResetRole);
+        QString url = sender()->property("url").toString();
+        int h = sender()->property("h").toInt();
+        int m = sender()->property("m").toInt();
+        QHBoxLayout *l = static_cast<QHBoxLayout *>(ui->ads->layout());
+        for (int i = l->count() - 1; i >= 0; --i)
+            if (static_cast<AdsLabel *>(l->itemAt(i)->widget())->url() == url)
+                l->takeAt(i)->widget()->deleteLater();
+        if (l->count() > m)
+            l->takeAt(0)->widget()->deleteLater();
+        l->addWidget(new AdsLabel(out, url, h, ui->ads), 1);
+        ui->ads->show();
     }
-    else
-    {
-        ui->actionTerminate->setEnabled(false);
-        model->setData(QModelIndex(), QString(), ShortcutModel::ResetRole);
-    }
-    model->sort(0);
-    if (model->rowCount() > 0)
-        ui->shortcuts->setCurrentIndex(model->index(0, 0));
-    ui->actionRun->setEnabled(index.isValid() && ui->shortcuts->currentIndex().isValid());
-    ui->actionBrowse->setEnabled(index.isValid());
+    sender()->deleteLater();
 }
 
-void MainWindow::shortcutChanged(const QModelIndex &index)
+void MainWindow::error()
 {
-    ui->actionRun->setEnabled(index.isValid());
+    QString out = sender()->property("out").toString();
+    if (QFile::exists(out))
+        QFile::remove(out);
+    sender()->deleteLater();
 }
 
-void MainWindow::on_actionInstall_triggered()
+void MainWindow::checkState()
 {
-    QString exe = Dialogs::open(tr("Select Installer"),
-                                tr("Executable files (*.exe *.msi)"), this);
-    if (!exe.isEmpty())
-    {
-        close();
-        (new InstallWizard(exe))->show();
-    }
-}
-
-void MainWindow::on_prefixes_customContextMenuRequested(const QPoint &pos)
-{
-    QModelIndex index = ui->prefixes->currentIndex();
-    if (!index.isValid())
-        return;
-
-    QString prefix = index.data(PrefixModel::PrefixRole).toString();
-    bool running = Executor::contains(prefix);
-
-    QMenu menu(ui->prefixes);
-
-    QMenu *iMenu = menu.addMenu(QIcon(":/icons/set-icon"), tr("Set icon..."));
-
-    QAction *act = iMenu->addAction(tr("from file"));
-    connect(act, &QAction::triggered, this, &MainWindow::setIconFromFile);
-
-    act = iMenu->addAction(tr("from shortcut"));
-    QModelIndex sIndex = ui->shortcuts->currentIndex();
-    if (sIndex.isValid())
-    {
-        QString shortcut = sIndex.data(ShortcutModel::ShortcutRole).toString();
-        act->setEnabled(FS::icons(prefix).exists(shortcut));
-        connect(act, &QAction::triggered, this, &MainWindow::setIconFromShortcut);
-    }
-    else
-        act->setEnabled(false);
-
-    menu.addSeparator();
-
-    act = menu.addAction(QIcon(":/icons/winecfg"), tr("Winecfg"));
-    connect(act, &QAction::triggered, this, &MainWindow::winecfg);
-    act->setDisabled(running);
-
-    act = menu.addAction(QIcon(":/icons/regedit"), tr("Regedit"));
-    connect(act, &QAction::triggered, this, &MainWindow::regedit);
-    act->setDisabled(running);
-
-    menu.addSeparator();
-
-    act = menu.addAction(QIcon(":/icons/rename"), tr("Rename"));
-    connect(act, &QAction::triggered, this, &MainWindow::renameApp);
-    act->setDisabled(running);
-
-    menu.addSeparator();
-
-    act = menu.addAction(style()->standardIcon(QStyle::SP_TrashIcon), tr("Delete"));
-    act->setDisabled(running);
-    connect(act, &QAction::triggered, this, &MainWindow::deleteApp);
-
-    menu.move(ui->prefixes->mapToGlobal(pos));
-    menu.exec();
-}
-
-void MainWindow::deleteApp()
-{
-    QModelIndex index = ui->prefixes->currentIndex();
-    QString name = index.data().toString();
-    if (Dialogs::confirm(tr("Are you sure you want to delete \"%1\"?").arg(name), this))
-    {
-        QString prefix = index.data(PrefixModel::PrefixRole).toString();
-        FS::prefix(prefix).removeRecursively();
-        ui->prefixes->model()->removeRow(index.row());
-    }
-}
-
-void MainWindow::renameApp()
-{
-    ui->prefixes->edit(ui->prefixes->currentIndex());
-}
-
-void MainWindow::winecfg()
-{
-    QString prefix = ui->prefixes->currentIndex().data(PrefixModel::PrefixRole).toString();
-    QString path = FS::toUnixPath(prefix, "C:\\windows\\system32\\winecfg.exe");
-    QString script = QString(FS::readFile(":/run")).arg(path).arg(QString()).arg(QString());
-    Executor *e = new Executor(prefix);
-    e->start(script, false, QProcess::ForwardedChannels);
-    close();
-}
-
-void MainWindow::regedit()
-{
-    QString prefix = ui->prefixes->currentIndex().data(PrefixModel::PrefixRole).toString();
-    QString path = FS::toUnixPath(prefix, "C:\\windows\\regedit.exe");
-    QString script = QString(FS::readFile(":/run")).arg(path).arg(QString()).arg(QString());
-    Executor *e = new Executor(prefix);
-    e->start(script, false, QProcess::ForwardedChannels);
-    close();
-}
-
-void MainWindow::on_shortcuts_customContextMenuRequested(const QPoint &pos)
-{
+    QAbstractItemModel *m = ui->prefixes->model();
     if (!ui->prefixes->currentIndex().isValid())
-        return;
-    QMenu menu(ui->shortcuts);
-    QAction *act = menu.addAction(QIcon(":/icons/plus"), tr("Add"));
-    connect(act, &QAction::triggered, this, &MainWindow::addShortcut);
-    menu.addSeparator();
-    QModelIndex index = ui->shortcuts->currentIndex();
-    act = menu.addAction(QIcon(":/icons/set-icon"), tr("Set icon"));
-    act->setEnabled(index.isValid());
-    connect(act, &QAction::triggered, this, &MainWindow::editShortcutIcon);
-    act = menu.addAction(style()->standardIcon(QStyle::SP_DirIcon), tr("Set working Directory"));
-    act->setEnabled(index.isValid());
-    connect(act, &QAction::triggered, this, &MainWindow::editWorkDir);
-    act = menu.addAction(QIcon(":/icons/terminal"), tr("Set command line arguments"));
-    act->setEnabled(index.isValid());
-    connect(act, &QAction::triggered, this, &MainWindow::editArgs);
-    menu.addSeparator();
-    act = menu.addAction(QIcon(":/icons/rename"), tr("Rename"));
-    connect(act, &QAction::triggered, this, &MainWindow::renameShortcut);
-    act->setEnabled(index.isValid());
-    menu.addSeparator();
-    act = menu.addAction(style()->standardIcon(QStyle::SP_TrashIcon), tr("Delete"));
-    connect(act, &QAction::triggered, this, &MainWindow::deleteShortcut);
-    act->setEnabled(index.isValid());
-    menu.move(ui->shortcuts->mapToGlobal(pos));
-    menu.exec();
-}
-
-void MainWindow::renameShortcut()
-{
-    ui->shortcuts->edit(ui->shortcuts->currentIndex());
-}
-
-void MainWindow::deleteShortcut()
-{
-    QModelIndex index = ui->shortcuts->currentIndex();
-    QString name = index.data().toString();
-    if (Dialogs::confirm(tr("Are you sure you want to delete \"%1\"?").arg(name), this))
-        ui->shortcuts->model()->removeRow(index.row());
-}
-
-void MainWindow::addShortcut()
-{
-    QString prefix = ui->prefixes->currentIndex().data(PrefixModel::PrefixRole).toString();
-    QString dir = FS::drive(prefix).absolutePath();
-    QString exe = Dialogs::open(tr("Select Executable File"),
-                                tr("Executable files (*.exe *.msi)"), this, dir);
-    if (!exe.isEmpty())
+        ui->prefixes->setCurrentIndex(m->index(0, 0));
+    if (ui->shortcuts->rootIndex() != ui->prefixes->currentIndex())
     {
-        QSortFilterProxyModel *sm = static_cast<QSortFilterProxyModel *>(ui->shortcuts->model());
-        QFileInfo info(exe);
-        QString name = info.completeBaseName();
-        while (!sm->match(sm->index(0, 0), Qt::DisplayRole, name, -1, Qt::MatchFixedString).isEmpty())
-            name.append('0');
-        QAbstractItemModel *m = sm->sourceModel();
-        m->insertRow(0);
-        QModelIndex index = m->index(0, 0);
-        m->setData(index, name);
-        m->setData(index, FS::toWinPath(prefix, exe), ShortcutModel::ExeRole);
-        m->setData(index, FS::toWinPath(prefix, info.absolutePath()), ShortcutModel::WorkDirRole);
-        ui->shortcuts->setCurrentIndex(sm->mapFromSource(index));
-        sm->sort(0);
+        ui->shortcuts->setRootIndex(ui->prefixes->currentIndex());
+        ui->shortcuts->setCurrentIndex(m->index(0, 0, ui->prefixes->currentIndex()));
     }
+    QModelIndexList rl = m->match(m->index(0, 0), MainModel::RunningRole, true);
+    bool running = !rl.isEmpty();
+    if (running && ui->actionControl->isChecked())
+        ui->actionControl->setChecked(false);
+    ui->actionControl->setDisabled(running || SetupWizard::running());
+    bool controlChecked = ui->actionControl->isChecked();
+    ui->actionSettings->setDisabled(running || controlChecked || SetupWizard::running());
+    bool valid = ui->shortcuts->rootIndex().isValid();
+    ui->actionBrowse->setEnabled(!controlChecked && valid);
+    ui->deletePrefixBtn->setEnabled(valid);
+    ui->editPrefixBtn->setEnabled(valid);
+    ui->newShortcutBtn->setEnabled(valid);
+    ui->actionTerminate->setEnabled(!controlChecked && running);
+    bool currentShortcut = ui->shortcuts->model()->rowCount(ui->shortcuts->rootIndex()) > 0;
+    if (!ui->shortcuts->currentIndex().isValid())
+        ui->shortcuts->setCurrentIndex(m->index(0, 0, ui->prefixes->currentIndex()));
+    ui->actionExecute->setEnabled(!controlChecked && currentShortcut);
+    ui->deleteShortcutBtn->setEnabled(currentShortcut);
+    ui->editShortcutBtn->setEnabled(currentShortcut);
+    if (isHidden() && !SetupWizard::running() && !running)
+        showNormal();
+}
+
+void MainWindow::trayActivated()
+{
+    if (!isVisible() || isMinimized())
+        showNormal();
+    else
+        hide();
+}
+
+void MainWindow::on_actionQuit_triggered()
+{
+    QAbstractItemModel *m = ui->prefixes->model();
+    if (m->match(m->index(0, 0), MainModel::RunningRole, true).isEmpty())
+        QApplication::quit();
+    else if (Utils::warning(tr("Are you sure you want to quit from Wine Wizard?"), this))
+        QApplication::quit();
 }
 
 void MainWindow::on_actionSettings_triggered()
 {
     SettingsDialog sd(this);
     if (sd.exec() == SettingsDialog::Accepted)
-        ui->actionQuit->setVisible(!Wizard::autoquit());
+        setLanguage(sd.language());
 }
 
-void MainWindow::setIconFromFile()
+void MainWindow::setLanguage(QLocale::Language language)
 {
-    QString path = Dialogs::open(tr("Select Icon"), tr("Icon files (*.png)"), this);
-    if (!path.isEmpty())
-        ui->prefixes->model()->setData(ui->prefixes->currentIndex(), path, Qt::DecorationRole);
-}
-
-void MainWindow::editShortcutIcon()
-{
-    QString path = Dialogs::open(tr("Select Icon"), tr("Icon files (*.png)"), this);
-    if (!path.isEmpty())
-        ui->shortcuts->model()->setData(ui->shortcuts->currentIndex(), path, Qt::DecorationRole);
-}
-
-void MainWindow::setIconFromShortcut()
-{
-    QModelIndex sIndex = ui->shortcuts->currentIndex();
-    QModelIndex pIndex = ui->prefixes->currentIndex();
-    QString sName = sIndex.data().toString();
-    QString pName = pIndex.data().toString();
-    if (Dialogs::confirm(tr("Are you sure you want to set icon for \"%1\" from \"%2\"?").
-                         arg(pName).arg(sName), this))
+    if (language == QLocale::English)
     {
-        QString shortcut = sIndex.data(ShortcutModel::ShortcutRole).toString();
-        QString prefix = pIndex.data(PrefixModel::PrefixRole).toString();
-        QString path = FS::icons(prefix).absoluteFilePath(shortcut);
-        ui->prefixes->model()->setData(ui->prefixes->currentIndex(), path, Qt::DecorationRole);
+        mStdTrans.load(QString());
+        mTrans.load(QString());
+    }
+    else
+    {
+        QString stdPath = QLibraryInfo::location(QLibraryInfo::TranslationsPath);
+        mStdTrans.load(QString("qt_%1").arg(QLocale(language).name()), stdPath);
+        mTrans.load(QString(":/translations/%1").arg(language));
     }
 }
 
-void MainWindow::runShortcut()
+void MainWindow::setActionIcon(QAction *action, const QString &name, QStyle::StandardPixmap alter)
 {
-    QModelIndex index = ui->shortcuts->currentIndex();
-    if (index.isValid())
-    {
-        QString exe = index.data(ShortcutModel::ExeRole).toString();
-        QString workDir = index.data(ShortcutModel::WorkDirRole).toString();
-        QString args = index.data(ShortcutModel::ArgsRole).toString();
-        QString prefix = ui->prefixes->currentIndex().data(PrefixModel::PrefixRole).toString();
-        QString script = QString(FS::readFile(":/run")).arg(exe).arg(workDir).arg(args);
-        Executor *e = new Executor(prefix);
-        e->start(script, true, QProcess::ForwardedChannels);
-        close();
-    }
+    action->setIcon(QIcon::fromTheme(name, style()->standardIcon(alter)).pixmap(32, 32).
+                            scaled(32, 32, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
 }
 
-void MainWindow::editArgs()
+void MainWindow::setBtnIcon(QPushButton *button, const QString &iconName, QStyle::StandardPixmap alter)
 {
-    QModelIndex index = ui->shortcuts->currentIndex();
-    QString args = index.data(ShortcutModel::ArgsRole).toString();
-    if (Dialogs::getText(tr("Command Line Arguments"), tr("Enter command line arguments:"), args, this))
-        ui->shortcuts->model()->setData(index, args, ShortcutModel::ArgsRole);
+    button->setIcon(QIcon::fromTheme(iconName, style()->standardIcon(alter)));
 }
 
-void MainWindow::editWorkDir()
+void MainWindow::on_deleteShortcutBtn_clicked()
 {
-    QModelIndex index = ui->shortcuts->currentIndex();
-    QString workDir = index.data(ShortcutModel::WorkDirRole).toString();
-    if (workDir.isEmpty())
-    {
-        QString prefix = ui->prefixes->currentIndex().data(PrefixModel::PrefixRole).toString();
-        workDir = FS::prefix(prefix).absolutePath();
-    }
-    QString newDir = Dialogs::dir(workDir, this);
-    if (!newDir.isEmpty())
-        ui->shortcuts->model()->setData(index, newDir, ShortcutModel::WorkDirRole);
+    QModelIndex shortcut = ui->shortcuts->currentIndex();
+    QString name = shortcut.data(Qt::EditRole).toString();
+    if (Utils::warning(tr("Are you sure you want to delete \"%1\"?").arg(name), this))
+        ui->shortcuts->model()->removeRow(shortcut.row(), ui->shortcuts->rootIndex());
+}
+
+void MainWindow::on_deletePrefixBtn_clicked()
+{
+    QModelIndex prefix = ui->prefixes->currentIndex();
+    QString name = prefix.data(Qt::EditRole).toString();
+    if (Utils::warning(tr("Are you sure you want to delete \"%1\"?").arg(name), this))
+        ui->prefixes->model()->removeRow(prefix.row());
+}
+
+void MainWindow::on_editShortcutBtn_clicked()
+{
+    EditShortcutDialog(ui->shortcuts->model(), ui->shortcuts->currentIndex(), this).exec();
+}
+
+void MainWindow::on_editPrefixBtn_clicked()
+{
+    EditPrefixDialog(ui->prefixes->model(), ui->prefixes->currentIndex(), this).exec();
 }
 
 void MainWindow::on_actionBrowse_triggered()
 {
-    QString prefix = ui->prefixes->currentIndex().data(PrefixModel::PrefixRole).toString();
-    FS::browse(FS::data().absoluteFilePath(prefix));
+    QString dir = ui->prefixes->currentIndex().data(MainModel::PathRole).toString();
+    QDesktopServices::openUrl(QUrl::fromLocalFile(dir));
+}
+
+void MainWindow::on_actionExecute_triggered()
+{
+    QModelIndex shortcut = ui->shortcuts->currentIndex();
+    ui->shortcuts->model()->setData(shortcut, true, MainModel::ExecuteRole);
+    hide();
 }
 
 void MainWindow::on_actionTerminate_triggered()
 {
-    QModelIndex index = ui->prefixes->currentIndex();
-    QString name = index.data().toString();
-    if (Dialogs::confirm(tr("Are you sure you want to terminate \"%1\"?").arg(name), this))
+    TerminateDialog(ui->prefixes->model(), this).exec();
+}
+
+void MainWindow::on_actionControl_toggled(bool checked)
+{
+    if (checked)
     {
-        QString prefix = index.data(PrefixModel::PrefixRole).toString();
-        for (Executor *e : Executor::instances())
-            if (e->prefix() == prefix)
-                e->deleteLater();
+        ui->actionControl->setShortcut(Qt::Key_Escape);
+        ui->shortcuts->setDragDropMode(QListView::DragOnly);
+    }
+    else
+    {
+        ui->actionControl->setShortcut(Qt::Key_unknown);
+        ui->shortcuts->setDragDropMode(QListView::NoDragDrop);
     }
 }
 
-void MainWindow::on_actionTerminateAll_triggered()
+void MainWindow::on_newShortcutBtn_clicked()
 {
-    if (Dialogs::confirm(tr("Are you sure you want to terminate all applications?"), this))
-        for (Executor *e : Executor::instances())
-            e->deleteLater();
-}
-
-void MainWindow::on_actionQuit_triggered()
-{
-    if (Executor::instances().isEmpty())
-        QApplication::quit();
-    else if (Dialogs::confirm(tr("Are you sure you want to terminate all " \
-                                 "applications and quit from Wine Wizard?"), this))
+    QString dir = ui->shortcuts->rootIndex().data(MainModel::PathRole).toString();
+    QFileInfo info = Utils::selectExe(dir, this);
+    if (info.exists())
     {
-        for (Executor *e : Executor::instances())
-            e->deleteLater();
-        QApplication::quit();
+        QSortFilterProxyModel *sm = static_cast<QSortFilterProxyModel *>(ui->shortcuts->model());
+        MainModel *m = static_cast<MainModel *>(sm->sourceModel());
+        QModelIndex i = m->newShortcut(info.absoluteFilePath(), sm->mapToSource(ui->shortcuts->rootIndex()));
+        ui->shortcuts->setCurrentIndex(sm->mapFromSource(i));
+        on_editShortcutBtn_clicked();
     }
 }
 
-void MainWindow::updateStatusBar()
+void MainWindow::on_shortcuts_doubleClicked(const QModelIndex &index)
 {
-    if (mNewVersion->x() > width() - mNewVersion->width())
-        sender()->setProperty("delta", -1);
-    else if (mNewVersion->x() < 0)
-        sender()->setProperty("delta", 1);
-        //mNewVersion->move(0, mNewVersion->y());
-    mNewVersion->move(mNewVersion->x() + sender()->property("delta").toInt(), mNewVersion->y());
+    if (index.isValid())
+    {
+        if (ui->actionControl->isChecked())
+            on_editShortcutBtn_clicked();
+        else
+            on_actionExecute_triggered();
+    }
+}
+
+void MainWindow::on_prefixes_doubleClicked(const QModelIndex &index)
+{
+    if (index.isValid() && ui->actionControl->isChecked())
+        on_editPrefixBtn_clicked();
+}
+
+void MainWindow::rowsInserted(const QModelIndex &parent, int row)
+{
+    if (parent.isValid())
+    {
+        if (!ui->shortcuts->currentIndex().isValid() && ui->shortcuts->rootIndex() == parent)
+            ui->shortcuts->setCurrentIndex(ui->shortcuts->model()->index(0, 0, parent));
+    }
+    else
+        ui->prefixes->setCurrentIndex(ui->prefixes->model()->index(row, 0));
+}
+
+void MainWindow::on_actionInstall_triggered()
+{
+    QString path = Utils::selectExe(QDir::homePath(), this);
+    if (!path.isEmpty())
+        start(path);
+}
+
+void MainWindow::on_actionAbout_triggered()
+{
+    AboutDialog(this).exec();
 }

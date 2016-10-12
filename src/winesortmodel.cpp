@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>       *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -19,7 +19,6 @@
  ***************************************************************************/
 
 #include "winesortmodel.h"
-#include "winemodel.h"
 
 WineSortModel::WineSortModel(QObject *parent) :
     QSortFilterProxyModel(parent)

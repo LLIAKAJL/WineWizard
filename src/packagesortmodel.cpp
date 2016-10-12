@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>       *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -18,31 +18,36 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "packagesortmodel.h"
-#include "packagemodel.h"
+#include <QSet>
 
-PackageSortModel::PackageSortModel(QObject *parent) :
+#include "packagesortmodel.h"
+
+PackageSortModel::PackageSortModel(PackageModel *pModel, QObject *parent) :
     QSortFilterProxyModel(parent),
-    mCatId(-1)
+    mCat(0)
 {
+    setSourceModel(pModel);
+    sort(0);
+    setDynamicSortFilter(true);
+    setFilterCaseSensitivity(Qt::CaseInsensitive);
 }
 
-bool PackageSortModel::setData(const QModelIndex &/*index*/, const QVariant &value, int role)
+bool PackageSortModel::filterAcceptsRow(int sRow, const QModelIndex &sParent) const
 {
-    if (role == CatIdRole)
-    {
-        beginResetModel();
-        mCatId = value.toInt();
-        endResetModel();
-        return true;
-    }
+    QModelIndex i = sourceModel()->index(sRow, 0, sParent);
+    if (filterRegExp().isEmpty() || i.data().toString().contains(filterRegExp()))
+        if (i.data(PackageModel::CatRole).value<SolutionModel::IntList>().contains(mCat))
+            return true;
     return false;
 }
 
-bool PackageSortModel::filterAcceptsRow(int source_row, const QModelIndex &/*source_parent*/) const
+bool PackageSortModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-    if (mCatId == -1)
+    if (role == CatRole)
+    {
+        mCat = value.toInt();
+        invalidate();
         return true;
-    return sourceModel()->index(source_row, 0).data(PackageModel::CategoryRole).
-            value<IntList>().contains(mCatId);
+    }
+    return QSortFilterProxyModel::setData(index, value, role);
 }

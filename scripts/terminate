@@ -1,0 +1,4 @@
+if pgrep "wineserver" > /dev/null
+then
+    wineserver -k
+fi

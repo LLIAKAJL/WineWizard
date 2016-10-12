@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>       *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -22,33 +22,41 @@
 #define PACKAGEMODEL_H
 
 #include <QAbstractListModel>
-#include <QDataStream>
 
-#include "repository.h"
+#include "solutionmodel.h"
 
 class PackageModel : public QAbstractListModel
 {
     Q_OBJECT
 
-public:
-    enum { IdRole = Qt::UserRole + 1, ResetRole, CategoryRole };
+    struct Item
+    {
+        int id;
+        SolutionModel::Package package;
+    };
+    typedef QList<Item> ItemList;
 
-    explicit PackageModel(QObject *parent = nullptr);
+public:
+    enum { IdRole = Qt::UserRole + 1, CatRole };
+
+    explicit PackageModel(const SolutionModel::IntList &list, const SolutionModel::PackageList &all,
+                       QObject *parent = nullptr);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
-    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
-    Qt::DropActions supportedDropActions() const override;
+    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
     Qt::ItemFlags flags(const QModelIndex &index) const override;
-    bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
-    bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
-    QStringList mimeTypes() const override;
-    QMimeData *mimeData(const QModelIndexList &indexes) const override;
-    bool dropMimeData(const QMimeData *data, Qt::DropAction action, int row,
-                                    int column, const QModelIndex &parent) override;
+    Qt::DropActions supportedDropActions() const override;
+
+    bool insertRows(int row, int count, const QModelIndex &parent);
+    bool removeRows(int row, int count, const QModelIndex &parent);
+    QStringList mimeTypes() const;
+    QMimeData *mimeData(const QModelIndexList &indexes) const;
+    bool dropMimeData(const QMimeData *data, Qt::DropAction action,
+                                int row, int column, const QModelIndex &parent);
 
 private:
-    Repository::PackageList mList;
+    ItemList mItems;
 };
 
 #endif // PACKAGEMODEL_H

@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>       *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -21,40 +21,88 @@
 #ifndef SOLUTIONMODEL_H
 #define SOLUTIONMODEL_H
 
-#include <QAbstractListModel>
+#include <QAbstractTableModel>
+#include <QJsonObject>
 #include <QColor>
-#include <QIcon>
 
-#include "repository.h"
+#include "netmanager.h"
 
-class SolutionModel : public QAbstractListModel
+class SolutionModel : public QAbstractTableModel
 {
     Q_OBJECT
 
     struct Item
     {
-        int rating, bw, aw, id;
-        QString date, bs, as;
-        IntList bp, ap;
-        bool approved;
+        int id;
+        QString date, rating;
+        int bw, aw;
+        QList<int> bp, ap;
     };
     typedef QList<Item> ItemList;
 
 public:
+    typedef QList<int> IntList;
+    struct Package
+    {
+        QString name;
+        IntList categories;
+    };
+    typedef QMap<int, Package> PackageList;
+    typedef QMap<QString, int> ErrorList;
+    typedef QMap<int, QString> CategoryList;
 
-    enum { IdRole = Qt::UserRole + 1, BWRole, AWRole, BPRole, APRole, BSRole, ASRole, ApprovedRole };
+    enum
+    {
+        ResetRole = Qt::UserRole + 1,
+        ScriptRole,
+        PackagesRole,
+        WinesRole,
+        ErrorsRole,
+        CatRole,
+        CloneRole,
+        IdRole,
+        BWRole,
+        AWRole,
+        BPRole,
+        APRole
+    };
 
-    explicit SolutionModel(const QString &prefix, QObject *parent = nullptr);
+    explicit SolutionModel(QObject *parent = nullptr);
 
+    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+    int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
+    bool setItemData(const QModelIndex &index, const QMap<int, QVariant> &roles) override;
+
+signals:
+    void started();
+    void finished();
+    void error(int code);
+    void readyOutput(const QString &data);
+    void readyError(const QString &data);
+
+private slots:
+    void downloadFinished();
+    void clear();
 
 private:
-    ItemList mList;
+    ItemList mItems;
+    NetManager mNetMgr;
+    QString mOut, mScriptOut, mRepo;
+    QByteArray mScript;
+    PackageList mPackages, mWines;
+    ErrorList mErrors;
+    CategoryList mCategories;
 
-    QIcon ratingToIcon(const QModelIndex &index) const;
-    void resetItem(const QModelIndex &index);
+    QColor ratingToColor(const QString &rating) const;
+    void reset(const QPair<QString, int> &args);
+    void cloneItem(const QModelIndex &index);
+    QString displayWines(const QModelIndex &index) const;
+    QString displayPackages(const QModelIndex &index) const;
 };
+
+Q_DECLARE_METATYPE(SolutionModel::Package)
 
 #endif // SOLUTIONMODEL_H

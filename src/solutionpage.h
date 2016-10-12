@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>       *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -21,10 +21,9 @@
 #ifndef SOLUTIONPAGE_H
 #define SOLUTIONPAGE_H
 
+#include <QStyledItemDelegate>
+#include <QItemSelection>
 #include <QWizardPage>
-#include <QModelIndex>
-
-#include "repository.h"
 
 namespace Ui {
 class SolutionPage;
@@ -33,48 +32,31 @@ class SolutionPage;
 class SolutionPage : public QWizardPage
 {
     Q_OBJECT
-    Q_PROPERTY(QString sha READ sha)
-    Q_PROPERTY(QModelIndex app READ app)
-    Q_PROPERTY(Repository *repository READ repository)
+
+    Q_PROPERTY(QModelIndex solution READ solution CONSTANT)
+    Q_PROPERTY(QString arch READ arch CONSTANT)
 
 public:
-    explicit SolutionPage(QWidget *parent = nullptr);
+    explicit SolutionPage(const QString &exe, QWidget *parent = nullptr);
     ~SolutionPage() override;
 
-    void initializePage();
-    bool validatePage() override;
-    bool isComplete() const override;
+    void initializePage() override;
+    bool isComplete() const;
     int nextId() const override;
 
 private slots:
-    void updateFinished(int code);
-    void repoFinished(int code);
-    void searchFinished(int code);
-    void solutonsFinished(int code);
-    void solutonsEditFinished(int code);
-    void addFinished(int code);
-    void on_addBtn_clicked();
-    void on_leftBtn_clicked();
-    void on_rightBtn_clicked();
-    void on_solutionsBtn_clicked();
-    void on_apps_doubleClicked(const QModelIndex &index);
-    void readyOutput(const QByteArray &text);
-    void readyError(const QByteArray &text);
+    void updateData();
+    void finished();
+    void currentChanged(const QModelIndex &index);
+    void on_copyBtn_clicked();
+    void on_editBtn_clicked();
+    void on_result_doubleClicked(const QModelIndex &index);
 
 private:
     Ui::SolutionPage *ui;
-    Repository mRepository;
-    QString mSha;
-    int mPage, mPageCount;
 
-    void getSearch(int page = 1);
-    void getSolutions(bool next = true);
-    Repository *repository();
-    QModelIndex app() const;
-    void clearRepository() const;
-    QString sha() const;
-
-    void appendOut(const QString &text);
+    QString arch() const;
+    QModelIndex solution() const;
 };
 
 #endif // SOLUTIONPAGE_H

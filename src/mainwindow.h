@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>       *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -22,16 +22,18 @@
 #define MAINWINDOW_H
 
 #include <QSystemTrayIcon>
+#include <QPushButton>
 #include <QMainWindow>
+#include <QTranslator>
+#include <QJsonObject>
+#include <QHideEvent>
 #include <QKeyEvent>
-#include <QFileInfo>
-#include <QLabel>
+#include <QLocale>
+#include <QStyle>
 
 namespace Ui {
 class MainWindow;
 }
-
-const QString DOWNLOAD_URL = "http://wwizard.net/download/";
 
 class MainWindow : public QMainWindow
 {
@@ -41,47 +43,46 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow() override;
 
-    static MainWindow *instance();
-
-    static void update();
+public slots:
+    void start(const QString &cmdLine);
+    void setVisible(bool visible) override;
 
 protected:
-    void keyPressEvent(QKeyEvent *event) override;
     void changeEvent(QEvent *e) override;
-    bool eventFilter(QObject *target, QEvent *event) override;
+    void keyPressEvent(QKeyEvent *e) override;
+    bool eventFilter(QObject *o, QEvent *e) override;
 
 private slots:
-    void prefixChanged(const QModelIndex &index);
-    void shortcutChanged(const QModelIndex &index);
-    void winecfg();
-    void regedit();
-    void setIconFromShortcut();
-    void runShortcut();
-    void setIconFromFile();
-    void deleteApp();
-    void renameApp();
-    void renameShortcut();
-    void deleteShortcut();
-    void editShortcutIcon();
-    void editArgs();
-    void editWorkDir();
-    void addShortcut();
-    void on_actionInstall_triggered();
-    void on_prefixes_customContextMenuRequested(const QPoint &pos);
-    void on_shortcuts_customContextMenuRequested(const QPoint &pos);
-    void on_actionSettings_triggered();
-    void on_actionBrowse_triggered();
-    void on_actionTerminate_triggered();
-    void on_actionTerminateAll_triggered();
+    void updateFinished();
+    void finished();
+    void error();
+    void checkState();
+    void trayActivated();
+    void rowsInserted(const QModelIndex &parent, int row);
     void on_actionQuit_triggered();
-    void updateStatusBar();
+    void on_actionSettings_triggered();
+    void on_deleteShortcutBtn_clicked();
+    void on_deletePrefixBtn_clicked();
+    void on_editShortcutBtn_clicked();
+    void on_editPrefixBtn_clicked();
+    void on_actionBrowse_triggered();
+    void on_actionExecute_triggered();
+    void on_actionTerminate_triggered();
+    void on_actionControl_toggled(bool checked);
+    void on_newShortcutBtn_clicked();
+    void on_shortcuts_doubleClicked(const QModelIndex &index);
+    void on_prefixes_doubleClicked(const QModelIndex &index);
+    void on_actionInstall_triggered();
+    void on_actionAbout_triggered();
 
 private:
     Ui::MainWindow *ui;
-    QMenu *mMenu;
-    static MainWindow *mInstance;
-    QLabel *mNewVersion;
-//    void addMenuEmpty(QMenu *menu);
+    QTranslator mStdTrans, mTrans;
+
+    void setLanguage(QLocale::Language language);
+    void setActionIcon(QAction *action, const QString &name, QStyle::StandardPixmap alter);
+    void setBtnIcon(QPushButton *button, const QString &iconName, QStyle::StandardPixmap alter);
+    void getUpdate();
 };
 
 #endif // MAINWINDOW_H

@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>       *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -18,19 +18,27 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <QDataStream>
 #include <QMimeData>
 
 #include "packagemodel.h"
-#include "filesystem.h"
 
-PackageModel::PackageModel(QObject *parent) :
+PackageModel::PackageModel(const SolutionModel::IntList &list,
+                           const SolutionModel::PackageList &all, QObject *parent) :
     QAbstractListModel(parent)
 {
+    for (int id : list)
+    {
+        Item item;
+        item.id = id;
+        item.package = all.value(id);
+        mItems.append(item);
+    }
 }
 
-int PackageModel::rowCount(const QModelIndex &/*parent*/) const
+int PackageModel::rowCount(const QModelIndex &) const
 {
-    return mList.count();
+    return mItems.count();
 }
 
 QVariant PackageModel::data(const QModelIndex &index, int role) const
@@ -39,16 +47,17 @@ QVariant PackageModel::data(const QModelIndex &index, int role) const
     {
         switch (role)
         {
-        case IdRole:
-            return mList.at(index.row()).id;
         case Qt::DisplayRole:
-            return mList.at(index.row()).name;
-        case CategoryRole:
-            return QVariant::fromValue(mList.at(index.row()).categories);
         case Qt::ToolTipRole:
-            return mList.at(index.row()).tooltip;
+            return mItems.at(index.row()).package.name;
+        case CatRole:
+            return QVariant::fromValue(mItems.at(index.row()).package.categories);
+        case IdRole:
+            return mItems.at(index.row()).id;
         case Qt::TextAlignmentRole:
             return Qt::AlignCenter;
+        default:
+            return QVariant();
         }
     }
     return QVariant();
@@ -60,32 +69,21 @@ bool PackageModel::setData(const QModelIndex &index, const QVariant &value, int 
     {
         switch (role)
         {
-        case IdRole:
-            mList[index.row()].id = value.toInt();
-            emit dataChanged(index, index);
-            return true;
         case Qt::EditRole:
-            mList[index.row()].name = value.toString();
+            mItems[index.row()].package.name = value.toString();
             emit dataChanged(index, index);
             return true;
-        case CategoryRole:
-            mList[index.row()].categories.append(value.value<IntList>());
+        case CatRole:
+            mItems[index.row()].package.categories = value.value<SolutionModel::IntList>();
             emit dataChanged(index, index);
             return true;
-        case Qt::ToolTipRole:
-            mList[index.row()].tooltip = value.toString();
+        case IdRole:
+            mItems[index.row()].id = value.toInt();
             emit dataChanged(index, index);
             return true;
         default:
             return false;
         }
-    }
-    if (role == ResetRole)
-    {
-        beginResetModel();
-        mList = value.value<Repository::PackageList>();
-        endResetModel();
-        return true;
     }
     return false;
 }
@@ -97,23 +95,17 @@ Qt::DropActions PackageModel::supportedDropActions() const
 
 Qt::ItemFlags PackageModel::flags(const QModelIndex &index) const
 {
-    Qt::ItemFlags defaultFlags = QAbstractListModel::flags(index);
     if (index.isValid())
-        return Qt::ItemIsDragEnabled | defaultFlags;
+        return Qt::ItemIsDragEnabled | Qt::ItemIsSelectable | Qt::ItemIsEnabled;
     else
-        return Qt::ItemIsDropEnabled | defaultFlags;
+        return Qt::ItemIsDropEnabled;
 }
 
 bool PackageModel::insertRows(int row, int count, const QModelIndex &parent)
 {
     beginInsertRows(parent, row, row + count - 1);
     for (int i = 0; i < count; ++i)
-    {
-        Repository::Package p;
-        p.id = -1;
-        p.categories = IntList() << -1;
-        mList.insert(row, p);
-    }
+        mItems.insert(row, Item{ -1, { QString(), SolutionModel::IntList() } });
     endInsertRows();
     return true;
 }
@@ -122,7 +114,7 @@ bool PackageModel::removeRows(int row, int count, const QModelIndex &parent)
 {
     beginRemoveRows(parent, row, row + count - 1);
     for (int i = 0; i < count; ++i)
-        mList.takeAt(row);
+        mItems.takeAt(row);
     endRemoveRows();
     return true;
 }
@@ -137,16 +129,13 @@ QMimeData *PackageModel::mimeData(const QModelIndexList &indexes) const
     QMimeData *mimeData = new QMimeData;
     QByteArray encodedData;
     QDataStream stream(&encodedData, QIODevice::WriteOnly);
-    foreach (QModelIndex index, indexes)
-    {
+    for (const QModelIndex &index : indexes)
         if (index.isValid())
         {
-            stream << data(index, IdRole).toInt();
-            stream << data(index).toString();
-            stream << data(index, CategoryRole).value<IntList>();
-            stream << data(index, Qt::ToolTipRole).toString();
+            stream << data(index, IdRole).toInt()
+                   << data(index).toString()
+                   << data(index, CatRole).value<SolutionModel::IntList>();
         }
-    }
     mimeData->setData("application/vnd.text.list", encodedData);
     return mimeData;
 }
@@ -154,42 +143,39 @@ QMimeData *PackageModel::mimeData(const QModelIndexList &indexes) const
 bool PackageModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
                                 int row, int column, const QModelIndex &parent)
 {
-    if (action == Qt::IgnoreAction)
-        return true;
-    if (!data->hasFormat("application/vnd.text.list"))
-        return false;
-    if (column > 0)
-        return false;
-    int beginRow;
-    if (row != -1)
-        beginRow = row;
-    else if (parent.isValid())
-        beginRow = parent.row();
-    else
-        beginRow = rowCount(QModelIndex());
-    QByteArray encodedData = data->data("application/vnd.text.list");
-    QDataStream stream(&encodedData, QIODevice::ReadOnly);
-    int rows = 0;
-    Repository::PackageList tmpList;
-    while (!stream.atEnd())
+    if (action == Qt::MoveAction)
     {
-        Repository::Package p;
-        stream >> p.id;
-        stream >> p.name;
-        stream >> p.categories;
-        stream >> p.tooltip;
-        tmpList.append(p);
-        ++rows;
+        if (data->hasFormat("application/vnd.text.list") && column < 1)
+        {
+            int beginRow;
+            if (row != -1)
+                beginRow = row;
+            else if (parent.isValid())
+                beginRow = parent.row();
+            else
+                beginRow = rowCount();
+            QByteArray encodedData = data->data("application/vnd.text.list");
+            QDataStream stream(&encodedData, QIODevice::ReadOnly);
+            int rows = 0;
+            ItemList tmpList;
+            while (!stream.atEnd())
+            {
+                Item item;
+                stream >> item.id >> item.package.name >> item.package.categories;
+                tmpList.append(item);
+                ++rows;
+            }
+            insertRows(beginRow, rows, QModelIndex());
+            for (const Item &item : tmpList)
+            {
+                QModelIndex i = index(beginRow, 0, QModelIndex());
+                setData(i, item.id, IdRole);
+                setData(i, item.package.name);
+                setData(i, QVariant::fromValue(item.package.categories), CatRole);
+                ++beginRow;
+            }
+            return true;
+        }
     }
-    insertRows(beginRow, rows, QModelIndex());
-    for (const Repository::Package &package : tmpList)
-    {
-        QModelIndex idx = index(beginRow, 0, QModelIndex());
-        setData(idx, package.id, IdRole);
-        setData(idx, package.name);
-        setData(idx, QVariant::fromValue(package.categories), CategoryRole);
-        setData(idx, package.tooltip, Qt::ToolTipRole);
-        ++beginRow;
-    }
-    return true;
+    return false;
 }

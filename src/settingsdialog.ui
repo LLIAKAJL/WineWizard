@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>474</width>
-    <height>152</height>
+    <width>464</width>
+    <height>145</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,81 +18,44 @@
     <enum>QLayout::SetFixedSize</enum>
    </property>
    <item>
-    <widget class="QTabWidget" name="pages">
+    <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
       <number>0</number>
      </property>
-     <widget class="QWidget" name="guiPage">
+     <widget class="QWidget" name="pageGUI">
       <attribute name="title">
        <string>Interface</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_2">
+      <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_4">
-         <item>
-          <widget class="QLabel" name="languageLbl">
-           <property name="text">
-            <string>Language:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QComboBox" name="language">
-           <item>
-            <property name="text">
-             <string>English</string>
-            </property>
-            <property name="icon">
-             <iconset resource="resources.qrc">
-              <normaloff>:/licons/uk</normaloff>:/licons/uk</iconset>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Русский</string>
-            </property>
-            <property name="icon">
-             <iconset resource="resources.qrc">
-              <normaloff>:/licons/ru</normaloff>:/licons/ru</iconset>
-            </property>
-           </item>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="autoquit">
+        <widget class="QLabel" name="languageLbl">
          <property name="text">
-          <string>Automatically exit</string>
+          <string>Language:</string>
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="QComboBox" name="language"/>
+       </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="graphicsPage">
+     <widget class="QWidget" name="pageGraphics">
       <attribute name="title">
        <string>Graphics</string>
       </attribute>
-      <layout class="QFormLayout" name="formLayout_2">
+      <layout class="QFormLayout" name="formLayout">
        <item row="0" column="0">
-        <widget class="QLabel" name="scrSizeLbl">
+        <widget class="QCheckBox" name="screenSizeAuto">
          <property name="text">
-          <string>Screen resolution:</string>
+          <string>Screen resolution</string>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
          </property>
         </widget>
        </item>
        <item row="0" column="1">
-        <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1,0,1">
-         <item>
-          <widget class="QCheckBox" name="scrSizeAuto">
-           <property name="text">
-            <string>Autodetect</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
+        <layout class="QHBoxLayout" name="screenSizeLayout" stretch="1,0,1">
          <item>
           <widget class="QSpinBox" name="width">
            <property name="enabled">
@@ -107,7 +70,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="xLbl">
+          <widget class="QLabel" name="xLabel">
            <property name="enabled">
             <bool>false</bool>
            </property>
@@ -132,26 +95,19 @@
         </layout>
        </item>
        <item row="1" column="0">
-        <widget class="QLabel" name="label">
+        <widget class="QCheckBox" name="memoryAuto">
          <property name="text">
-          <string>Video memory size:</string>
+          <string>Video memory size</string>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
          </property>
         </widget>
        </item>
        <item row="1" column="1">
-        <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,1,0">
+        <layout class="QHBoxLayout" name="memoryLayout" stretch="1,0">
          <item>
-          <widget class="QCheckBox" name="vmAuto">
-           <property name="text">
-            <string>Autodetect</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QSpinBox" name="vm">
+          <widget class="QSpinBox" name="memory">
            <property name="enabled">
             <bool>false</bool>
            </property>
@@ -167,7 +123,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="mbLbl">
+          <widget class="QLabel" name="mbLabel">
            <property name="enabled">
             <bool>false</bool>
            </property>
@@ -194,15 +150,13 @@
       <enum>Qt::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Help|QDialogButtonBox::Save</set>
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Help|QDialogButtonBox::Ok</set>
      </property>
     </widget>
    </item>
   </layout>
  </widget>
- <resources>
-  <include location="resources.qrc"/>
- </resources>
+ <resources/>
  <connections>
   <connection>
    <sender>buttonBox</sender>
@@ -211,12 +165,12 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>239</x>
-     <y>148</y>
+     <x>255</x>
+     <y>137</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
-     <y>144</y>
+     <y>274</y>
     </hint>
    </hints>
   </connection>
@@ -227,92 +181,92 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>307</x>
-     <y>148</y>
+     <x>323</x>
+     <y>137</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>
-     <y>144</y>
+     <y>274</y>
     </hint>
    </hints>
   </connection>
   <connection>
-   <sender>scrSizeAuto</sender>
+   <sender>screenSizeAuto</sender>
    <signal>toggled(bool)</signal>
    <receiver>width</receiver>
-   <slot>setDisabled(bool)</slot>
+   <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>225</x>
-     <y>66</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>319</x>
-     <y>60</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>scrSizeAuto</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>xLbl</receiver>
-   <slot>setDisabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>249</x>
-     <y>65</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>363</x>
-     <y>60</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>scrSizeAuto</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>height</receiver>
-   <slot>setDisabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>249</x>
-     <y>70</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>413</x>
-     <y>68</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>vmAuto</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>vm</receiver>
-   <slot>setDisabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>252</x>
-     <y>91</y>
+     <x>231</x>
+     <y>58</y>
     </hint>
     <hint type="destinationlabel">
      <x>324</x>
-     <y>91</y>
+     <y>61</y>
     </hint>
    </hints>
   </connection>
   <connection>
-   <sender>vmAuto</sender>
+   <sender>screenSizeAuto</sender>
    <signal>toggled(bool)</signal>
-   <receiver>mbLbl</receiver>
-   <slot>setDisabled(bool)</slot>
+   <receiver>xLabel</receiver>
+   <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>258</x>
-     <y>101</y>
+     <x>248</x>
+     <y>48</y>
     </hint>
     <hint type="destinationlabel">
-     <x>446</x>
-     <y>97</y>
+     <x>360</x>
+     <y>51</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>screenSizeAuto</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>height</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>230</x>
+     <y>49</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>407</x>
+     <y>56</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>memoryAuto</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>memory</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>223</x>
+     <y>88</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>306</x>
+     <y>87</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>memoryAuto</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>mbLabel</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>232</x>
+     <y>76</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>428</x>
+     <y>82</y>
     </hint>
    </hints>
   </connection>

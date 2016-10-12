@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>       *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -21,8 +21,8 @@
 #ifndef DEBUGPAGE_H
 #define DEBUGPAGE_H
 
+#include <QSortFilterProxyModel>
 #include <QWizardPage>
-#include <QModelIndex>
 
 namespace Ui {
 class DebugPage;
@@ -32,25 +32,30 @@ class DebugPage : public QWizardPage
 {
     Q_OBJECT
 
+    Q_PROPERTY(QModelIndex shortcut READ shortcut CONSTANT)
+    Q_PROPERTY(bool debug READ debug CONSTANT)
+
 public:
-    explicit DebugPage(QWidget *parent = nullptr);
+    explicit DebugPage(QAbstractItemModel *model, QWidget *parent = nullptr);
     ~DebugPage() override;
 
     void initializePage() override;
-    int nextId() const override;
-    bool isComplete() const override;
     bool validatePage() override;
+    int nextId() const override;
 
 private slots:
-    void finished();
-    void readyOutput(const QString &text);
-    void readyError(const QString &text);
+    void edit();
+    void currentChanged(const QModelIndex &index);
+    void on_newBtn_clicked();
+    void on_delBtn_clicked();
+    void on_shortcuts_doubleClicked(const QModelIndex &index);
 
 private:
     Ui::DebugPage *ui;
+    QSortFilterProxyModel *mModel;
 
-    void uncheckButtons();
-    void appendOut(const QString &text);
+    QModelIndex shortcut() const;
+    bool debug() const;
 };
 
 #endif // DEBUGPAGE_H

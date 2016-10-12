@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>       *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -18,54 +18,28 @@
  *                                                                         *
  ***************************************************************************/
 
-#include <QDesktopServices>
 #include <QFileInfo>
-#include <QIcon>
-#include <QDir>
 
 #include "qtsingleapplication/QtSingleApplication"
-#include "installwizard.h"
-#include "wizard.h"
+#include "mainwindow.h"
 
 int main(int argc, char *argv[])
 {
-    QtSingleApplication app(argc, argv);
-    if (app.isRunning())
+    QtSingleApplication a(argc, argv);
+    QString cmdLine = (argc > 1) ? QFileInfo(argv[1]).absoluteFilePath() : QString();
+    if (a.isRunning())
+        a.sendMessage(cmdLine);
+    else
     {
-        switch (argc)
-        {
-        case 3:
-            app.sendMessage(QString(argv[1]) + '\n' + argv[2]);
-            return 0;
-        case 2:
-            app.sendMessage(QFileInfo(argv[1]).absoluteFilePath());
-            return 0;
-        default:
-            app.sendMessage(QString());
-            return 0;
-        }
+        a.setQuitOnLastWindowClosed(false);
+        a.setWindowIcon(QIcon(":/images/main"));
+        a.setApplicationDisplayName("Wine Wizard");
+        a.setApplicationName("winewizard");
+        a.setApplicationVersion(VERSION);
+        MainWindow w;
+        a.connect(&a, &QtSingleApplication::messageReceived, &w, &MainWindow::start);
+        w.start(cmdLine);
+        return a.exec();
     }
-
-    app.setQuitOnLastWindowClosed(false);
-    app.setWindowIcon(QIcon(":/icons/main"));
-    app.setApplicationDisplayName("Wine Wizard");
-    app.setApplicationName("winewizard");
-    app.setApplicationVersion(APP_VERSION);
-
-    Wizard w;
-    w.connect(&app, &QtSingleApplication::messageReceived, &w, &Wizard::start);
-    switch (argc)
-    {
-    case 3:
-        w.start(QString(argv[1]) + '\n' + argv[2]);
-        break;
-    case 2:
-        w.start(QFileInfo(argv[1]).absoluteFilePath());
-        break;
-    default:
-        w.start();
-        break;
-    }
-
-    return app.exec();
+    return 0;
 }

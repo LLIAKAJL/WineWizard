@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>       *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -26,11 +26,15 @@
 class WineSortModel : public QSortFilterProxyModel
 {
     Q_OBJECT
+
 public:
     explicit WineSortModel(QObject *parent = nullptr);
 
 protected:
     bool lessThan(const QModelIndex &left, const QModelIndex &right) const override;
+
+private:
+    QString mFilter;
 };
 
 #endif // WINESORTMODEL_H

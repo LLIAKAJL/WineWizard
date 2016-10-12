@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>       *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -21,7 +21,10 @@
 #ifndef INTROPAGE_H
 #define INTROPAGE_H
 
+#include <QAbstractItemModel>
 #include <QWizardPage>
+
+#include "mainmodel.h"
 
 namespace Ui {
 class IntroPage;
@@ -31,29 +34,48 @@ class IntroPage : public QWizardPage
 {
     Q_OBJECT
 
-    Q_PROPERTY(QString arch READ arch)
-    Q_PROPERTY(QString exe READ exe)
-    Q_PROPERTY(QString search READ search)
+    Q_PROPERTY(QModelIndex app READ app CONSTANT)
+    Q_PROPERTY(QString exe READ exe CONSTANT)
+    Q_PROPERTY(QString args READ args CONSTANT)
+    Q_PROPERTY(QString workDir READ workDir CONSTANT)
+    Q_PROPERTY(QModelIndex prefix READ prefix CONSTANT)
 
 public:
-    explicit IntroPage(const QString &exe, QWidget *parent = nullptr);
+    explicit IntroPage(const QString &exe, QAbstractItemModel *model, QWidget *parent = nullptr);
     ~IntroPage() override;
 
-    int nextId() const override;
     bool isComplete() const override;
-    bool validatePage() override;
+    int nextId() const override;
+
+signals:
+    void modelChanged();
 
 private slots:
+    void finished();
+    void retry();
+    void prefixChanged(const QModelIndex &index);
+    void on_installRB_toggled(bool checked);
+    void on_workDir_textChanged(const QString &path);
+    void on_addBtn_clicked();
     void on_browseBtn_clicked();
-    void on_newRB_toggled(bool checked);
+    void on_leftBtn_clicked();
+    void on_rightBtn_clicked();
+    void on_searchBtn_clicked();
+    void on_alter_linkActivated(const QString &link);
+    void on_search_textChanged(const QString &);
 
 private:
     Ui::IntroPage *ui;
     QString mExe;
+    int mPageNum;
 
-    QString arch() const;
     const QString &exe() const;
-    QString search() const;
+    QString args() const;
+    QString workDir() const;
+    QModelIndex app() const;
+    QModelIndex prefix() const;
+    void search(int pagenum = 1);
+    QString prepareSearch() const;
 };
 
 #endif // INTROPAGE_H

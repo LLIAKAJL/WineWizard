@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>       *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -18,32 +18,31 @@
  *                                                                         *
  ***************************************************************************/
 
-#include <QSortFilterProxyModel>
-#include <QDesktopServices>
-#include <QDesktopWidget>
+#include <QMessageBox>
+#include <QFileDialog>
 
-#include "solutiondialog.h"
-#include "installwizard.h"
-#include "shortcutmodel.h"
+#include "editshortcutdialog.h"
+#include "setupwizard.h"
 #include "ui_debugpage.h"
-#include "searchmodel.h"
-#include "filesystem.h"
+#include "intropage.h"
 #include "debugpage.h"
-#include "executor.h"
-#include "dialogs.h"
+#include "appmodel.h"
+#include "utils.h"
 
-DebugPage::DebugPage(QWidget *parent) :
+DebugPage::DebugPage(QAbstractItemModel *model, QWidget *parent) :
     QWizardPage(parent),
-    ui(new Ui::DebugPage)
+    ui(new Ui::DebugPage),
+    mModel(static_cast<QSortFilterProxyModel *>(model))
 {
     ui->setupUi(this);
-    connect(ui->yes, &QRadioButton::toggled, this, &DebugPage::completeChanged);
-    connect(ui->no, &QRadioButton::toggled, this, &DebugPage::completeChanged);
-    connect(ui->end, &QRadioButton::toggled, this, &DebugPage::completeChanged);
-    ShortcutModel *sm = new ShortcutModel(this);
-    QSortFilterProxyModel *ssm = new QSortFilterProxyModel(this);
-    ssm->setSourceModel(sm);
-    ui->shortcuts->setModel(ssm);
+    ui->editBtn->setIcon(QIcon::fromTheme("document-properties"));
+    ui->newBtn->setIcon(QIcon::fromTheme("list-add"));
+    ui->delBtn->setIcon(QIcon::fromTheme("list-remove"));
+    ui->shortcuts->setModel(mModel);
+    registerField("shortcut", this, "shortcut");
+    registerField("debug", this, "debug");
+    QItemSelectionModel *ssm = ui->shortcuts->selectionModel();
+    connect(ssm, &QItemSelectionModel::currentRowChanged, this, &DebugPage::currentChanged);
 }
 
 DebugPage::~DebugPage()
@@ -53,105 +52,91 @@ DebugPage::~DebugPage()
 
 void DebugPage::initializePage()
 {
-    ui->pages->setCurrentIndex(1);
-    setSubTitle(tr("Is your application worked correctly?"));
-    QSortFilterProxyModel *m = static_cast<QSortFilterProxyModel *>(ui->shortcuts->model());
-    QString prefix = field("app").toModelIndex().data(SearchModel::PrefixRole).toString();
-    m->setData(QModelIndex(), prefix, ShortcutModel::ResetRole);
-    if (m->rowCount() > 0)
+    QVariant path = field("app").toModelIndex().data(AppModel::PathRole);
+    QModelIndexList l = mModel->match(mModel->index(0, 0), MainModel::PathRole, path, -1, Qt::MatchFixedString);
+    if (!l.isEmpty())
     {
-        ui->shortcuts->setCurrentIndex(m->index(0, 0));
-        ui->yes->setEnabled(true);
+        ui->shortcuts->setRootIndex(l.first());
+        ui->shortcuts->setCurrentIndex(mModel->index(0, 0, l.first()));
+        if (ui->shortcuts->currentIndex().isValid())
+            ui->debug->setChecked(true);
+        else
+            ui->reinstall->setChecked(true);
     }
-    else
-        ui->yes->setEnabled(false);
-}
-
-int DebugPage::nextId() const
-{
-    return InstallWizard::PageWin;
-}
-
-bool DebugPage::isComplete() const
-{
-    return ui->yes->isChecked() || ui->end->isChecked() || ui->no->isChecked();
 }
 
 bool DebugPage::validatePage()
 {
-    if (ui->no->isChecked())
+    if (ui->end->isChecked())
+        return true;
+    else if (ui->debug->isChecked())
     {
-        if (SolutionDialog(wizard(), wizard(), true).exec() == SolutionDialog::Accepted)
-        {
-            uncheckButtons();
-            wizard()->back();
-            wizard()->back();
-            wizard()->next();
-        }
-        return false;
+        wizard()->back();
+        wizard()->back();
+        wizard()->next();
     }
-    else if (ui->yes->isChecked())
+    else
     {
-        wizard()->showMinimized();
-        setField("out", QString());
-        setField("err", QString());
-        ui->pages->setCurrentIndex(0);
-        uncheckButtons();
-        setSubTitle(tr("Application is running, please wait..."));
-        QString prefix = field("app").toModelIndex().data(SearchModel::PrefixRole).toString();
-        QModelIndex index = ui->shortcuts->currentIndex();
-        QString exe = index.data(ShortcutModel::ExeRole).toString();
-        QString workDir = index.data(ShortcutModel::WorkDirRole).toString();
-        QString args = index.data(ShortcutModel::ArgsRole).toString();
-        QString script = QString(FS::readFile(":/run")).arg(exe).arg(workDir).arg(args);
-        Executor *e = new Executor(prefix, this);
-        connect(e, &Executor::destroyed, this, &DebugPage::finished);
-        connect(e, &Executor::readyOutput, this, &DebugPage::readyOutput);
-        connect(e, &Executor::readyError, this, &DebugPage::readyError);
-        e->start(script);
-        return false;
+        wizard()->back();
+        wizard()->back();
     }
-    return true;
+    return false;
 }
 
-void DebugPage::finished()
+int DebugPage::nextId() const
 {
-    wizard()->back();
-    wizard()->next();
-    if (wizard()->isMinimized())
+    return SetupWizard::PageFinal;
+}
+
+void DebugPage::edit()
+{
+    EditShortcutDialog(ui->shortcuts->model(), ui->shortcuts->currentIndex(), wizard()).exec();
+}
+
+void DebugPage::currentChanged(const QModelIndex &index)
+{
+    bool valid = index.isValid();
+    ui->debug->setEnabled(valid);
+    ui->editBtn->setEnabled(valid);
+    ui->delBtn->setEnabled(valid);
+    if (!valid && ui->debug->isChecked())
+        ui->reinstall->setChecked(true);
+}
+
+QModelIndex DebugPage::shortcut() const
+{
+    return ui->shortcuts->currentIndex();
+}
+
+bool DebugPage::debug() const
+{
+    return ui->debug->isChecked();
+}
+
+void DebugPage::on_newBtn_clicked()
+{
+    QString dir = ui->shortcuts->rootIndex().data(MainModel::PathRole).toString();
+    QFileInfo info = Utils::selectExe(dir, this);
+    if (info.exists())
     {
-        wizard()->showNormal();
-        QSize center = (QApplication::desktop()->size() - wizard()->size()) * 0.5;
-        wizard()->move(center.width(), center.height());
-    }
-}
-
-void DebugPage::readyOutput(const QString &text)
-{
-    setField("out", field("out").toString() + text);
-    appendOut(text);
-}
-
-void DebugPage::readyError(const QString &text)
-{
-    setField("err", field("err").toString() + text);
-    appendOut(QString(R"(<span style=" color:#ff0000;">%1</span>)").arg(QString(text)));
-}
-
-void DebugPage::uncheckButtons()
-{
-    if (ui->buttonGroup->checkedButton())
-    {
-        ui->buttonGroup->setExclusive(false);
-        ui->buttonGroup->checkedButton()->setChecked(false);
-        ui->buttonGroup->setExclusive(true);
+        QSortFilterProxyModel *sm = static_cast<QSortFilterProxyModel *>(ui->shortcuts->model());
+        MainModel *m = static_cast<MainModel *>(sm->sourceModel());
+        QModelIndex i = m->newShortcut(info.absoluteFilePath(), sm->mapToSource(ui->shortcuts->rootIndex()));
+        ui->shortcuts->setCurrentIndex(sm->mapFromSource(i));
+        edit();
     }
 }
 
-void DebugPage::appendOut(const QString &text)
+void DebugPage::on_delBtn_clicked()
 {
-    QTextCursor prev = ui->out->textCursor();
-    ui->out->moveCursor(QTextCursor::End);
-    ui->out->insertHtml(QString(text).replace('\n', "<br>"));
-    ui->out->setTextCursor(prev);
+    QModelIndex i = ui->shortcuts->currentIndex();
+    QString name = i.data().toString();
+    if (Utils::warning(tr("Are you sure you want to delete \"%1\"?").arg(name), wizard()))
+        mModel->removeRow(i.row(), ui->shortcuts->rootIndex());
+}
+
+void DebugPage::on_shortcuts_doubleClicked(const QModelIndex &index)
+{
+    if (index.isValid())
+        edit();
 }

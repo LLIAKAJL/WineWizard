@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>       *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -22,7 +22,6 @@
 
 #include "ui_aboutdialog.h"
 #include "aboutdialog.h"
-#include "wizard.h"
 
 AboutDialog::AboutDialog(QWidget *parent) :
     QDialog(parent),
@@ -30,12 +29,10 @@ AboutDialog::AboutDialog(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->icon->setPixmap(qApp->windowIcon().pixmap(QSize(128, 128)));
-    ui->label->setText(ui->label->text().arg(qApp->applicationDisplayName(),
-                                             qApp->applicationVersion()));
+    ui->label->setText(ui->label->text().arg(qApp->applicationDisplayName(), VERSION));
 }
 
 AboutDialog::~AboutDialog()
 {
     delete ui;
-    Wizard::update();
 }

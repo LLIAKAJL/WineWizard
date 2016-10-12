@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>       *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -21,9 +21,10 @@
 #ifndef INSTALLPAGE_H
 #define INSTALLPAGE_H
 
+#include <QSortFilterProxyModel>
 #include <QWizardPage>
 
-#include "repository.h"
+#include "solutionpage.h"
 
 namespace Ui {
 class InstallPage;
@@ -33,39 +34,30 @@ class InstallPage : public QWizardPage
 {
     Q_OBJECT
 
-    Q_PROPERTY(QString out READ out WRITE setOut)
-    Q_PROPERTY(QString err READ err WRITE setErr)
+    Q_PROPERTY(QString out READ out CONSTANT)
+    Q_PROPERTY(QString err READ err CONSTANT)
 
 public:
-    explicit InstallPage(QWidget *parent = nullptr);
+    explicit InstallPage(QAbstractItemModel *model, QWidget *parent = nullptr);
     ~InstallPage() override;
 
     void initializePage() override;
-    int nextId() const override;
     bool isComplete() const override;
-    bool validatePage() override;
+    int nextId() const override;
 
 private slots:
-    void bsFinished(int code);
-    void createFinished(int code);
-    void installFinished(int code);
-    void install();
-    void setupFinished();
-    void readyLogOutput(const QByteArray &text);
-    void readyLogError(const QByteArray &text);
-    void readyOutput(const QByteArray &text);
-    void readyError(const QByteArray &text);
+    void dataChanged(const QModelIndex &index);
+    void readyOutput(const QString &path, const QString &data);
+    void readyError(const QString &path, const QString &data);
 
 private:
     Ui::InstallPage *ui;
-    QString mBs, mAcs, mAs, mOut, mErr;
+    QSortFilterProxyModel *mModel;
+    QString mOut, mErr;
 
+    void appendOut(const QString &text);
     const QString &out() const;
     const QString &err() const;
-    void setOut(const QString &text);
-    void setErr(const QString &text);
-    void appendOut(const QString &text);
-    void installationFailed();
 };
 
 #endif // INSTALLPAGE_H

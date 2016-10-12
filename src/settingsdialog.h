@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>       *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -22,6 +22,7 @@
 #define SETTINGSDIALOG_H
 
 #include <QDialog>
+#include <QLocale>
 
 namespace Ui {
 class SettingsDialog;
@@ -32,10 +33,10 @@ class SettingsDialog : public QDialog
     Q_OBJECT
 
 public:
-    enum { GuiWindow, GuiMenu };
-
     explicit SettingsDialog(QWidget *parent = nullptr);
     ~SettingsDialog() override;
+
+    QLocale::Language language() const;
 
 public slots:
     void accept() override;
@@ -45,7 +46,8 @@ private slots:
 
 private:
     Ui::SettingsDialog *ui;
-    int localeToLangNum(const QString &locale) const;
+
+    QString languageName(QLocale::Language id) const;
 };
 
 #endif // SETTINGSDIALOG_H

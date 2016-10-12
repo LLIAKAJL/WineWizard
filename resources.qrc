@@ -1,0 +1,23 @@
+<RCC>
+    <qresource prefix="/images">
+        <file alias="app">images/app.png</file>
+        <file alias="unlocked">images/unlocked.png</file>
+        <file alias="locked">images/locked.png</file>
+        <file alias="main">images/main.png</file>
+        <file alias="settings">images/settings.png</file>
+    </qresource>
+    <qresource prefix="/translations">
+        <file alias="96">translations/ru.qm</file>
+    </qresource>
+    <qresource prefix="/flags">
+        <file alias="31">images/en.png</file>
+        <file alias="96">images/ru.png</file>
+    </qresource>
+    <qresource prefix="/scripts">
+        <file alias="execute">scripts/execute</file>
+        <file alias="terminate">scripts/terminate</file>
+        <file alias="get">scripts/get</file>
+        <file alias="post">scripts/post</file>
+        <file alias="install">scripts/install</file>
+    </qresource>
+</RCC>

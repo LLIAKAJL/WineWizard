@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>       *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -19,79 +19,118 @@
  ***************************************************************************/
 
 #include <QJsonDocument>
-#include <QJsonObject>
 #include <QJsonArray>
-#include <QIcon>
+#include <QDateTime>
 
 #include "solutionmodel.h"
-#include "filesystem.h"
-#include "repository.h"
+#include "utils.h"
 
-SolutionModel::SolutionModel(const QString &prefix, QObject *parent) :
-    QAbstractListModel(parent)
+const QString URL = "http://wwizard.net/api3/?c=solutions&os=%1&arch=%2&app=%3";
+const QString SCRIPT_URL = "https://raw.githubusercontent.com/LLIAKAJL/WineWizard-Utils/master/%1%2.script";
+const QString REPO_URL = "https://raw.githubusercontent.com/LLIAKAJL/WineWizard-Utils/master/%1%2.repo3";
+
+SolutionModel::SolutionModel(QObject *parent) :
+    QAbstractTableModel(parent)
 {
-    QByteArray data = FS::readFile(FS::temp().absoluteFilePath(prefix));
-    QJsonArray list = QJsonDocument::fromJson(data).array();
-    for (QJsonArray::Iterator i = list.begin(); i != list.end(); ++i)
-    {
-        QJsonObject itemData = (*i).toObject();
-        Item item;
-        item.date = itemData.value("d").toString();
-        if (item.date.isEmpty())
-            item.date = tr("New Solution");
-        item.rating = itemData.value("r").toInt();
-        QJsonArray bpa = itemData.value("bp").toArray();
-        for (QJsonArray::ConstIterator i = bpa.begin(); i != bpa.end(); ++i)
-            item.bp.append((*i).toInt());
-        QJsonArray apa = itemData.value("ap").toArray();
-        for (QJsonArray::ConstIterator i = apa.begin(); i != apa.end(); ++i)
-            item.ap.append((*i).toInt());
-        item.bw = itemData.value("bw").toInt();
-        item.aw = itemData.value("aw").toInt();
-        item.bs = itemData.value("bs").toString();
-        item.as = itemData.value("as").toString();
-        item.approved = itemData.value("a").toBool();
-        item.id = itemData.value("i").toInt();
-        mList.append(item);
-    }
+    connect(this,     &SolutionModel::finished, this, &SolutionModel::clear);
+    connect(this,     &SolutionModel::error,    this, &SolutionModel::clear);
+    connect(&mNetMgr, &NetManager::started,     this, &SolutionModel::started);
+    connect(&mNetMgr, &NetManager::finished,    this, &SolutionModel::downloadFinished);
+    connect(&mNetMgr, &NetManager::error,       this, &SolutionModel::error);
+    connect(&mNetMgr, &NetManager::readyOutput, this, &SolutionModel::readyOutput);
+    connect(&mNetMgr, &NetManager::readyError,  this, &SolutionModel::readyError);
 }
 
-int SolutionModel::rowCount(const QModelIndex &/*parent*/) const
+QVariant SolutionModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    return mList.count();
+    if (orientation == Qt::Horizontal)
+    {
+        switch (role)
+        {
+        case Qt::DisplayRole:
+            switch (section)
+            {
+            case 0:
+                return tr("Rating");
+            case 1:
+                return tr("Last Modified");
+            case 2:
+                return tr("Wine Versions");
+            case 3:
+                return tr("Packages");
+            default:
+                return QVariant();
+            }
+        case Qt::TextAlignmentRole:
+            return Qt::AlignCenter;
+        default:
+            return QVariant();
+        }
+    }
+    return QVariant();
+}
+
+int SolutionModel::rowCount(const QModelIndex &) const
+{
+    return mItems.count();
+}
+
+int SolutionModel::columnCount(const QModelIndex &) const
+{
+    return 4;
 }
 
 QVariant SolutionModel::data(const QModelIndex &index, int role) const
 {
+    switch (role)
+    {
+    case ScriptRole:
+        return mScript;
+    case PackagesRole:
+        return QVariant::fromValue(mPackages);
+    case WinesRole:
+        return QVariant::fromValue(mWines);
+    case ErrorsRole:
+        return QVariant::fromValue(mErrors);
+    case CatRole:
+        return QVariant::fromValue(mCategories);
+    }
     if (index.isValid())
     {
         switch (role)
         {
         case Qt::DisplayRole:
+            switch (index.column())
             {
-                const Item &item = mList.at(index.row());
-                return tr("%1 /// %2").arg(item.rating).arg(item.date);
+            case 0:
+                return mItems.at(index.row()).rating;
+            case 1:
+                return mItems.at(index.row()).date;
+            case 2:
+                return displayWines(index);
+            case 3:
+                return displayPackages(index);
+            default:
+                return QVariant();
             }
-        case Qt::DecorationRole:
-            return ratingToIcon(index);
+        case Qt::BackgroundRole:
+            return ratingToColor(mItems.at(index.row()).rating);
+        case Qt::ForegroundRole:
+            return QColor(Qt::black);
         case Qt::TextAlignmentRole:
             return Qt::AlignCenter;
+        case Qt::ToolTipRole:
+            return data(index, Qt::DisplayRole);
         case IdRole:
-            return mList.at(index.row()).id;
+            return mItems.at(index.row()).id;
         case BWRole:
-            return mList.at(index.row()).bw;
+            return mItems.at(index.row()).bw;
         case AWRole:
-            return mList.at(index.row()).aw;
+            return mItems.at(index.row()).aw;
         case BPRole:
-            return QVariant::fromValue<IntList>(mList.at(index.row()).bp);
+            return QVariant::fromValue(mItems.at(index.row()).bp);
         case APRole:
-            return QVariant::fromValue<IntList>(mList.at(index.row()).ap);
-        case BSRole:
-            return mList.at(index.row()).bs;
-        case ASRole:
-            return mList.at(index.row()).as;
-        case ApprovedRole:
-            return mList.at(index.row()).approved;
+            return QVariant::fromValue(mItems.at(index.row()).ap);
         default:
             return QVariant();
         }
@@ -101,84 +140,178 @@ QVariant SolutionModel::data(const QModelIndex &index, int role) const
 
 bool SolutionModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
+    switch (role)
+    {
+    case ResetRole:
+        reset(value.value<QPair<QString, int>>());
+        return true;
+    }
     if (index.isValid())
     {
         switch (role)
         {
-        case BWRole:
-            if (mList.at(index.row()).bw != value.toInt())
-            {
-                mList[index.row()].bw = value.toInt();
-                resetItem(index);
-                emit dataChanged(index, index);
-                return true;
-            }
-            return false;
-        case AWRole:
-            if (mList.at(index.row()).aw != value.toInt())
-            {
-                mList[index.row()].aw = value.toInt();
-                resetItem(index);
-                emit dataChanged(index, index);
-                return true;
-            }
-            return false;
-        case BPRole:
-            if (mList.at(index.row()).bp != value.value<IntList>())
-            {
-                mList[index.row()].bp = value.value<IntList>();
-                resetItem(index);
-                emit dataChanged(index, index);
-                return true;
-            }
-            return false;
-        case APRole:
-            if (mList.at(index.row()).ap != value.value<IntList>())
-            {
-                mList[index.row()].ap = value.value<IntList>();
-                resetItem(index);
-                emit dataChanged(index, index);
-                return true;
-            }
-            return false;
-        case BSRole:
-            if (mList.at(index.row()).bs != value.toString())
-            {
-                mList[index.row()].bs = value.toString();
-                resetItem(index);
-                emit dataChanged(index, index);
-                return true;
-            }
-            return false;
-        case ASRole:
-            if (mList.at(index.row()).as != value.toString())
-            {
-                mList[index.row()].as = value.toString();
-                resetItem(index);
-                emit dataChanged(index, index);
-                return true;
-            }
+        case CloneRole:
+            cloneItem(index);
+            return true;
+        default:
             return false;
         }
     }
     return false;
 }
 
-QIcon SolutionModel::ratingToIcon(const QModelIndex &index) const
+bool SolutionModel::setItemData(const QModelIndex &index, const QMap<int, QVariant> &roles)
 {
-    const Item &item = mList.at(index.row());
-    bool spec = !item.bs.isEmpty() || !item.as.isEmpty();
-    if (item.rating > 0)
-        return spec ? QIcon(":/icons/ge") : QIcon(item.approved ? ":/icons/gs" : ":/icons/gc");
-    else if (item.rating == 0)
-        return spec ? QIcon(":/icons/ye") : QIcon(item.approved ? ":/icons/ys" : ":/icons/yc");
-    else
-        return spec ? QIcon(":/icons/re") : QIcon(item.approved ? ":/icons/rs" : ":/icons/rc");
+    if (index.isValid() && (data(index, BWRole) != roles.value(BWRole) ||
+                            data(index, AWRole) != roles.value(AWRole) ||
+                            data(index, BPRole) != roles.value(BPRole) ||
+                            data(index, APRole) != roles.value(APRole)))
+    {
+        Item &item = mItems[index.row()];
+        item.bw = roles.value(BWRole).toInt();
+        item.aw = roles.value(AWRole).toInt();
+        item.bp = roles.value(BPRole).value<SolutionModel::IntList>();
+        item.ap = roles.value(APRole).value<SolutionModel::IntList>();
+        mItems[index.row()].date = QDateTime::currentDateTime().toString("dd.MM.yyyy, hh:mm:ss");
+        mItems[index.row()].rating = "-";
+        emit dataChanged(index, index);
+        return true;
+    }
+    return false;
 }
 
-void SolutionModel::resetItem(const QModelIndex &index)
+void SolutionModel::downloadFinished()
 {
-    mList[index.row()].date = tr("New Solution");
-    mList[index.row()].rating = 0;
-    mList[index.row()].approved = false;
+    beginResetModel();
+    mScript = Utils::readFile(mScriptOut);
+    QJsonArray data = QJsonDocument::fromJson(Utils::readFile(mOut)).array();
+    for (QJsonArray::ConstIterator i = data.constBegin(); i != data.constEnd(); ++i)
+    {
+        QJsonObject o = (*i).toObject();
+        Item item;
+        item.id = o.value("i").toInt();
+        item.rating = o.value("r").toString();
+        item.date = o.value("d").toString();
+        item.bw = o.value("bw").toInt();
+        item.aw = o.value("aw").toInt();
+        QJsonArray bpa = o.value("bp").toArray();
+        for (QJsonArray::ConstIterator i = bpa.begin(); i != bpa.end(); ++i)
+            item.bp.append((*i).toInt());
+        QJsonArray apa = o.value("ap").toArray();
+        for (QJsonArray::ConstIterator i = apa.begin(); i != apa.end(); ++i)
+            item.ap.append((*i).toInt());
+        mItems.append(item);
+    }
+    QJsonObject repo = Utils::readJson(mRepo);
+    QJsonArray pa = repo.value("packages").toArray();
+    for (QJsonArray::ConstIterator i = pa.constBegin(); i != pa.constEnd(); ++i)
+    {
+        QJsonObject o = (*i).toObject();
+        Package p;
+        p.name = o.value("n").toString();
+        QJsonArray ca = o.value("c").toArray();
+        for (QJsonArray::ConstIterator i = ca.constBegin(); i != ca.constEnd(); ++i)
+            p.categories.append((*i).toInt());
+        mPackages.insert(o.value("i").toInt(), p);
+    }
+    QJsonArray wa = repo.value("wines").toArray();
+    for (QJsonArray::ConstIterator i = wa.constBegin(); i != wa.constEnd(); ++i)
+    {
+        QJsonObject o = (*i).toObject();
+        Package w;
+        w.name = o.value("n").toString();
+        mWines.insert(o.value("i").toInt(), w);
+    }
+    QJsonArray ea = repo.value("errors").toArray();
+    for (QJsonArray::ConstIterator i = ea.constBegin(); i != ea.constEnd(); ++i)
+    {
+        QJsonObject o = (*i).toObject();
+        mErrors.insert(o.value("r").toString(), o.value("p").toInt());
+    }
+    QJsonArray ca = repo.value("categories").toArray();
+    for (QJsonArray::ConstIterator i = ca.constBegin(); i != ca.constEnd(); ++i)
+    {
+        QJsonObject o = (*i).toObject();
+        mCategories.insert(o.value("i").toInt(), o.value("n").toString());
+    }
+    endResetModel();
+    emit finished();
+}
+
+QColor SolutionModel::ratingToColor(const QString &rating) const
+{
+    bool ok;
+    int r = rating.toInt(&ok);
+    if (!ok)
+        return QColor(Qt::lightGray);
+    if (r > 0)
+        return Qt::green;
+    else if (r < 0)
+        return Qt::red;
+    else
+        return Qt::yellow;
+}
+
+void SolutionModel::reset(const QPair<QString, int> &args)
+{
+    clear();
+    mNetMgr.terminate();
+    beginResetModel();
+    mItems.clear();
+    mPackages.clear();
+    mWines.clear();
+    endResetModel();
+    NetManager::RequestList rl;
+    mScriptOut = Utils::temp().absoluteFilePath(Utils::genID());
+    mOut = Utils::temp().absoluteFilePath(Utils::genID());
+    mRepo = Utils::temp().absoluteFilePath(Utils::genID());
+    rl << NetManager::makeGetRequest(SCRIPT_URL.arg(OS).arg(args.first), mScriptOut);
+    rl << NetManager::makeGetRequest(URL.arg(OS).arg(args.first).arg(args.second), mOut);
+    rl << NetManager::makeGetRequest(REPO_URL.arg(OS).arg(args.first), mRepo);
+    mNetMgr.start(rl);
+}
+
+void SolutionModel::cloneItem(const QModelIndex &index)
+{
+    Item item;
+    item.bw = index.data(BWRole).toInt();
+    item.aw = index.data(AWRole).toInt();
+    item.bp = index.data(BPRole).value<QList<int>>();
+    item.ap = index.data(APRole).value<QList<int>>();
+    item.rating = "-";
+    item.date = QDateTime::currentDateTime().toString("dd.MM.yyyy, hh:mm:ss");
+    int row = mItems.count();
+    beginInsertRows(QModelIndex(), row, row);
+    mItems.append(item);
+    endInsertRows();
+}
+
+QString SolutionModel::displayWines(const QModelIndex &index) const
+{
+    const Item &i = mItems.at(index.row());
+    return QString("%1 / %2").arg(mWines.value(i.bw).name).arg(mWines.value(i.aw).name);
+}
+
+QString SolutionModel::displayPackages(const QModelIndex &index) const
+{
+    const Item &i = mItems.at(index.row());
+    QStringList bp;
+    for (int id : i.bp)
+        bp.append(mPackages.value(id).name);
+    QStringList ap;
+    for (int id : i.ap)
+        ap.append(mPackages.value(id).name);
+    QString bps = bp.isEmpty() ? "-" : bp.join(", ");
+    QString aps = ap.isEmpty() ? "-" : ap.join(", ");
+    return QString("%1 / %2").arg(bps).arg(aps);
+}
+
+void SolutionModel::clear()
+{
+    if (QFile::exists(mScriptOut))
+        QFile::remove(mScriptOut);
+    if (QFile::exists(mOut))
+        QFile::remove(mOut);
+    if (QFile::exists(mRepo))
+        QFile::remove(mRepo);
 }

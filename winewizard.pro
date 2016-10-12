@@ -1,6 +1,6 @@
 #-------------------------------------------------
 #
-# Project created by QtCreator 2016-03-07T02:31:29
+# Project created by QtCreator 2016-09-07T03:44:05
 #
 #-------------------------------------------------
 
@@ -10,13 +10,11 @@ QMAKE_CXXFLAGS += -std=c++11
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-VERSION = 2.0.1
-
 isEmpty(OS) {
  OS = linux
 }
 
-DEFINES += APP_VERSION=\\\"$$VERSION\\\" \
+DEFINES += VERSION=\\\"3.0.0\\\" \
            OS=\\\"$$OS\\\"
 
 TARGET = winewizard
@@ -33,6 +31,7 @@ isEmpty(DATADIR) {
 
 target.path = $$BINDIR
 
+TARGET = winewizard
 TEMPLATE = app
 
 icon.files = winewizard.png
@@ -45,88 +44,107 @@ INSTALLS += target \
             icon \
             desktop
 
-TRANSLATIONS += src/translations/ru.ts
-
-SOURCES += src/qtsingleapplication/qtlocalpeer.cpp \
+SOURCES += src/main.cpp\
+    src/mainwindow.cpp \
+    src/mainmodel.cpp \
+    src/settingsdialog.cpp \
+    src/intropage.cpp \
+    src/solutionpage.cpp \
+    src/installpage.cpp \
+    src/debugpage.cpp \
+    src/finalpage.cpp \
+    src/editprefixdialog.cpp \
+    src/editshortcutdialog.cpp \
+    src/qtsingleapplication/qtlocalpeer.cpp \
     src/qtsingleapplication/qtlockedfile.cpp \
     src/qtsingleapplication/qtlockedfile_unix.cpp \
     src/qtsingleapplication/qtlockedfile_win.cpp \
     src/qtsingleapplication/qtsingleapplication.cpp \
     src/qtsingleapplication/qtsinglecoreapplication.cpp \
-    src/aboutdialog.cpp \
-    src/dialogs.cpp \
-    src/executor.cpp \
-    src/filesystem.cpp \
-    src/main.cpp \
-    src/wizard.cpp \
-    src/searchmodel.cpp \
-    src/packagemodel.cpp \
-    src/packagesortmodel.cpp \
-    src/mainmenu.cpp \
-    src/settingsdialog.cpp \
-    src/installwizard.cpp \
-    src/intropage.cpp \
-    src/winpage.cpp \
-    src/installpage.cpp \
-    src/solutionmodel.cpp \
-    src/mainwindow.cpp \
-    src/shortcutmodel.cpp \
-    src/repository.cpp \
-    src/categorymodel.cpp \
-    src/centercombobox.cpp \
-    src/winemodel.cpp \
+    src/newappdialog.cpp \
+    src/packageview.cpp \
+    src/editsolutiondialog.cpp \
+    src/utils.cpp \
+    src/winedialog.cpp \
     src/winesortmodel.cpp \
-    src/categorysortmodel.cpp \
-    src/debugpage.cpp \
-    src/solutionpage.cpp \
-    src/solutiondialog.cpp \
-    src/prefixmodel.cpp
+    src/appmodel.cpp \
+    src/netmanager.cpp \
+    src/waitform.cpp \
+    src/solutionmodel.cpp \
+    src/packagemodel.cpp \
+    src/terminatedialog.cpp \
+    src/terminatemodel.cpp \
+    src/updatepage.cpp \
+    src/delegates.cpp \
+    src/categorymodel.cpp \
+    src/packagesortmodel.cpp \
+    src/centercombobox.cpp \
+    src/setupwizard.cpp \
+    src/adslabel.cpp \
+    src/aboutdialog.cpp \
+    src/highlightedlistview.cpp \
+    src/highlightedtableview.cpp
 
-HEADERS  += src/qtsingleapplication/qtlocalpeer.h \
+HEADERS  += src/mainwindow.h \
+    src/mainmodel.h \
+    src/settingsdialog.h \
+    src/intropage.h \
+    src/solutionpage.h \
+    src/installpage.h \
+    src/debugpage.h \
+    src/finalpage.h \
+    src/editprefixdialog.h \
+    src/editshortcutdialog.h \
+    src/qtsingleapplication/qtlocalpeer.h \
+    src/qtsingleapplication/QtLockedFile \
     src/qtsingleapplication/qtlockedfile.h \
+    src/qtsingleapplication/QtSingleApplication \
     src/qtsingleapplication/qtsingleapplication.h \
     src/qtsingleapplication/qtsinglecoreapplication.h \
-    src/aboutdialog.h \
-    src/dialogs.h \
-    src/executor.h \
-    src/filesystem.h \
-    src/wizard.h \
-    src/searchmodel.h \
-    src/packagemodel.h \
-    src/packagesortmodel.h \
-    src/mainmenu.h \
-    src/settingsdialog.h \
-    src/installwizard.h \
-    src/intropage.h \
-    src/winpage.h \
-    src/installpage.h \
-    src/solutionmodel.h \
-    src/mainwindow.h \
-    src/shortcutmodel.h \
-    src/repository.h \
-    src/categorymodel.h \
-    src/centercombobox.h \
-    src/winemodel.h \
+    src/wintypes.h \
+    src/newappdialog.h \
+    src/packageview.h \
+    src/editsolutiondialog.h \
+    src/utils.h \
+    src/winedialog.h \
     src/winesortmodel.h \
-    src/categorysortmodel.h \
-    src/debugpage.h \
-    src/solutionpage.h \
-    src/solutiondialog.h \
-    src/prefixmodel.h
+    src/appmodel.h \
+    src/netmanager.h \
+    src/waitform.h \
+    src/solutionmodel.h \
+    src/packagemodel.h \
+    src/terminatedialog.h \
+    src/terminatemodel.h \
+    src/updatepage.h \
+    src/delegates.h \
+    src/categorymodel.h \
+    src/packagesortmodel.h \
+    src/centercombobox.h \
+    src/setupwizard.h \
+    src/adslabel.h \
+    src/aboutdialog.h \
+    src/highlightedlistview.h \
+    src/highlightedtableview.h
 
-FORMS    += \
-    src/aboutdialog.ui \
+FORMS    += src/mainwindow.ui \
     src/settingsdialog.ui \
-    src/installwizard.ui \
     src/intropage.ui \
-    src/winpage.ui \
-    src/installpage.ui \
-    src/mainwindow.ui \
-    src/debugpage.ui \
     src/solutionpage.ui \
-    src/solutiondialog.ui
+    src/installpage.ui \
+    src/debugpage.ui \
+    src/finalpage.ui \
+    src/editshortcutdialog.ui \
+    src/editprefixdialog.ui \
+    src/newappdialog.ui \
+    src/editsolutiondialog.ui \
+    src/winedialog.ui \
+    src/waitform.ui \
+    src/terminatedialog.ui \
+    src/setupwizard.ui \
+    src/aboutdialog.ui
 
 RESOURCES += \
-    src/resources.qrc
+    resources.qrc
 
-OTHER_FILES +=
+TRANSLATIONS += \
+    translations/ru.ts

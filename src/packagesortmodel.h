@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>       *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -23,21 +23,23 @@
 
 #include <QSortFilterProxyModel>
 
+#include "categorymodel.h"
+#include "packagemodel.h"
+
 class PackageSortModel : public QSortFilterProxyModel
 {
-    Q_OBJECT
 public:
-    enum { CatIdRole = Qt::UserRole + 1 };
+    enum { TypeOr, TypeAnd };
+    enum { CatRole = Qt::UserRole + 1 };
 
-    explicit PackageSortModel(QObject *parent = nullptr);
-
+    explicit PackageSortModel(PackageModel *pModel, QObject *parent = nullptr);
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
 
 protected:
-    bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const override;
+    bool filterAcceptsRow(int sRow, const QModelIndex &sParent) const override;
 
 private:
-    int mCatId;
+    int mCat;
 };
 
 #endif // PACKAGESORTMODEL_H

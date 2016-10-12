@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>       *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -20,15 +20,21 @@
 
 #include "categorymodel.h"
 
-CategoryModel::CategoryModel(const Repository::CategoryList &list, QObject *parent) :
-    QAbstractListModel(parent),
-    mList(list)
+CategoryModel::CategoryModel(const SolutionModel::CategoryList &categories, QObject *parent) :
+    QAbstractListModel(parent)
 {
+    for (SolutionModel::CategoryList::ConstIterator i = categories.begin(); i != categories.end(); ++i)
+    {
+        Item item;
+        item.id = i.key();
+        item.name = i.value();
+        mItems.append(item);
+    }
 }
 
-int CategoryModel::rowCount(const QModelIndex &/*parent*/) const
+int CategoryModel::rowCount(const QModelIndex &) const
 {
-    return mList.count();
+    return mItems.count();
 }
 
 QVariant CategoryModel::data(const QModelIndex &index, int role) const
@@ -38,11 +44,11 @@ QVariant CategoryModel::data(const QModelIndex &index, int role) const
         switch (role)
         {
         case Qt::DisplayRole:
-            return mList.at(index.row()).name;
+            return mItems.at(index.row()).name;
+        case IdRole:
+            return mItems.at(index.row()).id;
         case Qt::TextAlignmentRole:
             return Qt::AlignCenter;
-        case IdRole:
-            return mList.at(index.row()).id;
         default:
             return QVariant();
         }

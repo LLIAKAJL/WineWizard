@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>       *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -23,21 +23,29 @@
 
 #include <QAbstractListModel>
 
-#include "repository.h"
+#include "solutionmodel.h"
 
 class CategoryModel : public QAbstractListModel
 {
     Q_OBJECT
-public:
-    enum { IdRole = Qt::UserRole + 1};
 
-    explicit CategoryModel(const Repository::CategoryList &list, QObject *parent = nullptr);
+    struct Item
+    {
+        int id;
+        QString name;
+    };
+    typedef QList<Item> ItemList;
+
+public:
+    enum { IdRole = Qt::UserRole + 1 };
+
+    explicit CategoryModel(const SolutionModel::CategoryList &categories, QObject *parent = nullptr);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
 private:
-    Repository::CategoryList mList;
+    ItemList mItems;
 };
 
 #endif // CATEGORYMODEL_H

@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>       *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -20,11 +20,11 @@
 
 #include <QDesktopServices>
 #include <QSettings>
+#include <QDir>
 #include <QUrl>
 
 #include "ui_settingsdialog.h"
 #include "settingsdialog.h"
-#include "wizard.h"
 
 SettingsDialog::SettingsDialog(QWidget *parent) :
     QDialog(parent),
@@ -33,21 +33,27 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->setupUi(this);
     QSettings s("winewizard", "settings");
     s.beginGroup("VideoSettings");
-    int sw = s.value("ScreenWidth", -1).toInt();
-    int sh = s.value("ScreenHeight", -1).toInt();
-    int vm = s.value("VideoMemorySize", -1).toInt();
+    int w = s.value("ScreenWidth", -1).toInt();
+    int h = s.value("ScreenHeight", -1).toInt();
+    int m = s.value("VideoMemorySize", -1).toInt();
     s.endGroup();
-    ui->scrSizeAuto->setChecked(sw < 0 || sh < 0);
-    ui->vmAuto->setChecked(vm < 0);
-    ui->width->setValue(sw);
-    ui->height->setValue(sh);
-    ui->vm->setValue(vm);
-    ui->autoquit->setChecked(s.value("Autoquit").toBool());
-    int lang = s.value("Language", -1).toInt();
-    if (lang < 0)
-        ui->language->setCurrentIndex(localeToLangNum(QLocale::system().name()));
-    else
-        ui->language->setCurrentIndex(lang);
+    ui->screenSizeAuto->setChecked(w >= 0 && h >= 0);
+    ui->memoryAuto->setChecked(m >= 0);
+    ui->width->setValue(w);
+    ui->height->setValue(h);
+    ui->memory->setValue(m);
+    for (const QString &flag : QDir(":/flags").entryList())
+    {
+        QIcon icon(QString(":/flags/%1").arg(flag));
+        QLocale::Language id = static_cast<QLocale::Language>(flag.toInt());
+        QString name = languageName(id);
+        ui->language->addItem(icon, name, id);
+    }
+    QVariant lang = s.value("Language", QLocale::system().language());
+    int li = ui->language->findData(lang);
+    if (li < 0)
+        li = ui->language->findData(QLocale::English);
+    ui->language->setCurrentIndex(li);
 }
 
 SettingsDialog::~SettingsDialog()
@@ -55,37 +61,43 @@ SettingsDialog::~SettingsDialog()
     delete ui;
 }
 
+QLocale::Language SettingsDialog::language() const
+{
+    return static_cast<QLocale::Language>(ui->language->currentData().toInt());
+}
+
 void SettingsDialog::accept()
 {
     QSettings s("winewizard", "settings");
     s.beginGroup("VideoSettings");
-    if (ui->scrSizeAuto->isChecked())
-    {
-        s.setValue("ScreenWidth", -1);
-        s.setValue("ScreenHeight", -1);
-    }
-    else
+    if (ui->screenSizeAuto->isChecked())
     {
         s.setValue("ScreenWidth", ui->width->value());
         s.setValue("ScreenHeight", ui->height->value());
     }
-    s.setValue("VideoMemorySize", ui->vmAuto->isChecked() ? -1 : ui->vm->value());
+    else
+    {
+        s.setValue("ScreenWidth", -1);
+        s.setValue("ScreenHeight", -1);
+    }
+    s.setValue("VideoMemorySize", ui->memoryAuto->isChecked() ? ui->memory->value() : -1);
     s.endGroup();
-    s.setValue("Autoquit", ui->autoquit->isChecked());
-    s.setValue("Language", ui->language->currentIndex());
-    Wizard::setAutoquit(ui->autoquit->isChecked());
-    Wizard::retranslate(ui->language->currentIndex());
+    s.setValue("Language", ui->language->currentData());
     QDialog::accept();
+}
+
+QString SettingsDialog::languageName(QLocale::Language id) const
+{
+    switch (id)
+    {
+    case QLocale::Russian:
+        return "Русский";
+    default:
+        return "English";
+    }
 }
 
 void SettingsDialog::on_buttonBox_helpRequested()
 {
     QDesktopServices::openUrl(QUrl("http://wwizard.net/help/#settings"));
-}
-
-int SettingsDialog::localeToLangNum(const QString &locale) const
-{
-    if (locale.startsWith("ru"))
-        return 1;
-    return 0;
 }

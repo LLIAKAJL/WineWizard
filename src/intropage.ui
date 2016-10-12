@@ -6,24 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>631</width>
-    <height>290</height>
+    <width>577</width>
+    <height>487</height>
    </rect>
   </property>
-  <property name="windowTitle">
-   <string notr="true"/>
-  </property>
-  <property name="title">
-   <string>Welcome to the Setup Wizard!</string>
-  </property>
-  <property name="subTitle">
-   <string>Click Next to continue or Cancel to exit.</string>
-  </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,1">
+    <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,1">
      <item>
-      <widget class="QRadioButton" name="newRB">
+      <widget class="QRadioButton" name="installRB">
        <property name="font">
         <font>
          <weight>75</weight>
@@ -31,14 +22,11 @@
         </font>
        </property>
        <property name="text">
-        <string>New installation</string>
+        <string>Installation</string>
        </property>
        <property name="checked">
         <bool>true</bool>
        </property>
-       <attribute name="buttonGroup">
-        <string notr="true">typeGroup</string>
-       </attribute>
       </widget>
      </item>
      <item>
@@ -55,23 +43,17 @@
        <property name="text">
         <string>Update</string>
        </property>
-       <attribute name="buttonGroup">
-        <string notr="true">typeGroup</string>
-       </attribute>
       </widget>
      </item>
     </layout>
    </item>
    <item>
-    <widget class="QStackedWidget" name="typePages">
+    <widget class="QStackedWidget" name="stack">
      <property name="currentIndex">
       <number>0</number>
      </property>
-     <widget class="QWidget" name="pageNew">
-      <layout class="QVBoxLayout" name="verticalLayout_2">
-       <property name="spacing">
-        <number>0</number>
-       </property>
+     <widget class="QWidget" name="pageInstall">
+      <layout class="QVBoxLayout" name="verticalLayout">
        <property name="leftMargin">
         <number>0</number>
        </property>
@@ -85,41 +67,90 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="QLineEdit" name="search">
-         <property name="minimumSize">
-          <size>
-           <width>450</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="maxLength">
-          <number>255</number>
-         </property>
-         <property name="placeholderText">
-          <string>Enter application name</string>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QLineEdit" name="search"/>
+         </item>
+         <item>
+          <widget class="QPushButton" name="searchBtn">
+           <property name="text">
+            <string>Search</string>
+           </property>
+           <property name="autoDefault">
+            <bool>true</bool>
+           </property>
+           <property name="default">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QLabel" name="alter">
+         <property name="wordWrap">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
        <item>
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
+        <widget class="HighlightedListView" name="result"/>
+       </item>
+       <item>
+        <widget class="WaitForm" name="wait" native="true"/>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QPushButton" name="addBtn">
+           <property name="text">
+            <string>Add Application</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>263</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="leftBtn">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="pagenum">
+           <property name="text">
+            <string notr="true">1 from 1</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="rightBtn">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="pageTogether">
+     <widget class="QWidget" name="pageUpdate">
       <layout class="QVBoxLayout" name="verticalLayout_3">
-       <property name="spacing">
-        <number>0</number>
-       </property>
        <property name="leftMargin">
         <number>0</number>
        </property>
@@ -133,120 +164,70 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="QComboBox" name="prefixes"/>
-       </item>
-       <item>
-        <spacer name="verticalSpacer_2">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
+        <widget class="HighlightedListView" name="prefixes">
+         <property name="editTriggers">
+          <set>QAbstractItemView::NoEditTriggers</set>
          </property>
-         <property name="sizeHint" stdset="0">
+         <property name="iconSize">
           <size>
-           <width>20</width>
-           <height>40</height>
+           <width>32</width>
+           <height>32</height>
           </size>
          </property>
-        </spacer>
+        </widget>
        </item>
       </layout>
      </widget>
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="archLbl">
-     <property name="font">
-      <font>
-       <weight>75</weight>
-       <bold>true</bold>
-      </font>
-     </property>
-     <property name="text">
-      <string>Architecture:</string>
-     </property>
-     <property name="buddy">
-      <cstring>win32</cstring>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1">
+    <layout class="QHBoxLayout" name="horizontalLayout_6">
      <item>
-      <widget class="QRadioButton" name="win32">
+      <widget class="QLabel" name="argsLbl">
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
        <property name="text">
-        <string>Win32 application</string>
+        <string>Command line arguments:</string>
        </property>
-       <property name="checked">
-        <bool>true</bool>
+       <property name="buddy">
+        <cstring>args</cstring>
        </property>
-       <attribute name="buttonGroup">
-        <string notr="true">archGroup</string>
-       </attribute>
       </widget>
      </item>
      <item>
-      <widget class="QRadioButton" name="win64">
-       <property name="text">
-        <string>Win64 application</string>
-       </property>
-       <attribute name="buttonGroup">
-        <string notr="true">archGroup</string>
-       </attribute>
-      </widget>
+      <widget class="QLineEdit" name="args"/>
      </item>
     </layout>
    </item>
    <item>
-    <widget class="QLabel" name="argsLbl">
-     <property name="font">
-      <font>
-       <weight>75</weight>
-       <bold>true</bold>
-      </font>
-     </property>
-     <property name="text">
-      <string>Command line arguments:</string>
-     </property>
-     <property name="buddy">
-      <cstring>args</cstring>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QLineEdit" name="args"/>
-   </item>
-   <item>
-    <widget class="QLabel" name="workDirLbl">
-     <property name="font">
-      <font>
-       <weight>75</weight>
-       <bold>true</bold>
-      </font>
-     </property>
-     <property name="text">
-      <string>Working directory:</string>
-     </property>
-     <property name="buddy">
-      <cstring>workDir</cstring>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="workDirLayout">
+    <layout class="QHBoxLayout" name="horizontalLayout_5">
      <item>
-      <widget class="QLineEdit" name="workDir">
-       <property name="readOnly">
-        <bool>true</bool>
+      <widget class="QLabel" name="workDirLbl">
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Working directory:</string>
+       </property>
+       <property name="buddy">
+        <cstring>workDir</cstring>
        </property>
       </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="workDir"/>
      </item>
      <item>
       <widget class="QPushButton" name="browseBtn">
        <property name="text">
         <string notr="true"/>
-       </property>
-       <property name="icon">
-        <iconset>
-         <normaloff>:/icons/directory</normaloff>:/icons/directory</iconset>
        </property>
       </widget>
      </item>
@@ -254,21 +235,19 @@
    </item>
   </layout>
  </widget>
- <tabstops>
-  <tabstop>search</tabstop>
-  <tabstop>win32</tabstop>
-  <tabstop>win64</tabstop>
-  <tabstop>args</tabstop>
-  <tabstop>workDir</tabstop>
-  <tabstop>browseBtn</tabstop>
-  <tabstop>newRB</tabstop>
-  <tabstop>updateRB</tabstop>
-  <tabstop>prefixes</tabstop>
- </tabstops>
+ <customwidgets>
+  <customwidget>
+   <class>HighlightedListView</class>
+   <extends>QListView</extends>
+   <header>src/highlightedlistview.h</header>
+  </customwidget>
+  <customwidget>
+   <class>WaitForm</class>
+   <extends>QWidget</extends>
+   <header>src/waitform.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
- <buttongroups>
-  <buttongroup name="typeGroup"/>
-  <buttongroup name="archGroup"/>
- </buttongroups>
 </ui>

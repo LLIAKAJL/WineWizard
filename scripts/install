@@ -1,0 +1,2 @@
+sh "$WINEPREFIX/ww_install"
+rm "$WINEPREFIX/ww_install"

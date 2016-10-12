@@ -1,2 +1,0 @@
-export WINEDEBUG=-all
-wineserver -k

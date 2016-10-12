@@ -6,55 +6,221 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>705</width>
-    <height>536</height>
+    <width>821</width>
+    <height>542</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Control Center</string>
   </property>
-  <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,0">
     <item>
      <widget class="QSplitter" name="splitter">
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
-      <property name="childrenCollapsible">
-       <bool>false</bool>
-      </property>
-      <widget class="QListView" name="prefixes">
-       <property name="contextMenuPolicy">
-        <enum>Qt::CustomContextMenu</enum>
-       </property>
-       <property name="editTriggers">
-        <set>QAbstractItemView::NoEditTriggers</set>
-       </property>
+      <widget class="QWidget" name="layoutWidget">
+       <layout class="QVBoxLayout" name="prefixesLayout">
+        <item>
+         <widget class="QFrame" name="prefixesEditPanel">
+          <property name="frameShape">
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Raised</enum>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <property name="spacing">
+            <number>2</number>
+           </property>
+           <property name="leftMargin">
+            <number>2</number>
+           </property>
+           <property name="topMargin">
+            <number>2</number>
+           </property>
+           <property name="rightMargin">
+            <number>2</number>
+           </property>
+           <property name="bottomMargin">
+            <number>2</number>
+           </property>
+           <item>
+            <widget class="QPushButton" name="editPrefixBtn">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Edit</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="prefixesSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>1</width>
+               <height>21</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="deletePrefixBtn">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Delete</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="HighlightedListView" name="prefixes">
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>32</width>
+            <height>32</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </widget>
-      <widget class="QListView" name="shortcuts">
-       <property name="contextMenuPolicy">
-        <enum>Qt::CustomContextMenu</enum>
-       </property>
-       <property name="editTriggers">
-        <set>QAbstractItemView::NoEditTriggers</set>
-       </property>
-       <property name="dragDropMode">
-        <enum>QAbstractItemView::DragOnly</enum>
-       </property>
+      <widget class="QWidget" name="shortcutsLayoutWidget">
+       <layout class="QVBoxLayout" name="shortcutsLayout">
+        <item>
+         <widget class="QFrame" name="shortcutsEditPanel">
+          <property name="frameShape">
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Raised</enum>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <property name="spacing">
+            <number>2</number>
+           </property>
+           <property name="leftMargin">
+            <number>2</number>
+           </property>
+           <property name="topMargin">
+            <number>2</number>
+           </property>
+           <property name="rightMargin">
+            <number>2</number>
+           </property>
+           <property name="bottomMargin">
+            <number>2</number>
+           </property>
+           <item>
+            <widget class="QPushButton" name="newShortcutBtn">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Create Shortcut</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="editShortcutBtn">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Edit</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="shortcutsSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>193</width>
+               <height>17</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="deleteShortcutBtn">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Delete</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="HighlightedListView" name="shortcuts">
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>32</width>
+            <height>32</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </widget>
+     </widget>
+    </item>
+    <item>
+     <widget class="QWidget" name="ads" native="true">
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+      </layout>
      </widget>
     </item>
    </layout>
   </widget>
-  <widget class="QToolBar" name="leftBar">
+  <widget class="QToolBar" name="mainToolBar">
    <property name="contextMenuPolicy">
     <enum>Qt::CustomContextMenu</enum>
    </property>
-   <property name="windowTitle">
-    <string notr="true"/>
-   </property>
    <property name="movable">
     <bool>false</bool>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>32</width>
+     <height>32</height>
+    </size>
    </property>
    <property name="toolButtonStyle">
     <enum>Qt::ToolButtonTextUnderIcon</enum>
@@ -70,23 +236,28 @@
    </attribute>
    <addaction name="actionInstall"/>
    <addaction name="separator"/>
-   <addaction name="actionRun"/>
+   <addaction name="actionExecute"/>
    <addaction name="actionTerminate"/>
    <addaction name="separator"/>
    <addaction name="actionBrowse"/>
+   <addaction name="separator"/>
+   <addaction name="actionControl"/>
   </widget>
-  <widget class="QToolBar" name="rightBar">
+  <widget class="QToolBar" name="additionalToolBar">
    <property name="contextMenuPolicy">
     <enum>Qt::CustomContextMenu</enum>
-   </property>
-   <property name="windowTitle">
-    <string notr="true"/>
    </property>
    <property name="layoutDirection">
     <enum>Qt::RightToLeft</enum>
    </property>
    <property name="movable">
     <bool>false</bool>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>32</width>
+     <height>32</height>
+    </size>
    </property>
    <property name="toolButtonStyle">
     <enum>Qt::ToolButtonTextUnderIcon</enum>
@@ -103,57 +274,8 @@
    <addaction name="actionQuit"/>
    <addaction name="actionSettings"/>
    <addaction name="separator"/>
-   <addaction name="actionTerminateAll"/>
+   <addaction name="actionAbout"/>
   </widget>
-  <widget class="QStatusBar" name="statusBar"/>
-  <action name="actionTerminateAll">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Terminate All</string>
-   </property>
-   <property name="toolTip">
-    <string>Terminate all applications</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+T</string>
-   </property>
-  </action>
-  <action name="actionQuit">
-   <property name="text">
-    <string>Quit</string>
-   </property>
-   <property name="toolTip">
-    <string>Quit</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Q</string>
-   </property>
-  </action>
-  <action name="actionInstall">
-   <property name="text">
-    <string>Install</string>
-   </property>
-   <property name="toolTip">
-    <string>Install or update application</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+I</string>
-   </property>
-  </action>
-  <action name="actionSettings">
-   <property name="icon">
-    <iconset resource="resources.qrc">
-     <normaloff>:/icons/settings</normaloff>:/icons/settings</iconset>
-   </property>
-   <property name="text">
-    <string>Settings</string>
-   </property>
-   <property name="toolTip">
-    <string>Wine Wizard settings</string>
-   </property>
-  </action>
   <action name="actionTerminate">
    <property name="enabled">
     <bool>false</bool>
@@ -161,80 +283,190 @@
    <property name="text">
     <string>Terminate</string>
    </property>
-   <property name="toolTip">
-    <string>Terminate application</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+T</string>
-   </property>
   </action>
-  <action name="actionRun">
+  <action name="actionExecute">
    <property name="enabled">
     <bool>false</bool>
    </property>
+   <property name="icon">
+    <iconset>
+     <normaloff>.</normaloff>.</iconset>
+   </property>
    <property name="text">
-    <string>Run</string>
-   </property>
-   <property name="toolTip">
-    <string>Run application</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+R</string>
+    <string>Execute</string>
    </property>
   </action>
   <action name="actionBrowse">
    <property name="enabled">
     <bool>false</bool>
    </property>
+   <property name="icon">
+    <iconset>
+     <normaloff>.</normaloff>.</iconset>
+   </property>
    <property name="text">
     <string>Browse</string>
    </property>
-   <property name="toolTip">
-    <string>Browse application directory</string>
+  </action>
+  <action name="actionSettings">
+   <property name="icon">
+    <iconset>
+     <normaloff>.</normaloff>.</iconset>
    </property>
-   <property name="shortcut">
-    <string>Ctrl+B</string>
+   <property name="text">
+    <string>Settings</string>
+   </property>
+  </action>
+  <action name="actionQuit">
+   <property name="icon">
+    <iconset>
+     <normaloff>.</normaloff>.</iconset>
+   </property>
+   <property name="text">
+    <string>Quit</string>
+   </property>
+  </action>
+  <action name="actionControl">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset>
+     <normaloff>.</normaloff>.</iconset>
+   </property>
+   <property name="text">
+    <string>Control</string>
+   </property>
+  </action>
+  <action name="actionInstall">
+   <property name="icon">
+    <iconset>
+     <normaloff>.</normaloff>.</iconset>
+   </property>
+   <property name="text">
+    <string>Install</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/images/main</normaloff>:/images/main</iconset>
+   </property>
+   <property name="text">
+    <string>About</string>
    </property>
   </action>
  </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>HighlightedListView</class>
+   <extends>QListView</extends>
+   <header>src/highlightedlistview.h</header>
+  </customwidget>
+ </customwidgets>
  <resources>
-  <include location="resources.qrc"/>
+  <include location="../resources.qrc"/>
  </resources>
  <connections>
   <connection>
-   <sender>shortcuts</sender>
-   <signal>doubleClicked(QModelIndex)</signal>
-   <receiver>MainWindow</receiver>
-   <slot>runShortcut()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>481</x>
-     <y>195</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>839</x>
-     <y>202</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionRun</sender>
-   <signal>triggered()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>runShortcut()</slot>
+   <sender>actionControl</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>prefixesEditPanel</receiver>
+   <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
      <x>-1</x>
      <y>-1</y>
     </hint>
     <hint type="destinationlabel">
-     <x>352</x>
-     <y>267</y>
+     <x>141</x>
+     <y>87</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionControl</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>shortcutsEditPanel</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>420</x>
+     <y>87</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionControl</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>actionInstall</receiver>
+   <slot>setDisabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionControl</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>actionSettings</receiver>
+   <slot>setDisabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionControl</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>actionQuit</receiver>
+   <slot>setDisabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionControl</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>checkState()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>300</x>
+     <y>256</y>
     </hint>
    </hints>
   </connection>
  </connections>
  <slots>
-  <slot>runShortcut()</slot>
+  <slot>checkState()</slot>
  </slots>
 </ui>
