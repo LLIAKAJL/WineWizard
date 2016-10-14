@@ -50,7 +50,6 @@ public slots:
 protected:
     void changeEvent(QEvent *e) override;
     void keyPressEvent(QKeyEvent *e) override;
-    bool eventFilter(QObject *o, QEvent *e) override;
 
 private slots:
     void updateFinished();
@@ -74,6 +73,7 @@ private slots:
     void on_prefixes_doubleClicked(const QModelIndex &index);
     void on_actionInstall_triggered();
     void on_actionAbout_triggered();
+    void on_actionHelp_triggered();
 
 private:
     Ui::MainWindow *ui;

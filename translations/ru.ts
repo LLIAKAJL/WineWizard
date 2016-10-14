@@ -229,12 +229,12 @@
         <translation type="unfinished">Создать ярлык</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="338"/>
+        <location filename="../src/mainwindow.ui" line="340"/>
         <source>Control</source>
         <translation type="unfinished">Управление</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="347"/>
+        <location filename="../src/mainwindow.ui" line="349"/>
         <source>Install</source>
         <translation type="unfinished">Установить</translation>
     </message>
@@ -251,53 +251,63 @@
         <translation type="unfinished">Удалить</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="284"/>
+        <location filename="../src/mainwindow.ui" line="286"/>
         <source>Terminate</source>
         <translation type="unfinished">Прервать</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="296"/>
+        <location filename="../src/mainwindow.ui" line="298"/>
         <source>Execute</source>
         <translation type="unfinished">Выполнить</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="308"/>
+        <location filename="../src/mainwindow.ui" line="310"/>
         <source>Browse</source>
         <translation type="unfinished">Обзор</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="356"/>
+        <location filename="../src/mainwindow.ui" line="358"/>
         <source>About</source>
         <translation type="unfinished">О программе</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="317"/>
+        <location filename="../src/mainwindow.ui" line="363"/>
+        <source>Help</source>
+        <translation type="unfinished">Справка</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.ui" line="319"/>
         <source>Settings</source>
         <translation type="unfinished">Настройки</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="326"/>
+        <location filename="../src/mainwindow.ui" line="328"/>
         <source>Quit</source>
         <translation type="unfinished">Выйти</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="114"/>
+        <location filename="../src/mainwindow.cpp" line="118"/>
         <source>The file &quot;%1&quot; was not found.</source>
         <translation type="unfinished">Файл &quot;%1&quot; не был найден.</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="137"/>
+        <location filename="../src/mainwindow.cpp" line="141"/>
         <source>The shortcut &quot;%1&quot; was not found.</source>
         <translation type="unfinished">Ярлык &quot;%1&quot; не был найден.</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="333"/>
-        <location filename="../src/mainwindow.cpp" line="341"/>
+        <location filename="../src/mainwindow.cpp" line="211"/>
+        <source>A new version of Wine Wizard(%1) is available!</source>
+        <translation type="unfinished">Доступна новая версия Wine Wizard(%1)!</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="353"/>
+        <location filename="../src/mainwindow.cpp" line="361"/>
         <source>Are you sure you want to delete &quot;%1&quot;?</source>
         <translation type="unfinished">Вы действительно хотите удалить &quot;%1&quot;?</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="292"/>
+        <location filename="../src/mainwindow.cpp" line="312"/>
         <source>Are you sure you want to quit from Wine Wizard?</source>
         <translation type="unfinished">Вы действительно хотите выйти из Wine Wizard?</translation>
     </message>
@@ -448,7 +458,7 @@
         <translation type="unfinished">Менеджер задач</translation>
     </message>
     <message>
-        <location filename="../src/terminatedialog.cpp" line="35"/>
+        <location filename="../src/terminatedialog.cpp" line="37"/>
         <source>Terminate</source>
         <translation type="unfinished">Прервать</translation>
     </message>

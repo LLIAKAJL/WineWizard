@@ -108,5 +108,5 @@ void SetupWizard::hideBackButton()
 
 void SetupWizard::on_SetupWizard_helpRequested()
 {
-    QDesktopServices::openUrl(QUrl("http://wwizard.net/help/#installation"));
+    QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
 }

@@ -142,5 +142,5 @@ void EditShortcutDialog::on_name_textChanged(const QString &name)
 
 void EditShortcutDialog::on_buttonBox_helpRequested()
 {
-    QDesktopServices::openUrl(QUrl("http://wwizard.net/help/#edit-shortcut"));
+    QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
 }

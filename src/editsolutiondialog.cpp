@@ -158,7 +158,7 @@ void EditSolutionDialog::setWine(QPushButton *button, const QVariant &wine)
 
 void EditSolutionDialog::on_buttonBox_helpRequested()
 {
-    QDesktopServices::openUrl(QUrl("http://wwizard.net/help/#edit"));
+    QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
 }
 
 void EditSolutionDialog::on_categories_currentIndexChanged(int)

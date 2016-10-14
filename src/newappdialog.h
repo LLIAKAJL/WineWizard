@@ -40,6 +40,8 @@ public:
 private slots:
     void on_name_textChanged(const QString &name);
 
+    void on_buttonBox_helpRequested();
+
 private:
     Ui::NewAppDialog *ui;
     QString prepareName(const QString &name) const;

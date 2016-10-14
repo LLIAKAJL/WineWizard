@@ -42,6 +42,8 @@ public slots:
 private slots:
     void on_prefixes_clicked(const QModelIndex &index);
 
+    void on_buttonBox_helpRequested();
+
 private:
     Ui::TerminateDialog *ui;
 };

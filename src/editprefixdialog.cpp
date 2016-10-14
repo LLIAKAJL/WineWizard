@@ -90,5 +90,5 @@ void EditPrefixDialog::on_name_textChanged(const QString &name)
 
 void EditPrefixDialog::on_buttonBox_helpRequested()
 {
-    QDesktopServices::openUrl(QUrl("http://wwizard.net/help/#edit-prefix"));
+    QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
 }

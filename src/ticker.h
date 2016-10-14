@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>       *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -18,36 +18,29 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef WINEDIALOG_H
-#define WINEDIALOG_H
+#ifndef TICKER_H
+#define TICKER_H
 
-#include <QDialog>
+#include <QWidget>
 
-#include "winesortmodel.h"
-#include "packagemodel.h"
-
-namespace Ui {
-class WineDialog;
-}
-
-class WineDialog : public QDialog
+class Ticker : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit WineDialog(const QString &current, PackageModel *model, QWidget *parent = nullptr);
-    ~WineDialog() override;
+    Ticker(const QString &text, const QString &url, QWidget *parent = nullptr);
+    QSize sizeHint() const override;
 
-    QString wine() const;
-
-private slots:
-    void on_list_clicked(const QModelIndex &index);
-
-    void on_buttonBox_helpRequested();
+protected:
+    void paintEvent(QPaintEvent *event) override;
+    void timerEvent(QTimerEvent *event) override;
+    void showEvent(QShowEvent *event) override;
+    void hideEvent(QHideEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
 
 private:
-    Ui::WineDialog *ui;
-    WineSortModel *mModel;
+    QString mText, mUrl;
+    int mOffset, mTimerId;
 };
 
-#endif // WINEDIALOG_H
+#endif // TICKER_H

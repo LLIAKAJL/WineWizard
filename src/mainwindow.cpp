@@ -27,6 +27,7 @@
 #include <QJsonArray>
 #include <QSettings>
 #include <QWindow>
+#include <QUrl>
 
 #include "editshortcutdialog.h"
 #include "editprefixdialog.h"
@@ -39,7 +40,10 @@
 #include "netmanager.h"
 #include "mainmodel.h"
 #include "adslabel.h"
+#include "ticker.h"
 #include "utils.h"
+
+#include <QDebug>
 
 const QString UPDATE_URL = "http://wwizard.net/api3/?c=update&l=%1";
 
@@ -70,6 +74,7 @@ MainWindow::MainWindow(QWidget *parent) :
     setActionIcon(ui->actionBrowse,    "folder-open",          QStyle::SP_DirOpenIcon);
     setActionIcon(ui->actionControl,   "computer",             QStyle::SP_ComputerIcon);
     setActionIcon(ui->actionQuit,      "application-exit",     QStyle::SP_DialogCloseButton);
+    setActionIcon(ui->actionHelp,      "help-contents",        QStyle::SP_DialogHelpButton);
     ui->actionSettings->setIcon(QIcon::fromTheme("preferences-system", QIcon(":/images/settings")));
     setBtnIcon(ui->editPrefixBtn,     "document-properties", QStyle::SP_FileDialogDetailedView);
     setBtnIcon(ui->editShortcutBtn,   "document-properties", QStyle::SP_FileDialogDetailedView);
@@ -173,13 +178,6 @@ void MainWindow::keyPressEvent(QKeyEvent *e)
     QMainWindow::keyPressEvent(e);
 }
 
-bool MainWindow::eventFilter(QObject *o, QEvent *e)
-{
-    if (e->type() == QEvent::MouseButtonPress)
-        QDesktopServices::openUrl(o->property("url").toString());
-    return QMainWindow::eventFilter(o, e);
-}
-
 void MainWindow::getUpdate()
 {
     QString out = Utils::temp().absoluteFilePath(Utils::genID());
@@ -198,19 +196,33 @@ void MainWindow::updateFinished()
     QJsonObject data = Utils::readJson(out);
     if (QFile::exists(out))
         QFile::remove(out);
-    QJsonArray b = data.value("b").toArray();
-    for (QJsonArray::ConstIterator i = b.begin(); i != b.end(); ++i)
+    QString v = data.value("v").toString();
+    if (v != VERSION)
     {
-        QString out = Utils::temp().absoluteFilePath(Utils::genID());
-        NetManager *nm = new NetManager(this);
-        QJsonObject o = (*i).toObject();
-        nm->setProperty("out", out);
-        nm->setProperty("url", o.value("u").toString());
-        nm->setProperty("h", data.value("h").toInt());
-        nm->setProperty("m", data.value("m").toInt());
-        connect(nm, &NetManager::finished, this, &MainWindow::finished);
-        connect(nm, &NetManager::error,    this, &MainWindow::error);
-        nm->start(NetManager::RequestList() << NetManager::makeGetRequest(o.value("i").toString(), out));
+        if (ui->ads->layout()->isEmpty())
+        {
+            Ticker *t = new Ticker(tr("A new version of Wine Wizard(%1) is available!").arg(v),
+                                   "http://wwizard.net/download", ui->ads);
+            ui->ads->layout()->addWidget(t);
+            ui->ads->show();
+        }
+    }
+    else
+    {
+        QJsonArray b = data.value("b").toArray();
+        for (QJsonArray::ConstIterator i = b.begin(); i != b.end(); ++i)
+        {
+            QString out = Utils::temp().absoluteFilePath(Utils::genID());
+            NetManager *nm = new NetManager(this);
+            QJsonObject o = (*i).toObject();
+            nm->setProperty("out", out);
+            nm->setProperty("url", o.value("u").toString());
+            nm->setProperty("h", data.value("h").toInt());
+            nm->setProperty("m", data.value("m").toInt());
+            connect(nm, &NetManager::finished, this, &MainWindow::finished);
+            connect(nm, &NetManager::error,    this, &MainWindow::error);
+            nm->start(NetManager::RequestList() << NetManager::makeGetRequest(o.value("i").toString(), out));
+        }
     }
     sender()->deleteLater();
 }
@@ -436,4 +448,9 @@ void MainWindow::on_actionInstall_triggered()
 void MainWindow::on_actionAbout_triggered()
 {
     AboutDialog(this).exec();
+}
+
+void MainWindow::on_actionHelp_triggered()
+{
+    QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
 }

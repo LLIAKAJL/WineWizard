@@ -18,9 +18,11 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <QDesktopServices>
 #include <QDesktopWidget>
 #include <QPushButton>
 #include <QSettings>
+#include <QUrl>
 
 #include "winesortmodel.h"
 #include "ui_winedialog.h"
@@ -74,4 +76,9 @@ void WineDialog::on_list_clicked(const QModelIndex &index)
 {
     if (index.isValid())
         accept();
+}
+
+void WineDialog::on_buttonBox_helpRequested()
+{
+    QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
 }

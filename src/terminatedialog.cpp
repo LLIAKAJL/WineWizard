@@ -18,9 +18,11 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <QDesktopServices>
 #include <QDesktopWidget>
 #include <QPushButton>
 #include <QSettings>
+#include <QUrl>
 
 #include "ui_terminatedialog.h"
 #include "terminatedialog.h"
@@ -67,4 +69,9 @@ void TerminateDialog::on_prefixes_clicked(const QModelIndex &index)
     QAbstractItemModel *m = ui->prefixes->model();
     Qt::CheckState state = static_cast<Qt::CheckState>(m->data(index, Qt::CheckStateRole).toUInt());
     m->setData(index, (state == Qt::Checked) ? Qt::Unchecked : Qt::Checked, Qt::CheckStateRole);
+}
+
+void TerminateDialog::on_buttonBox_helpRequested()
+{
+    QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
 }

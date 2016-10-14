@@ -14,7 +14,7 @@ isEmpty(OS) {
  OS = linux
 }
 
-DEFINES += VERSION=\\\"3.0.0\\\" \
+DEFINES += VERSION=\\\"3.0.1\\\" \
            OS=\\\"$$OS\\\"
 
 TARGET = winewizard
@@ -83,7 +83,8 @@ SOURCES += src/main.cpp\
     src/adslabel.cpp \
     src/aboutdialog.cpp \
     src/highlightedlistview.cpp \
-    src/highlightedtableview.cpp
+    src/highlightedtableview.cpp \
+    src/ticker.cpp
 
 HEADERS  += src/mainwindow.h \
     src/mainmodel.h \
@@ -124,7 +125,8 @@ HEADERS  += src/mainwindow.h \
     src/adslabel.h \
     src/aboutdialog.h \
     src/highlightedlistview.h \
-    src/highlightedtableview.h
+    src/highlightedtableview.h \
+    src/ticker.h
 
 FORMS    += src/mainwindow.ui \
     src/settingsdialog.ui \

@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>       *
+ *   Copyright (C) 2016 by Vitalii Kachemtsev <LLIAKAJI@wwizard.net>         *
  *                                                                         *
  *   This file is part of Wine Wizard.                                     *
  *                                                                         *
@@ -19,51 +19,71 @@
  ***************************************************************************/
 
 #include <QDesktopServices>
-#include <QDesktopWidget>
-#include <QPushButton>
+#include <QApplication>
+#include <QTimerEvent>
+#include <QPainter>
 #include <QUrl>
 
-#include "ui_newappdialog.h"
-#include "newappdialog.h"
+#include "ticker.h"
 
-NewAppDialog::NewAppDialog(const QString &name, QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::NewAppDialog)
+Ticker::Ticker(const QString &text, const QString &url, QWidget *parent) :
+    QWidget(parent),
+    mText(text),
+    mUrl(url),
+    mOffset(0),
+    mTimerId(0)
 {
-    ui->setupUi(this);
-    resize(QApplication::desktop()->width() * 0.5, sizeHint().height());
-    setFixedHeight(height());
-    QString tmp;
-    for (const QChar &c : name)
+    QFont f = QApplication::font();
+    f.setUnderline(true);
+    setFont(f);
+    QPalette p = QApplication::palette();
+    p.setColor(QPalette::WindowText, p.color(QPalette::Link));
+    setPalette(p);
+    setCursor(Qt::PointingHandCursor);
+}
+
+QSize Ticker::sizeHint() const
+{
+    return fontMetrics().size(0, mText);
+}
+
+void Ticker::paintEvent(QPaintEvent *)
+{
+    QPainter painter(this);
+    int x = -mOffset;
+    while (x < width())
     {
-        if (!c.isLetter() || c.isUpper())
-            tmp += QChar::Space;
-        tmp += (tmp.isEmpty() || tmp.at(tmp.length() - 1) == QChar::Space) ? c.toUpper() : c;
+        painter.drawText(x, 0, width(), height(), Qt::AlignLeft | Qt::AlignVCenter, mText);
+        x += width();
     }
-    ui->name->setText(prepareName(tmp));
 }
 
-NewAppDialog::~NewAppDialog()
+void Ticker::showEvent(QShowEvent *)
 {
-    delete ui;
+    mTimerId = startTimer(30);
 }
 
-QString NewAppDialog::name() const
+void Ticker::timerEvent(QTimerEvent *event)
 {
-    return prepareName(ui->name->text());
+    if (event->timerId() == mTimerId)
+    {
+        ++mOffset;
+        if (mOffset >= width())
+            mOffset = 0;
+        scroll(-1, 0);
+    }
+    else
+        QWidget::timerEvent(event);
 }
 
-void NewAppDialog::on_name_textChanged(const QString &name)
+void Ticker::hideEvent(QHideEvent *)
 {
-    ui->buttonBox->button(QDialogButtonBox::Ok)->setDisabled(name.trimmed().isEmpty());
+    killTimer(mTimerId);
+    mTimerId = 0;
 }
 
-QString NewAppDialog::prepareName(const QString &name) const
+void Ticker::mousePressEvent(QMouseEvent *)
 {
-    return name.split(QChar::Space, QString::SkipEmptyParts).join(QChar::Space);
-}
-
-void NewAppDialog::on_buttonBox_helpRequested()
-{
-    QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
+    if (!mUrl.isEmpty())
+        QDesktopServices::openUrl(QUrl(mUrl));
 }

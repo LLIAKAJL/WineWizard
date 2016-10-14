@@ -272,9 +272,11 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionQuit"/>
-   <addaction name="actionSettings"/>
    <addaction name="separator"/>
    <addaction name="actionAbout"/>
+   <addaction name="actionHelp"/>
+   <addaction name="separator"/>
+   <addaction name="actionSettings"/>
   </widget>
   <action name="actionTerminate">
    <property name="enabled">
@@ -354,6 +356,11 @@
    </property>
    <property name="text">
     <string>About</string>
+   </property>
+  </action>
+  <action name="actionHelp">
+   <property name="text">
+    <string>Help</string>
    </property>
   </action>
  </widget>

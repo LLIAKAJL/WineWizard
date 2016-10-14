@@ -99,5 +99,5 @@ QString SettingsDialog::languageName(QLocale::Language id) const
 
 void SettingsDialog::on_buttonBox_helpRequested()
 {
-    QDesktopServices::openUrl(QUrl("http://wwizard.net/help/#settings"));
+    QDesktopServices::openUrl(QUrl("http://wwizard.net/help"));
 }
