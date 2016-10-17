@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>821</width>
-    <height>542</height>
+    <width>673</width>
+    <height>532</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -51,6 +51,9 @@
              <property name="enabled">
               <bool>false</bool>
              </property>
+             <property name="toolTip">
+              <string>Edit the selected application</string>
+             </property>
              <property name="text">
               <string>Edit</string>
              </property>
@@ -73,6 +76,9 @@
             <widget class="QPushButton" name="deletePrefixBtn">
              <property name="enabled">
               <bool>false</bool>
+             </property>
+             <property name="toolTip">
+              <string>Delete the selected application</string>
              </property>
              <property name="text">
               <string>Delete</string>
@@ -128,6 +134,9 @@
              <property name="enabled">
               <bool>false</bool>
              </property>
+             <property name="toolTip">
+              <string>Create a new shortcut</string>
+             </property>
              <property name="text">
               <string>Create Shortcut</string>
              </property>
@@ -137,6 +146,9 @@
             <widget class="QPushButton" name="editShortcutBtn">
              <property name="enabled">
               <bool>false</bool>
+             </property>
+             <property name="toolTip">
+              <string>Edit the selected shortcut</string>
              </property>
              <property name="text">
               <string>Edit</string>
@@ -160,6 +172,9 @@
             <widget class="QPushButton" name="deleteShortcutBtn">
              <property name="enabled">
               <bool>false</bool>
+             </property>
+             <property name="toolTip">
+              <string>Delete the selected shortcut</string>
              </property>
              <property name="text">
               <string>Delete</string>
@@ -285,6 +300,9 @@
    <property name="text">
     <string>Terminate</string>
    </property>
+   <property name="toolTip">
+    <string>Terminate applications</string>
+   </property>
   </action>
   <action name="actionExecute">
    <property name="enabled">
@@ -296,6 +314,9 @@
    </property>
    <property name="text">
     <string>Execute</string>
+   </property>
+   <property name="toolTip">
+    <string>Execute the selected shortcut</string>
    </property>
   </action>
   <action name="actionBrowse">
@@ -309,6 +330,9 @@
    <property name="text">
     <string>Browse</string>
    </property>
+   <property name="toolTip">
+    <string>Browse the application folder</string>
+   </property>
   </action>
   <action name="actionSettings">
    <property name="icon">
@@ -317,6 +341,9 @@
    </property>
    <property name="text">
     <string>Settings</string>
+   </property>
+   <property name="toolTip">
+    <string>Wine Wizard settings</string>
    </property>
   </action>
   <action name="actionQuit">
@@ -327,10 +354,16 @@
    <property name="text">
     <string>Quit</string>
    </property>
+   <property name="toolTip">
+    <string>Quit from Wine Wizard</string>
+   </property>
   </action>
   <action name="actionControl">
    <property name="checkable">
     <bool>true</bool>
+   </property>
+   <property name="enabled">
+    <bool>false</bool>
    </property>
    <property name="icon">
     <iconset>
@@ -338,6 +371,9 @@
    </property>
    <property name="text">
     <string>Control</string>
+   </property>
+   <property name="toolTip">
+    <string>Application control</string>
    </property>
   </action>
   <action name="actionInstall">
@@ -348,6 +384,9 @@
    <property name="text">
     <string>Install</string>
    </property>
+   <property name="toolTip">
+    <string>Install or update an application</string>
+   </property>
   </action>
   <action name="actionAbout">
    <property name="icon">
@@ -356,6 +395,9 @@
    </property>
    <property name="text">
     <string>About</string>
+   </property>
+   <property name="toolTip">
+    <string>About Wine Wizard</string>
    </property>
   </action>
   <action name="actionHelp">

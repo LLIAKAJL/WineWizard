@@ -77,7 +77,7 @@ int MainModel::rowCount(const QModelIndex &parent) const
     return mRoot->childCount();
 }
 
-int MainModel::columnCount(const QModelIndex &/*parent*/) const
+int MainModel::columnCount(const QModelIndex &) const
 {
     return 1;
 }
@@ -228,14 +228,11 @@ MainModel::VarMap MainModel::itemData(const QModelIndex &index) const
             {
                 const LocationInfo *loc = reinterpret_cast<LocationInfo *>(data + offset);
                 const char *p = reinterpret_cast<char *>(const_cast<LocationInfo *>(loc));
-                if (loc->dwVolTableOfs && loc->dwVolTableOfs + sizeof(LocalVolumeInfo) < loc->dwTotalSize)
+                if (loc->dwLocalPathOfs && (loc->dwLocalPathOfs < loc->dwTotalSize))
                 {
-                    if (loc->dwLocalPathOfs && (loc->dwLocalPathOfs < loc->dwTotalSize))
-                    {
-                        QTextCodec *codec = QTextCodec::codecForName("Windows-" + codepage.toUtf8());
-                        if (codec)
-                            target = cutQuotes(codec->toUnicode(&p[loc->dwLocalPathOfs]));
-                    }
+                    QTextCodec *codec = QTextCodec::codecForName("Windows-" + codepage.toUtf8());
+                    if (codec)
+                        target = cutQuotes(codec->toUnicode(&p[loc->dwLocalPathOfs]));
                 }
                 offset += loc->dwTotalSize;
             }
@@ -299,7 +296,8 @@ bool MainModel::setItemData(const QModelIndex &index, const QMap<int, QVariant> 
                 QString iconLocation = toWin(roles.value(IconLocationRole).toString(), prefix);
                 s->setName(name);
                 s->setIcon(roles.value(Qt::DecorationRole).value<QImage>());
-                saveLink(s->path(), name, target, workDir, args, iconLocation);
+                QString codepage = prefixCodepage(prefix);
+                saveLink(s->path(), name, target, workDir, args, iconLocation, codepage);
                 emit dataChanged(index, index);
                 return true;
             }
@@ -334,7 +332,8 @@ QModelIndex MainModel::newShortcut(const QFileInfo &targetInfo, const QModelInde
     if (!pd.exists(".links"))
         pd.mkdir(".links");
     QString path = pd.absoluteFilePath(".links/" + Utils::genID() + ".lnk");
-    saveLink(path, name, target, workDir, QString(), target);
+    QString codepage = prefixCodepage(p->path());
+    saveLink(path, name, target, workDir, QString(), target, codepage);
     int row = p->childCount();
     beginInsertRows(prefix, row, row);
     new Item(path, icon, name, p);
@@ -479,9 +478,8 @@ void MainModel::install(const QByteArray &script, const QString &name, int appID
 void MainModel::runShortcut(const QModelIndex &index, bool debug)
 {
     Item *s = static_cast<Item *>(index.internalPointer());
-    QString exe = s->path();
-    QString wd = QFileInfo(exe).absolutePath();
-    QString script = QString(Utils::readFile(":/scripts/execute")).arg(exe).arg(wd).arg(QString());
+    QString wd = QFileInfo(s->path()).absolutePath();
+    QString script = QString(Utils::readFile(":/scripts/execute")).arg(s->path()).arg(wd).arg(QString());
     if (debug)
         this->debug(script, index.parent());
     else
@@ -521,14 +519,11 @@ void MainModel::scanDir(Item *prefix, const QString &dir, const QString &codepag
         {
             const LocationInfo *loc = reinterpret_cast<LocationInfo *>(data + offset);
             const char *p = reinterpret_cast<char *>(const_cast<LocationInfo *>(loc));
-            if (loc->dwVolTableOfs && loc->dwVolTableOfs + sizeof(LocalVolumeInfo) < loc->dwTotalSize)
+            if (loc->dwLocalPathOfs && (loc->dwLocalPathOfs < loc->dwTotalSize))
             {
-                if (loc->dwLocalPathOfs && (loc->dwLocalPathOfs < loc->dwTotalSize))
-                {
-                    QTextCodec *codec = QTextCodec::codecForName("Windows-" + codepage.toUtf8());
-                    if (codec)
-                        target = cutQuotes(codec->toUnicode(&p[loc->dwLocalPathOfs]));
-                }
+                QTextCodec *codec = QTextCodec::codecForName("Windows-" + codepage.toUtf8());
+                if (codec)
+                    target = cutQuotes(codec->toUnicode(&p[loc->dwLocalPathOfs]));
             }
             offset += loc->dwTotalSize;
         }
@@ -615,7 +610,8 @@ bool MainModel::isRunning(const QString &path) const
 }
 
 void MainModel::saveLink(const QString &path, const QString &name, const QString &winTarget,
-                         const QString &winWorkDir, const QString &args, const QString &winIconLocation)
+                         const QString &winWorkDir, const QString &args,
+                         const QString &winIconLocation, const QString &codepage)
 {
     QFile f(path);
     f.open(QFile::WriteOnly);
@@ -643,7 +639,8 @@ void MainModel::saveLink(const QString &path, const QString &name, const QString
     loc.dwFinalPathOfs = winTarget.length() + loc.dwLocalPathOfs + 1;
     loc.dwTotalSize = loc.dwFinalPathOfs + 1;
     f.write(reinterpret_cast<char *>(&loc), sizeof(loc));
-    f.write(winTarget.toUtf8() + '\0' + '\0');
+    QTextCodec *codec = QTextCodec::codecForName("Windows-" + codepage.toUtf8());
+    f.write(codec->fromUnicode(winTarget) + '\0' + '\0');
     writeLnkString(f, name);
     writeLnkString(f, winWorkDir);
     if (!args.isEmpty())
@@ -652,50 +649,50 @@ void MainModel::saveLink(const QString &path, const QString &name, const QString
     f.close();
 }
 
-QString MainModel::toUnix(const QString &path, const QString &prefixPath)
+QString MainModel::toUnix(const QString &path, const QDir &prefixDir)
 {
     if (!path.isEmpty())
     {
         QString tmpPath = path;
         tmpPath.replace('\\', QDir::separator());
-        QDir dev = QDir(prefixPath).absoluteFilePath("dosdevices");
-        QString fullPath = dev.absoluteFilePath(tmpPath);
-        if (QFile::exists(fullPath))
-            return fullPath;
+        QDir dir = prefixDir.absoluteFilePath("dosdevices");
+        if (dir.exists(tmpPath))
+            return QFileInfo(dir.absoluteFilePath(tmpPath)).canonicalFilePath();
         QStringList items = tmpPath.split(QDir::separator(), QString::SkipEmptyParts);
         QString file = items.takeLast();
         for (const QString &item : items)
         {
-            if (dev.exists(item))
-                dev = dev.absoluteFilePath(item);
+            if (dir.exists(item))
+                dir = dir.absoluteFilePath(item);
             else
             {
-                QStringList entries = dev.entryList(QStringList(item), QDir::AllEntries);
+                QStringList entries = dir.entryList(QStringList(item), QDir::AllEntries);
                 if (entries.isEmpty())
                     return path;
-                dev = dev.absoluteFilePath(entries.first());
+                dir = dir.absoluteFilePath(entries.first());
             }
         }
-        if (dev.exists(file))
-            return dev.absoluteFilePath(file);
+        if (dir.exists(file))
+            return QFileInfo(dir.absoluteFilePath(file)).canonicalFilePath();
         else
         {
-            QStringList files = dev.entryList(QStringList(file));
+            QStringList files = dir.entryList(QStringList(file));
             if (!files.isEmpty())
-                return dev.absoluteFilePath(files.first());
+                return QFileInfo(dir.absoluteFilePath(files.first())).canonicalFilePath();
         }
     }
     return path;
 }
 
-QString MainModel::toWin(const QString &path, const QString &prefixPath)
+QString MainModel::toWin(const QString &path, const QDir &prefixDir)
 {
-    if (!path.isEmpty())
+    if (!path.isEmpty() && path.contains(QDir::separator()))
     {
         QString res = path;
         QString drive;
-        QDir dev = QDir(prefixPath).absoluteFilePath("dosdevices");
-        for (const QFileInfo &d : dev.entryInfoList(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::System))
+        QFileInfoList drives = QDir(prefixDir.absoluteFilePath("dosdevices")).
+                        entryInfoList(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::System);
+        for (const QFileInfo &d : drives)
         {
             bool startWithName = res.startsWith(d.absoluteFilePath());
             bool startWithTarget = res.startsWith(d.symLinkTarget());

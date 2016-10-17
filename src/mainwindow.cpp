@@ -43,9 +43,7 @@
 #include "ticker.h"
 #include "utils.h"
 
-#include <QDebug>
-
-const QString UPDATE_URL = "http://wwizard.net/api3/?c=update&l=%1";
+const QString UPDATE_URL = "http://wwizard.net/api3/?c=update";
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -57,11 +55,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QSystemTrayIcon *tray = new QSystemTrayIcon(qApp->windowIcon(), this);
     connect(tray, &QSystemTrayIcon::activated, this, &MainWindow::trayActivated);
     tray->show();
-    qApp->installTranslator(&mStdTrans);
-    qApp->installTranslator(&mTrans);
     QSettings s("winewizard", "settings");
-    QLocale::Language lang = static_cast<QLocale::Language>(s.value("Language", QLocale::English).toInt());
-    setLanguage(lang);
     getUpdate();
     s.beginGroup("MainWindow");
     QDesktopWidget *dw = QApplication::desktop();
@@ -114,42 +108,43 @@ void MainWindow::start(const QString &cmdLine)
     ui->actionControl->setChecked(false);
     if (cmdLine.isEmpty())
         showNormal();
-    else if (!QFile::exists(cmdLine))
-    {
-        Utils::error(tr("The file \"%1\" was not found.").arg(cmdLine), this);
-        showNormal();
-    }
-    else if (QFileInfo(cmdLine).suffix().toUpper() == "LNK")
-    {
-        QAbstractItemModel *m = ui->prefixes->model();
-        bool exists = false;
-        for (int i = m->rowCount(); i >= 0; --i)
-        {
-            QModelIndex pi = m->index(i, 0);
-            for (int j = m->rowCount(pi); j >= 0; --j)
-            {
-                QModelIndex si = m->index(j, 0, pi);
-                if (QFileInfo(si.data(MainModel::PathRole).toString()) == cmdLine)
-                {
-                    exists = true;
-                    hide();
-                    m->setData(si, true, MainModel::ExecuteRole);
-                }
-            }
-        }
-        if (!exists)
-        {
-            Utils::error(tr("The shortcut \"%1\" was not found.").
-                         arg(QFileInfo(cmdLine).completeBaseName()), this);
-            showNormal();
-        }
-    }
     else
     {
-        hide();
-        SetupWizard *iw = new SetupWizard(cmdLine, ui->prefixes->model());
-        connect(iw, &SetupWizard::destroyed, this, &MainWindow::checkState);
-        iw->show();
+        QStringList args = cmdLine.split('\n');
+        QFileInfo info(args.first());
+        if (info.exists() && info.suffix().toUpper() == "LNK")
+        {
+            QAbstractItemModel *m = ui->prefixes->model();
+            bool exists = false;
+            for (int i = m->rowCount(); i >= 0; --i)
+            {
+                QModelIndex pi = m->index(i, 0);
+                for (int j = m->rowCount(pi); j >= 0; --j)
+                {
+                    QModelIndex si = m->index(j, 0, pi);
+                    if (QFileInfo(si.data(MainModel::PathRole).toString()) == info.absoluteFilePath())
+                    {
+                        exists = true;
+                        hide();
+                        m->setData(si, true, MainModel::ExecuteRole);
+                    }
+                }
+            }
+            if (!exists)
+            {
+                Utils::error(tr("The shortcut \"%1\" was not found.").arg(info.completeBaseName()), this);
+                showNormal();
+            }
+        }
+        else
+        {
+            hide();
+            QString exe = args.takeFirst();
+            SetupWizard *iw = new SetupWizard(exe, args.isEmpty() ? QString() : args.first(),
+                                              ui->prefixes->model());
+            connect(iw, &SetupWizard::destroyed, this, &MainWindow::checkState);
+            iw->show();
+        }
     }
     checkState();
 }
@@ -161,14 +156,6 @@ void MainWindow::setVisible(bool visible)
     else
         getUpdate();
     QMainWindow::setVisible(visible);
-}
-
-void MainWindow::changeEvent(QEvent *e)
-{
-    if (e->type() == QEvent::LanguageChange)
-        ui->retranslateUi(this);
-    else
-        QMainWindow::changeEvent(e);
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *e)
@@ -185,9 +172,7 @@ void MainWindow::getUpdate()
     nm->setProperty("out", out);
     connect(nm, &NetManager::finished, this, &MainWindow::updateFinished);
     connect(nm, &NetManager::error,    this, &MainWindow::error);
-    QSettings s("winewizard", "settings");
-    QLocale::Language lang = static_cast<QLocale::Language>(s.value("Language", QLocale::English).toInt());
-    nm->start(NetManager::RequestList() << NetManager::makeGetRequest(UPDATE_URL.arg(QLocale(lang).name()), out));
+    nm->start(NetManager::RequestList() << NetManager::makeGetRequest(UPDATE_URL, out));
 }
 
 void MainWindow::updateFinished()
@@ -267,9 +252,10 @@ void MainWindow::checkState()
     }
     QModelIndexList rl = m->match(m->index(0, 0), MainModel::RunningRole, true);
     bool running = !rl.isEmpty();
-    if (running && ui->actionControl->isChecked())
+    bool empty = m->rowCount() == 0;
+    if (empty || (running && ui->actionControl->isChecked()))
         ui->actionControl->setChecked(false);
-    ui->actionControl->setDisabled(running || SetupWizard::running());
+    ui->actionControl->setDisabled(empty || running || SetupWizard::running());
     bool controlChecked = ui->actionControl->isChecked();
     ui->actionSettings->setDisabled(running || controlChecked || SetupWizard::running());
     bool valid = ui->shortcuts->rootIndex().isValid();
@@ -307,24 +293,7 @@ void MainWindow::on_actionQuit_triggered()
 
 void MainWindow::on_actionSettings_triggered()
 {
-    SettingsDialog sd(this);
-    if (sd.exec() == SettingsDialog::Accepted)
-        setLanguage(sd.language());
-}
-
-void MainWindow::setLanguage(QLocale::Language language)
-{
-    if (language == QLocale::English)
-    {
-        mStdTrans.load(QString());
-        mTrans.load(QString());
-    }
-    else
-    {
-        QString stdPath = QLibraryInfo::location(QLibraryInfo::TranslationsPath);
-        mStdTrans.load(QString("qt_%1").arg(QLocale(language).name()), stdPath);
-        mTrans.load(QString(":/translations/%1").arg(language));
-    }
+    SettingsDialog(this).exec();
 }
 
 void MainWindow::setActionIcon(QAction *action, const QString &name, QStyle::StandardPixmap alter)

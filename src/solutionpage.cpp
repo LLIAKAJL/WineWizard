@@ -55,26 +55,29 @@ SolutionPage::SolutionPage(const QString &exe, QWidget *parent) :
     connect(ui->wait, &WaitForm::retry, this, &SolutionPage::updateData);
     registerField("arch", this, "arch");
     registerField("solution", this, "solution");
-    QFile f(exe);
-    f.open(QFile::ReadOnly);
-    IMAGE_DOS_HEADER dh;
-    f.read(reinterpret_cast<char *>(&dh), sizeof(IMAGE_DOS_HEADER));
-    if (f.error() == QFile::NoError)
+    if (QFile::exists(exe))
     {
-        if ((dh.e_magic == IMAGE_DOS_SIGNATURE) && (dh.e_lfanew % sizeof(DWORD) == 0))
+        QFile f(exe);
+        f.open(QFile::ReadOnly);
+        IMAGE_DOS_HEADER dh;
+        f.read(reinterpret_cast<char *>(&dh), sizeof(IMAGE_DOS_HEADER));
+        if (f.error() == QFile::NoError)
         {
-            f.seek(dh.e_lfanew);
-            if (f.error() == QFile::NoError)
+            if ((dh.e_magic == IMAGE_DOS_SIGNATURE) && (dh.e_lfanew % sizeof(DWORD) == 0))
             {
-                IMAGE_NT_HEADERS nth;
-                f.read(reinterpret_cast<char *>(&nth), sizeof(IMAGE_NT_HEADERS));
+                f.seek(dh.e_lfanew);
                 if (f.error() == QFile::NoError)
-                    ui->win64->setChecked(nth.Signature == IMAGE_NT_SIGNATURE &&
-                                          nth.OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR64_MAGIC);
+                {
+                    IMAGE_NT_HEADERS nth;
+                    f.read(reinterpret_cast<char *>(&nth), sizeof(IMAGE_NT_HEADERS));
+                    if (f.error() == QFile::NoError)
+                        ui->win64->setChecked(nth.Signature == IMAGE_NT_SIGNATURE &&
+                                    nth.OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR64_MAGIC);
+                }
             }
         }
+        f.close();
     }
-    f.close();
     connect(ui->win32, &QRadioButton::toggled, this, &SolutionPage::updateData);
     connect(ui->wait, &WaitForm::retry, this, &SolutionPage::updateData);
     QItemSelectionModel *rsm = ui->result->selectionModel();

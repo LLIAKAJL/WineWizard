@@ -42,28 +42,11 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->width->setValue(w);
     ui->height->setValue(h);
     ui->memory->setValue(m);
-    for (const QString &flag : QDir(":/flags").entryList())
-    {
-        QIcon icon(QString(":/flags/%1").arg(flag));
-        QLocale::Language id = static_cast<QLocale::Language>(flag.toInt());
-        QString name = languageName(id);
-        ui->language->addItem(icon, name, id);
-    }
-    QVariant lang = s.value("Language", QLocale::system().language());
-    int li = ui->language->findData(lang);
-    if (li < 0)
-        li = ui->language->findData(QLocale::English);
-    ui->language->setCurrentIndex(li);
 }
 
 SettingsDialog::~SettingsDialog()
 {
     delete ui;
-}
-
-QLocale::Language SettingsDialog::language() const
-{
-    return static_cast<QLocale::Language>(ui->language->currentData().toInt());
 }
 
 void SettingsDialog::accept()
@@ -82,19 +65,7 @@ void SettingsDialog::accept()
     }
     s.setValue("VideoMemorySize", ui->memoryAuto->isChecked() ? ui->memory->value() : -1);
     s.endGroup();
-    s.setValue("Language", ui->language->currentData());
     QDialog::accept();
-}
-
-QString SettingsDialog::languageName(QLocale::Language id) const
-{
-    switch (id)
-    {
-    case QLocale::Russian:
-        return "Русский";
-    default:
-        return "English";
-    }
 }
 
 void SettingsDialog::on_buttonBox_helpRequested()

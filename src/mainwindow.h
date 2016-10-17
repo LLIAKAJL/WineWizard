@@ -24,11 +24,9 @@
 #include <QSystemTrayIcon>
 #include <QPushButton>
 #include <QMainWindow>
-#include <QTranslator>
 #include <QJsonObject>
 #include <QHideEvent>
 #include <QKeyEvent>
-#include <QLocale>
 #include <QStyle>
 
 namespace Ui {
@@ -48,7 +46,6 @@ public slots:
     void setVisible(bool visible) override;
 
 protected:
-    void changeEvent(QEvent *e) override;
     void keyPressEvent(QKeyEvent *e) override;
 
 private slots:
@@ -77,9 +74,7 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    QTranslator mStdTrans, mTrans;
 
-    void setLanguage(QLocale::Language language);
     void setActionIcon(QAction *action, const QString &name, QStyle::StandardPixmap alter);
     void setBtnIcon(QPushButton *button, const QString &iconName, QStyle::StandardPixmap alter);
     void getUpdate();

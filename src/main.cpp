@@ -26,7 +26,17 @@
 int main(int argc, char *argv[])
 {
     QtSingleApplication a(argc, argv);
-    QString cmdLine = (argc > 1) ? QFileInfo(argv[1]).absoluteFilePath() : QString();
+    QString cmdLine;
+    QStringList args = a.arguments();
+    args.removeFirst();
+    if (!args.isEmpty())
+    {
+        QString target = args.takeFirst();
+        QFileInfo info(target);
+        cmdLine += (info.exists() ? info.absoluteFilePath() : target) + '\n';
+    }
+    if (!args.isEmpty())
+        cmdLine += args.join(QChar::Space);
     if (a.isRunning())
         a.sendMessage(cmdLine);
     else

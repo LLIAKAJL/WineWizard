@@ -48,8 +48,9 @@ QVariant PackageModel::data(const QModelIndex &index, int role) const
         switch (role)
         {
         case Qt::DisplayRole:
-        case Qt::ToolTipRole:
             return mItems.at(index.row()).package.name;
+        case Qt::ToolTipRole:
+            return mItems.at(index.row()).package.tooltip;
         case CatRole:
             return QVariant::fromValue(mItems.at(index.row()).package.categories);
         case IdRole:
@@ -71,6 +72,10 @@ bool PackageModel::setData(const QModelIndex &index, const QVariant &value, int 
         {
         case Qt::EditRole:
             mItems[index.row()].package.name = value.toString();
+            emit dataChanged(index, index);
+            return true;
+        case Qt::ToolTipRole:
+            mItems[index.row()].package.tooltip = value.toString();
             emit dataChanged(index, index);
             return true;
         case CatRole:
@@ -105,7 +110,7 @@ bool PackageModel::insertRows(int row, int count, const QModelIndex &parent)
 {
     beginInsertRows(parent, row, row + count - 1);
     for (int i = 0; i < count; ++i)
-        mItems.insert(row, Item{ -1, { QString(), SolutionModel::IntList() } });
+        mItems.insert(row, Item{ -1, { QString(), QString(), SolutionModel::IntList() } });
     endInsertRows();
     return true;
 }
@@ -134,6 +139,7 @@ QMimeData *PackageModel::mimeData(const QModelIndexList &indexes) const
         {
             stream << data(index, IdRole).toInt()
                    << data(index).toString()
+                   << data(index, Qt::ToolTipRole).toString()
                    << data(index, CatRole).value<SolutionModel::IntList>();
         }
     mimeData->setData("application/vnd.text.list", encodedData);
@@ -161,7 +167,7 @@ bool PackageModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
             while (!stream.atEnd())
             {
                 Item item;
-                stream >> item.id >> item.package.name >> item.package.categories;
+                stream >> item.id >> item.package.name >> item.package.tooltip >> item.package.categories;
                 tmpList.append(item);
                 ++rows;
             }
@@ -171,6 +177,7 @@ bool PackageModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
                 QModelIndex i = index(beginRow, 0, QModelIndex());
                 setData(i, item.id, IdRole);
                 setData(i, item.package.name);
+                setData(i, item.package.tooltip, Qt::ToolTipRole);
                 setData(i, QVariant::fromValue(item.package.categories), CatRole);
                 ++beginRow;
             }

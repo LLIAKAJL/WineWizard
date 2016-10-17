@@ -41,7 +41,8 @@ class IntroPage : public QWizardPage
     Q_PROPERTY(QModelIndex prefix READ prefix CONSTANT)
 
 public:
-    explicit IntroPage(const QString &exe, QAbstractItemModel *model, QWidget *parent = nullptr);
+    explicit IntroPage(const QString &exe, const QString &args,
+                       QAbstractItemModel *model, QWidget *parent = nullptr);
     ~IntroPage() override;
 
     bool isComplete() const override;

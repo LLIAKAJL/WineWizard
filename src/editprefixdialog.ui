@@ -42,7 +42,11 @@
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="name"/>
+        <widget class="QLineEdit" name="name">
+         <property name="placeholderText">
+          <string>Enter an application name</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>

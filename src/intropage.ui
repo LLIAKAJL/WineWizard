@@ -69,7 +69,11 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <item>
-          <widget class="QLineEdit" name="search"/>
+          <widget class="QLineEdit" name="search">
+           <property name="placeholderText">
+            <string>Enter an application name</string>
+           </property>
+          </widget>
          </item>
          <item>
           <widget class="QPushButton" name="searchBtn">
@@ -103,6 +107,9 @@
         <layout class="QHBoxLayout" name="horizontalLayout">
          <item>
           <widget class="QPushButton" name="addBtn">
+           <property name="toolTip">
+            <string>Add a new application</string>
+           </property>
            <property name="text">
             <string>Add Application</string>
            </property>
@@ -126,6 +133,9 @@
            <property name="enabled">
             <bool>false</bool>
            </property>
+           <property name="toolTip">
+            <string>Go back to the previous page</string>
+           </property>
           </widget>
          </item>
          <item>
@@ -142,6 +152,9 @@
           <widget class="QPushButton" name="rightBtn">
            <property name="enabled">
             <bool>false</bool>
+           </property>
+           <property name="toolTip">
+            <string>Go to the next page</string>
            </property>
           </widget>
          </item>
@@ -226,6 +239,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="browseBtn">
+       <property name="toolTip">
+        <string>Choose a directory</string>
+       </property>
        <property name="text">
         <string notr="true"/>
        </property>

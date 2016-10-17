@@ -44,7 +44,7 @@ public:
     typedef QList<int> IntList;
     struct Package
     {
-        QString name;
+        QString name, tooltip;
         IntList categories;
     };
     typedef QMap<int, Package> PackageList;

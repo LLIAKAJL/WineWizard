@@ -63,5 +63,5 @@ void WaitForm::readyOutput(const QString &data)
 
 void WaitForm::readyError(const QString &data)
 {
-    appendOut(QString(R"(<span style=" color:#ff0000;">%1</span>)").arg(data));
+    appendOut(QString(R"(<span style="color:#ff0000;">%1</span>)").arg(data));
 }

@@ -121,10 +121,11 @@ private:
     static QString cutQuotes(const QString &str);
     static QString readLnkString(qint64 &offset, uchar *data, const QString &codepage, bool unicode);
     static void saveLink(const QString &path, const QString &name, const QString &winTarget,
-                          const QString &winWorkDir, const QString &args, const QString &winIconLocation);
+                          const QString &winWorkDir, const QString &args,
+                           const QString &winIconLocation, const QString &codepage);
     static void writeLnkString(QFile &f, const QString &str);
-    static QString toUnix(const QString &path, const QString &prefixPath);
-    static QString toWin(const QString &path, const QString &prefixPath);
+    static QString toUnix(const QString &path, const QDir &prefixDir);
+    static QString toWin(const QString &path, const QDir &prefixDir);
     static QString prefixCodepage(const QString &prefixPath);
 };
 

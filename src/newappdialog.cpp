@@ -33,14 +33,7 @@ NewAppDialog::NewAppDialog(const QString &name, QWidget *parent) :
     ui->setupUi(this);
     resize(QApplication::desktop()->width() * 0.5, sizeHint().height());
     setFixedHeight(height());
-    QString tmp;
-    for (const QChar &c : name)
-    {
-        if (!c.isLetter() || c.isUpper())
-            tmp += QChar::Space;
-        tmp += (tmp.isEmpty() || tmp.at(tmp.length() - 1) == QChar::Space) ? c.toUpper() : c;
-    }
-    ui->name->setText(prepareName(tmp));
+    ui->name->setText(prepareName(name));
 }
 
 NewAppDialog::~NewAppDialog()

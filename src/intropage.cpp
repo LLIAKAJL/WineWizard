@@ -34,7 +34,8 @@
 #include "appmodel.h"
 #include "utils.h"
 
-IntroPage::IntroPage(const QString &exe, QAbstractItemModel *model, QWidget *parent) :
+IntroPage::IntroPage(const QString &exe, const QString &args,
+                     QAbstractItemModel *model, QWidget *parent) :
     QWizardPage(parent),
     ui(new Ui::IntroPage),
     mExe(exe),
@@ -52,6 +53,7 @@ IntroPage::IntroPage(const QString &exe, QAbstractItemModel *model, QWidget *par
     registerField("args", this, "args");
     registerField("workDir", this, "workDir");
     registerField("prefix", this, "prefix");
+    ui->args->setText(args);
     ui->workDir->setText(QFileInfo(mExe).absolutePath());
     ui->prefixes->setModel(model);
     QItemSelectionModel *psm = ui->prefixes->selectionModel();
@@ -69,7 +71,18 @@ IntroPage::IntroPage(const QString &exe, QAbstractItemModel *model, QWidget *par
     connect(ui->wait, &WaitForm::retry,       this,       &IntroPage::retry);
     connect(appModel, &AppModel::finished,    this,       &IntroPage::finished);
     ui->result->setModel(appModel);
-    ui->prefixes->setCurrentIndex(model->index(0, 0));
+    for (int i = model->rowCount() - 1; i >= 0; --i)
+    {
+        QModelIndex pi = model->index(i, 0);
+        if (exe.startsWith(pi.data(MainModel::PathRole).toString()))
+        {
+            ui->prefixes->setCurrentIndex(pi);
+            ui->updateRB->setChecked(true);
+            break;
+        }
+    }
+    if (!ui->prefixes->currentIndex().isValid())
+        ui->prefixes->setCurrentIndex(model->index(0, 0));
     search();
 }
 
@@ -82,8 +95,7 @@ bool IntroPage::isComplete() const
 {
     QFileInfo wdi(workDir());
     return ((ui->updateRB->isChecked() && ui->prefixes->currentIndex().isValid()) ||
-           (ui->installRB->isChecked() && app().isValid())) &&
-            wdi.exists() && wdi.isDir() && QFile::exists(exe());
+           (ui->installRB->isChecked() && app().isValid())) && wdi.exists() && wdi.isDir();
 }
 
 int IntroPage::nextId() const
@@ -156,7 +168,6 @@ void IntroPage::search(int pagenum)
     ui->leftBtn->setEnabled(false);
     ui->rightBtn->setEnabled(false);
     ui->addBtn->setEnabled(false);
-//    ui->pagenum->setText(tr("wait"));
     mPageNum = pagenum;
     ui->wait->start();
     QPair<QString, int> request;

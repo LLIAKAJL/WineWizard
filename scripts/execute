@@ -1,8 +1,6 @@
-EXE="%1"
-WORK_DIR="%2"
-if [ -d "$WORK_DIR" ]
+if [ -d "%2" ]
 then
-    cd "$WORK_DIR"
+    cd "%2"
 fi
-echo "%3" | xargs wine start /Unix "$EXE"
+echo "%3" | xargs wine start /Unix "%1"
 wineserver -w

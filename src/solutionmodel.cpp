@@ -209,6 +209,7 @@ void SolutionModel::downloadFinished()
         QJsonObject o = (*i).toObject();
         Package p;
         p.name = o.value("n").toString();
+        p.tooltip = o.value("h").toString();
         QJsonArray ca = o.value("c").toArray();
         for (QJsonArray::ConstIterator i = ca.constBegin(); i != ca.constEnd(); ++i)
             p.categories.append((*i).toInt());

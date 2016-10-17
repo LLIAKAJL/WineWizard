@@ -4,17 +4,15 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network
+QT += core gui network widgets
 
 QMAKE_CXXFLAGS += -std=c++11
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 isEmpty(OS) {
  OS = linux
 }
 
-DEFINES += VERSION=\\\"3.0.1\\\" \
+DEFINES += VERSION=\\\"3.0.2\\\" \
            OS=\\\"$$OS\\\"
 
 TARGET = winewizard

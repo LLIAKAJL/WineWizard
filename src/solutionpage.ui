@@ -89,6 +89,9 @@
        <property name="enabled">
         <bool>false</bool>
        </property>
+       <property name="toolTip">
+        <string>Copy the selected solution</string>
+       </property>
        <property name="text">
         <string>Copy</string>
        </property>
@@ -111,6 +114,9 @@
       <widget class="QPushButton" name="editBtn">
        <property name="enabled">
         <bool>false</bool>
+       </property>
+       <property name="toolTip">
+        <string>Edit the selected solution</string>
        </property>
        <property name="text">
         <string>Edit</string>

@@ -42,7 +42,11 @@
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="name"/>
+        <widget class="QLineEdit" name="name">
+         <property name="placeholderText">
+          <string>Enter a shortcut name</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>
@@ -72,10 +76,7 @@
         </sizepolicy>
        </property>
        <property name="toolTip">
-        <string>Select target</string>
-       </property>
-       <property name="text">
-        <string notr="true"/>
+        <string>Choose a file</string>
        </property>
       </widget>
      </item>
@@ -115,10 +116,7 @@
         </sizepolicy>
        </property>
        <property name="toolTip">
-        <string>Select working directory</string>
-       </property>
-       <property name="text">
-        <string notr="true"/>
+        <string>Choose a directory</string>
        </property>
       </widget>
      </item>

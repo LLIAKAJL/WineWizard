@@ -49,14 +49,14 @@ namespace Utils
     {
         QString filter = QObject::tr("Executable files (*.exe)");
         return QFileDialog::getOpenFileName(parent, QObject::tr("Select File"), dir,
-                                   QObject::tr("Executable files (*.exe);;All files (*.*)"), &filter);
+                                   QObject::tr("Executable files (*.exe);;All files (*)"), &filter);
     }
 
     QString selectIcon(const QString &dir, QWidget *parent)
     {
         QString filter = QObject::tr("Images (*.png *.ico *.bmp *.jpg *.jpeg *.exe)");
         return QFileDialog::getOpenFileName(parent, QObject::tr("Select Icon"), dir,
-                   QObject::tr("Images (*.png *.ico *.bmp *.jpg *.jpeg *.exe);;All files (*.*)"), &filter);
+                   QObject::tr("Images (*.png *.ico *.bmp *.jpg *.jpeg *.exe);;All files (*)"), &filter);
     }
 
     QString selectDir(const QString &dir, QWidget *parent)

@@ -22,7 +22,6 @@
 #define SETTINGSDIALOG_H
 
 #include <QDialog>
-#include <QLocale>
 
 namespace Ui {
 class SettingsDialog;
@@ -36,8 +35,6 @@ public:
     explicit SettingsDialog(QWidget *parent = nullptr);
     ~SettingsDialog() override;
 
-    QLocale::Language language() const;
-
 public slots:
     void accept() override;
 
@@ -46,8 +43,6 @@ private slots:
 
 private:
     Ui::SettingsDialog *ui;
-
-    QString languageName(QLocale::Language id) const;
 };
 
 #endif // SETTINGSDIALOG_H

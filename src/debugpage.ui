@@ -60,6 +60,9 @@
       </property>
       <item>
        <widget class="QPushButton" name="newBtn">
+        <property name="toolTip">
+         <string>Create a new shortcut</string>
+        </property>
         <property name="text">
          <string>Create Shortcut</string>
         </property>
@@ -69,6 +72,9 @@
        <widget class="QPushButton" name="editBtn">
         <property name="enabled">
          <bool>false</bool>
+        </property>
+        <property name="toolTip">
+         <string>Edit the selected shortcut</string>
         </property>
         <property name="text">
          <string>Edit</string>
@@ -93,6 +99,9 @@
         <property name="enabled">
          <bool>false</bool>
         </property>
+        <property name="toolTip">
+         <string>Delete the selected shortcut</string>
+        </property>
         <property name="text">
          <string>Delete</string>
         </property>
@@ -104,7 +113,7 @@
    <item>
     <widget class="QRadioButton" name="reinstall">
      <property name="text">
-      <string>Select another solution.</string>
+      <string>Select another solution(or edit the current solution).</string>
      </property>
      <property name="checked">
       <bool>true</bool>

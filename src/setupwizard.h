@@ -37,7 +37,8 @@ class SetupWizard : public QWizard
 public:
     enum { PageIntro, PageSolution, PageInstall, PageDebug, PageFinal, PageUpdate };
 
-    explicit SetupWizard(const QString &exe, QAbstractItemModel *model, QWidget *parent = nullptr);
+    explicit SetupWizard(const QString &exe, const QString &args,
+                         QAbstractItemModel *model, QWidget *parent = nullptr);
     ~SetupWizard() override;
 
     static bool running();

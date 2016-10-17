@@ -37,7 +37,8 @@
 
 SetupWizard::InstanceList SetupWizard::mInstances;
 
-SetupWizard::SetupWizard(const QString &exe, QAbstractItemModel *model, QWidget *parent) :
+SetupWizard::SetupWizard(const QString &exe, const QString &args,
+                         QAbstractItemModel *model, QWidget *parent) :
     QWizard(parent),
     ui(new Ui::SetupWizard),
     mModel(model)
@@ -52,7 +53,7 @@ SetupWizard::SetupWizard(const QString &exe, QAbstractItemModel *model, QWidget 
     QDesktopWidget *dw = QApplication::desktop();
     resize(s.value("Size", QSize(dw->width() * 0.7, dw->height() * 0.6)).toSize());
     s.endGroup();
-    setPage(PageIntro, new IntroPage(exe, mModel, this));
+    setPage(PageIntro, new IntroPage(exe, args, mModel, this));
     setPage(PageSolution, new SolutionPage(exe, this));
     setPage(PageInstall, new InstallPage(mModel, this));
     setPage(PageDebug, new DebugPage(mModel, this));

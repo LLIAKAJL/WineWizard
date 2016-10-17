@@ -77,6 +77,9 @@
                  <property name="focusPolicy">
                   <enum>Qt::NoFocus</enum>
                  </property>
+                 <property name="toolTip">
+                  <string>The pre-installation Wine version</string>
+                 </property>
                  <property name="text">
                   <string>* Undefined *</string>
                  </property>
@@ -128,6 +131,9 @@
                  <property name="focusPolicy">
                   <enum>Qt::NoFocus</enum>
                  </property>
+                 <property name="toolTip">
+                  <string>The post-installation Wine version</string>
+                 </property>
                  <property name="text">
                   <string>* Undefined *</string>
                  </property>
@@ -167,6 +173,9 @@
               <property name="focusPolicy">
                <enum>Qt::NoFocus</enum>
               </property>
+              <property name="toolTip">
+               <string>The pre-installation packages</string>
+              </property>
               <property name="frameShape">
                <enum>QFrame::Box</enum>
               </property>
@@ -196,7 +205,11 @@
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_7">
                  <item>
-                  <widget class="CenterComboBox" name="categories"/>
+                  <widget class="CenterComboBox" name="categories">
+                   <property name="toolTip">
+                    <string>A category of packages</string>
+                   </property>
+                  </widget>
                  </item>
                  <item>
                   <widget class="QLineEdit" name="search">
@@ -248,6 +261,9 @@
               </property>
               <property name="focusPolicy">
                <enum>Qt::NoFocus</enum>
+              </property>
+              <property name="toolTip">
+               <string>The post-installation packages</string>
               </property>
               <property name="frameShape">
                <enum>QFrame::Box</enum>
