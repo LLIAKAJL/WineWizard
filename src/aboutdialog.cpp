@@ -19,6 +19,7 @@
  ***************************************************************************/
 
 #include <QApplication>
+#include <QIcon>
 
 #include "ui_aboutdialog.h"
 #include "aboutdialog.h"

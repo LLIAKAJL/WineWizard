@@ -18,6 +18,7 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <QStyle>
 #include <QSortFilterProxyModel>
 #include <QDesktopServices>
 #include <QDesktopWidget>

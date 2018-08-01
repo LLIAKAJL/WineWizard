@@ -18,6 +18,7 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <QStyle>
 #include "ui_waitform.h"
 #include "waitform.h"
 

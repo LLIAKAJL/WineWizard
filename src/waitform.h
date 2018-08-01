@@ -22,6 +22,7 @@
 #define WAITFORM_H
 
 #include <QWidget>
+#include <QStyle>
 
 namespace Ui {
 class WaitForm;
